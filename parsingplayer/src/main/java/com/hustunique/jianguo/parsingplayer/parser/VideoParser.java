@@ -50,7 +50,7 @@ public class VideoParser {
             Pattern pattern = Pattern.compile(reg);
             Matcher matcher = pattern.matcher(url);
             if (matcher.find()) {
-                return sMatchMap.get(url);
+                return sMatchMap.get(reg);
             }
         }
         return null;

@@ -15,6 +15,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         VideoParser videoParser = new VideoParser();
-        videoParser.parse("http://v.youku.com/v_show/id_XMTc1ODE5Njcy.html");
+        videoParser.parse("http://v.youku.com/v_show/id_XMTc1ODE5Njcy.html", null);
     }
 }

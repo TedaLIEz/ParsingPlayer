@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.jianguo.parsingplayer.parser.VideoParser;
 import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
@@ -30,18 +30,19 @@ public class YoukuExtractor implements IExtractor {
     private String id;
 
 
-    @Nullable
     @Override
-    public VideoInfo extract(@NonNull String url) {
+    public void extract(@NonNull String url, @Nullable final VideoParser.ExtractCallback callback) {
         id = extractId(url);
         String basicUrl = constructBasicUrl();
-
+        // TODO: 1/17/17 Construction here can be refactored
         OkHttpClient client = new OkHttpClient();
         final Request request = new Request.Builder().url(basicUrl).build();
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
+                if (callback != null) {
+                    callback.onError(e);
+                }
             }
 
             @Override
@@ -50,10 +51,12 @@ public class YoukuExtractor implements IExtractor {
                 JsonObject jsonObject = jsonParser.parse(response.body().string()).getAsJsonObject();
                 JsonArray jsonArray = jsonObject.getAsJsonObject("data").getAsJsonArray("stream");
                 Logger.json(jsonArray.toString());
+                if (callback != null) {
+                    callback.onSuccess(null);
+                }
             }
         });
 
-        return null;
     }
 
     private String constructBasicUrl() {

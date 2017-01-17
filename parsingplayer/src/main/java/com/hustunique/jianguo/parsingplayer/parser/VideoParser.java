@@ -50,14 +50,19 @@ public class VideoParser {
             Pattern pattern = Pattern.compile(reg);
             Matcher matcher = pattern.matcher(url);
             if (matcher.find()) {
-                return sMatchMap.get(url);
+                return sMatchMap.get(reg);
             }
         }
         return null;
     }
 
-    public VideoInfo parse(String url) {
+    public void parse(String url, ExtractCallback callback) {
         iExtractor = createExtractor(url);
-        return iExtractor.extract(url);
+        iExtractor.extract(url, callback);
+    }
+
+    public interface ExtractCallback {
+        void onSuccess(VideoInfo videoInfo);
+        void onError(Throwable e);
     }
 }

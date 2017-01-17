@@ -3,9 +3,8 @@
 package com.hustunique.jianguo.parsingplayer.parser.extractor;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.jianguo.parsingplayer.parser.VideoParser;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -13,6 +12,5 @@ import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
  */
 
 public interface IExtractor {
-    @Nullable
-    VideoInfo extract(@NonNull String url);
+    void extract(@NonNull String url, VideoParser.ExtractCallback callback);
 }

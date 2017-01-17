@@ -1,1 +1,1 @@
-include ':parsingplayer_sample', ':parsingplayer'
+include ':sample', ':parsingplayer'

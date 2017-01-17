@@ -7,7 +7,7 @@ android {
     buildToolsVersion "25.0.1"
     defaultConfig {
         applicationId "com.hustunique.jianguo.parsingplayer"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -29,5 +29,8 @@ dependencies {
     // version just for jianxinli,we can modify it in later
     compile 'com.android.support:appcompat-v7:25.0.1'
     testCompile 'junit:junit:4.12'
+    // this will use the default all64release of parsingplayer,uncomment the line below to use other productFlavors
+    // compile project(path: ':parsingplayer', configuration: 'all64Debug')
+    // ref: http://stackoverflow.com/a/24316133/4380801
     compile project(':parsingplayer')
 }

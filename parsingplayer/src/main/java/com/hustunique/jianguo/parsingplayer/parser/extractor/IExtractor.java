@@ -1,9 +1,11 @@
 
 
-package com.hustunique.jianguo.parsingplayer.parser;
+package com.hustunique.jianguo.parsingplayer.parser.extractor;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.hustunique.jianguo.parsingplayer.parser.VideoInfo;
 
 /**
  * Created by JianGuo on 1/16/17.

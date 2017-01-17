@@ -1,5 +1,5 @@
 
-package com.hustunique.jianguo.parsingplayer.parser;
+package com.hustunique.jianguo.parsingplayer.parser.entity;
 
 import java.util.List;
 import java.util.Map;
@@ -18,6 +18,7 @@ public class VideoInfo {
     public static int HD_3 = 3;
 
     private Map<Integer,List<Seg>> segsMap;
+    private String title;
 
     public List<Seg> getSegs(int hd){
         if (!segsMap.containsKey(hd)) throw new RuntimeException("No such hd in this url");

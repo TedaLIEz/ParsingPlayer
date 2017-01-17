@@ -1,4 +1,4 @@
-package com.hustunique.jianguo.parsingplayer.parser;
+package com.hustunique.jianguo.parsingplayer.parser.entity;
 
 /**
  * Created by CoXier on 17-1-16.
@@ -6,8 +6,8 @@ package com.hustunique.jianguo.parsingplayer.parser;
  */
 
 public class Seg {
-    String path;
-    long duration;
+    private String path;
+    private long duration;
 
     public Seg(String path, long duration) {
         this.path = path;

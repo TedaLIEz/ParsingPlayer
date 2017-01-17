@@ -6,8 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.hustunique.jianguo.parsingplayer.LogUtil;
-import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.jianguo.parsingplayer.parser.extractor.IExtractor;
+import com.hustunique.jianguo.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.jianguo.parsingplayer.parser.extractor.YoukuExtractor;
 
 import java.util.HashMap;
@@ -22,8 +21,8 @@ import java.util.regex.Pattern;
 
 public class VideoParser {
     private static final String TAG = "VideoParser";
-    private IExtractor iExtractor;
-    private static Map<String, Class<? extends IExtractor>> sMatchMap = new HashMap<>();
+    private Extractor mExtractor;
+    private static Map<String, Class<? extends Extractor>> sMatchMap = new HashMap<>();
 
     static {
         // TODO: 1/17/17 Maybe there is a better solution to register map between regex and IExtractor here
@@ -31,9 +30,9 @@ public class VideoParser {
     }
 
     @NonNull
-    IExtractor createExtractor(@NonNull String url) {
+    Extractor createExtractor(@NonNull String url) {
         if (url == null) throw new IllegalArgumentException("Url shouldn't be null");
-        Class<? extends IExtractor> clz = findClass(url);
+        Class<? extends Extractor> clz = findClass(url);
         if (clz != null) {
             try {
                 return clz.newInstance();
@@ -45,7 +44,7 @@ public class VideoParser {
     }
 
     @Nullable
-    private Class<? extends IExtractor> findClass(@NonNull String url) {
+    private Class<? extends Extractor> findClass(@NonNull String url) {
         for (String reg : sMatchMap.keySet()) {
             Pattern pattern = Pattern.compile(reg);
             Matcher matcher = pattern.matcher(url);
@@ -56,13 +55,10 @@ public class VideoParser {
         return null;
     }
 
-    public void parse(String url, ExtractCallback callback) {
-        iExtractor = createExtractor(url);
-        iExtractor.extract(url, callback);
+    public void parse(String url, Extractor.ExtractCallback callback) {
+        mExtractor = createExtractor(url);
+        mExtractor.extract(url, callback);
     }
 
-    public interface ExtractCallback {
-        void onSuccess(VideoInfo videoInfo);
-        void onError(Throwable e);
-    }
+
 }

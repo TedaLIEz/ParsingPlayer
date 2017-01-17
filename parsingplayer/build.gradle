@@ -4,7 +4,7 @@ apply plugin: 'com.android.library'
 
 android {
     // we use all64 productFlavors as default published library
-    defaultPublishConfig "all64Release"
+    defaultPublishConfig "all64Debug"
     publishNonDefault true
     compileSdkVersion 25
     buildToolsVersion "25.0.1"
@@ -17,6 +17,9 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
     buildTypes {
         release {
@@ -41,8 +44,11 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.0.1'
 
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.5.0'
+    // jsonarray is included in the android SDK, so we have to added it to the test dependency manually
+    testCompile 'org.json:json:20160810'
     compile 'com.google.code.gson:gson:2.8.0'
-
+    testCompile 'org.mockito:mockito-core:2.6.3'
     testCompile 'junit:junit:4.12'
     compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.6'
     all32Compile 'tv.danmaku.ijk.media:ijkplayer-armv5:0.7.6'
@@ -58,4 +64,5 @@ dependencies {
     // just for test
     compile 'com.orhanobut:logger:1.15'
 
+    androidTestCompile 'com.android.support.test:runner:0.5'
 }

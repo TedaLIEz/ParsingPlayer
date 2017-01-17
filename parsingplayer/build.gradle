@@ -39,9 +39,12 @@ dependencies {
     })
     // version just for jianxinli,we can modify it in later
     compile 'com.android.support:appcompat-v7:25.0.1'
+
+    compile 'com.squareup.okhttp3:okhttp:3.5.0'
+    compile 'com.google.code.gson:gson:2.8.0'
+
     testCompile 'junit:junit:4.12'
     compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.6'
-    compile 'com.squareup.okhttp3:okhttp:3.5.0'
     all32Compile 'tv.danmaku.ijk.media:ijkplayer-armv5:0.7.6'
     all32Compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.6'
     all32Compile 'tv.danmaku.ijk.media:ijkplayer-x86:0.7.6'
@@ -51,4 +54,8 @@ dependencies {
     all64Compile 'tv.danmaku.ijk.media:ijkplayer-arm64:0.7.6'
     all64Compile 'tv.danmaku.ijk.media:ijkplayer-x86:0.7.6'
     all64Compile 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.7.6'
+
+    // just for test
+    compile 'com.orhanobut:logger:1.15'
+
 }

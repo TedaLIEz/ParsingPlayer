@@ -4,6 +4,7 @@ package com.hustunique.jianguo.parsingplayer.parser;
 
 import android.support.annotation.NonNull;
 
+import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.jianguo.parsingplayer.parser.extractor.IExtractor;
 import com.hustunique.jianguo.parsingplayer.parser.extractor.Youku;
 
@@ -17,20 +18,31 @@ import java.util.regex.Pattern;
 
 public class VideoParser {
     private String[] urlRegexArray = {Youku.VALID_URL};
-    private Class[] extratorArray = {Youku.class};
+    private Class[] extractorArray = {Youku.class};
     private IExtractor iExtractor;
 
-    IExtractor createExtractor(String url) throws IllegalAccessException, InstantiationException {
+    private IExtractor createExtractor(String url) throws IllegalAccessException, InstantiationException {
         Pattern pattern;
         Matcher matcher;
         for (int i=0;i<urlRegexArray.length;i++){
             pattern = Pattern.compile(urlRegexArray[i]);
             matcher = pattern.matcher(url);
             if (matcher.find()){
-                iExtractor = (IExtractor) extratorArray[i].newInstance();
-                return iExtractor;
+                return  (IExtractor) extractorArray[i].newInstance();
             }
         }
         throw new RuntimeException("This url is not valid");
+    }
+
+    public VideoInfo parse(String url){
+        try {
+            iExtractor = createExtractor(url);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+
+        return iExtractor.extract(url);
     }
 }

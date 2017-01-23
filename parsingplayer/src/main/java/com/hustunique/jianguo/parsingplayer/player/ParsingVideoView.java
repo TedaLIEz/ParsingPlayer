@@ -14,6 +14,8 @@ import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.MediaController;
@@ -36,7 +38,8 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
  * Created by JianGuo on 1/16/17.
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
-// TODO: 1/16/17 Implement this view's feature
+// TODO: 1/23/17 Implement scale dynamicly in onTouchEvent
+// FIXME: 1/23/17 Can't maintain View status after configuration changes
 public class ParsingVideoView extends FrameLayout implements MediaController.MediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
     private Uri mUri;
@@ -89,8 +92,9 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     private boolean mCanSeekForward = true;
 
 
+
+
     // TODO: 1/20/17 Subtitle
-    // TODO: 1/20/17 Handling with onTouchEvent
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -118,6 +122,8 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
+        mMediaController = new ParsingMediaController(context, false);
+        setMediaController(mMediaController);
     }
 
     private void initRenders() {
@@ -434,6 +440,8 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     private IjkMediaPlayer createPlayer() {
         IjkMediaPlayer ijkMediaPlayer = null;
         if (mUri != null) {
+            IjkMediaPlayer.loadLibrariesOnce(null);
+            IjkMediaPlayer.native_profileBegin("libijkplayer.so");
             ijkMediaPlayer = new IjkMediaPlayer();
             IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG 
                     ? IjkMediaPlayer.IJK_LOG_DEBUG : IjkMediaPlayer.IJK_LOG_INFO);
@@ -441,7 +449,6 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "protocol_whitelist", "ffconcat,file,http,https");
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", 1);
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", 1);
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", 0);
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-handle-resolution-change", 1);
 
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "opensles", 1);
@@ -458,6 +465,23 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
         return ijkMediaPlayer;
     }
 
+
+    public void setVideoPath(String path) {
+        setVideoURI(Uri.parse(path));
+    }
+
+    public void setVideoURI(Uri uri) {
+        setVideoURI(uri, null);
+    }
+
+    private void setVideoURI(Uri uri, Map<String, String> headers) {
+        mUri = uri;
+        mHeaders = headers;
+        mSeekWhenPrepared = 0;
+        openVideo();
+        requestLayout();
+        invalidate();
+    }
 
     public void setMediaController(IMediaController controller) {
         if (mMediaController != null) {
@@ -534,6 +558,71 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     }
 
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        boolean isKeyCodeSupported = keyCode != KeyEvent.KEYCODE_BACK &&
+                keyCode != KeyEvent.KEYCODE_VOLUME_UP &&
+                keyCode != KeyEvent.KEYCODE_VOLUME_DOWN &&
+                keyCode != KeyEvent.KEYCODE_VOLUME_MUTE &&
+                keyCode != KeyEvent.KEYCODE_MENU &&
+                keyCode != KeyEvent.KEYCODE_CALL &&
+                keyCode != KeyEvent.KEYCODE_ENDCALL;
+        if (isInPlayBackState() && isKeyCodeSupported && mMediaController != null) {
+            if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK ||
+                    keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+                if (mMediaPlayer.isPlaying()) {
+                    pause();
+                    mMediaController.show();
+                } else {
+                    start();
+                    mMediaController.hide();
+                }
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY) {
+                if (!mMediaPlayer.isPlaying()) {
+                    start();
+                    mMediaController.hide();
+                }
+                return true;
+            } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
+                    keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
+                if (mMediaPlayer.isPlaying()) {
+                    pause();
+                    mMediaController.show();
+                }
+                return true;
+            } else {
+                toggleMediaControlsVisibility();
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    // TODO: 1/23/17 Implement scaling feature
+    public boolean onTouchEvent(MotionEvent event) {
+        if (isInPlayBackState() && mMediaController != null) {
+            toggleMediaControlsVisibility();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onTrackballEvent(MotionEvent event) {
+        if (isInPlayBackState() && mMediaController != null) {
+            toggleMediaControlsVisibility();
+        }
+        return false;
+    }
+
+    private void toggleMediaControlsVisibility() {
+        if (mMediaController.isShowing()) {
+            mMediaController.hide();
+        } else {
+            mMediaController.show();
+        }
+    }
+
     private boolean isInPlayBackState() {
         return (mMediaPlayer != null &&
                 mCurrentState != STATE_ERROR &&
@@ -589,7 +678,7 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
 
     @Override
     public boolean isPlaying() {
-        return isInPlayBackState();
+        return isInPlayBackState() && mMediaPlayer.isPlaying();
     }
 
     @Override

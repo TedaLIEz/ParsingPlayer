@@ -2,7 +2,10 @@ package com.hustunique.jianguo.parsingplayer.player;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.MediaController;
+
+import java.util.ArrayList;
 
 /**
  * Created by JianGuo on 1/20/17.
@@ -20,5 +23,23 @@ public class ParsingMediaController extends MediaController implements IMediaCon
 
     public ParsingMediaController(Context context) {
         super(context);
+    }
+
+
+
+    @Override
+    public void hide() {
+        super.hide();
+        for (View view : mShowOnceArray)
+            view.setVisibility(View.GONE);
+        mShowOnceArray.clear();
+    }
+
+    private ArrayList<View> mShowOnceArray = new ArrayList<View>();
+    @Override
+    public void showOnce(View view) {
+        mShowOnceArray.add(view);
+        view.setVisibility(View.VISIBLE);
+        show();
     }
 }

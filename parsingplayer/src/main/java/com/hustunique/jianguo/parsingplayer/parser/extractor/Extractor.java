@@ -22,10 +22,16 @@ import okhttp3.Response;
 
 public abstract class Extractor implements Callback {
     private ExtractCallback mCallback;
+    private OkHttpClient mClient;
     public interface ExtractCallback {
         void onSuccess(VideoInfo videoInfo);
         void onError(Throwable e);
     }
+
+    public Extractor() {
+        mClient = new OkHttpClient();
+    }
+
     /**
      * Extract videoinfo from given url,
      * call {@link ExtractCallback#onSuccess(VideoInfo)}
@@ -34,10 +40,9 @@ public abstract class Extractor implements Callback {
      * @param callback the callback, see {@link ExtractCallback} for details
      */
     public void extract(@NonNull String url, @Nullable final ExtractCallback callback) {
-        OkHttpClient client = buildClient();
         String baseUrl = constructBasicUrl(url);
         final Request request = buildRequest(baseUrl);
-        client.newCall(request).enqueue(this);
+        mClient.newCall(request).enqueue(this);
         mCallback = callback;
     }
 
@@ -45,10 +50,6 @@ public abstract class Extractor implements Callback {
 
     @Nullable
     abstract VideoInfo createInfo(@NonNull Response response) throws IOException;
-
-    @NonNull
-    abstract OkHttpClient buildClient();
-
     @NonNull
     abstract Request buildRequest(@NonNull String baseUrl);
 

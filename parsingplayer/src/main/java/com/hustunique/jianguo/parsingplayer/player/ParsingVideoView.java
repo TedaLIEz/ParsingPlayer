@@ -7,6 +7,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -39,7 +41,7 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
 // TODO: 1/23/17 Implement scale dynamicly in onTouchEvent
-// FIXME: 1/23/17 Can't maintain View status after configuration changes
+
 public class ParsingVideoView extends FrameLayout implements MediaController.MediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
     private Uri mUri;
@@ -90,8 +92,6 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
-
-
 
 
     // TODO: 1/20/17 Subtitle
@@ -228,7 +228,7 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
                 if (mRenderView != null) {
                     mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
                     mRenderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
-                    if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == mVideoWidth 
+                    if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == mVideoWidth
                             || mSurfaceHeight == mVideoHeight) {
                         if (mTargetState == STATE_PLAYING) {
                             start();
@@ -423,27 +423,28 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({IjkMediaPlayer.OPT_CATEGORY_CODEC, IjkMediaPlayer.OPT_CATEGORY_FORMAT,
             IjkMediaPlayer.OPT_CATEGORY_PLAYER, IjkMediaPlayer.OPT_CATEGORY_SWS})
-    @interface OptionCategory{}
+    @interface OptionCategory {
+    }
 
     public void setOption(@OptionCategory int category, String name, String value) {
         if (mMediaPlayer != null) {
             mMediaPlayer.setOption(category, name, value);
         }
     }
-    
+
     public void setOption(@OptionCategory int category, String name, long value) {
         if (mMediaPlayer != null) {
             mMediaPlayer.setOption(category, name, value);
         }
     }
-    
+
     private IjkMediaPlayer createPlayer() {
         IjkMediaPlayer ijkMediaPlayer = null;
         if (mUri != null) {
             IjkMediaPlayer.loadLibrariesOnce(null);
             IjkMediaPlayer.native_profileBegin("libijkplayer.so");
             ijkMediaPlayer = new IjkMediaPlayer();
-            IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG 
+            IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG
                     ? IjkMediaPlayer.IJK_LOG_DEBUG : IjkMediaPlayer.IJK_LOG_INFO);
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "safe", 0);
             ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "protocol_whitelist", "ffconcat,file,http,https");
@@ -708,4 +709,123 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     public int getAudioSessionId() {
         return 0;
     }
+
+    @Override
+    // FIXME: 1/23/17 Can't maintain View status after configuration changes
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+        SavedState ss = (SavedState) state;
+        super.onRestoreInstanceState(ss.getSuperState());
+        LogUtil.d(TAG, "onRestoreInstanceState " + ss.toString());
+        mCurrentState = ss.currentState;
+        mTargetState = ss.targetState;
+        mCurrentBufferPercentage = ss.currentBufferPercentage;
+        if (ss.uri != null)
+            mUri = ss.uri;
+        else return;
+        if (ss.headers != null) mHeaders = ss.headers;
+        int currPos = ss.currentPos;
+
+        seekTo(currPos);
+
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable parcelable = super.onSaveInstanceState();
+        SavedState ss = new SavedState(parcelable);
+        ss.currentState = mCurrentState;
+        ss.targetState = mTargetState;
+        ss.currentPos = (int) mMediaPlayer.getCurrentPosition();
+        ss.uri = mUri;
+        ss.headers = mHeaders;
+        ss.currentBufferPercentage = mCurrentBufferPercentage;
+        LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
+        return ss;
+    }
+
+
+    class SavedState extends BaseSavedState {
+        int currentState;
+        int targetState;
+        Map<String, String> headers;
+        Uri uri;
+        int currentBufferPercentage;
+        int currentPos;
+        private ClassLoader mClassLoader;
+
+        public SavedState(Parcel in) {
+            super(in);
+            mClassLoader = mContext.getClassLoader();
+            currentState = in.readInt();
+            targetState = in.readInt();
+            currentPos = in.readInt();
+            int hasMap = in.readInt();
+            if (hasMap == 1) {
+                headers = in.readHashMap(mClassLoader);
+            }
+            int hasUri = in.readInt();
+            if (hasUri == 1) {
+                uri = in.readParcelable(mClassLoader);
+            }
+            currentBufferPercentage = in.readInt();
+        }
+
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        public SavedState(Parcel source, ClassLoader loader) {
+            super(source, loader);
+            if (loader == null) {
+                loader = getClass().getClassLoader();
+            }
+            mClassLoader = loader;
+        }
+
+        public SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(currentState);
+            out.writeInt(targetState);
+            out.writeInt(currentPos);
+            if (headers != null) {
+                out.writeInt(1);
+                out.writeMap(headers);
+            } else {
+                out.writeInt(0);
+            }
+            if (uri != null) {
+                out.writeInt(1);
+                out.writeParcelable(uri, flags);
+            } else {
+                out.writeInt(0);
+            }
+            out.writeInt(currentBufferPercentage);
+        }
+
+        @Override
+        public String toString() {
+            return "SavedState{" +
+                    "currentPos=" + currentPos +
+                    ", currentState=" + currentState +
+                    ", targetState=" + targetState +
+                    ", headers=" + headers +
+                    ", uri=" + uri +
+                    ", currentBufferPercentage=" + currentBufferPercentage +
+                    '}';
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        release(true);
+    }
+
 }

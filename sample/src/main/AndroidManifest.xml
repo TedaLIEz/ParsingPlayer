@@ -12,7 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name="com.hustunique.jianguo.sample.MainActivity"
-
                   android:configChanges="orientation|keyboardHidden|screenSize"
                   android:screenOrientation="user">
             <intent-filter>

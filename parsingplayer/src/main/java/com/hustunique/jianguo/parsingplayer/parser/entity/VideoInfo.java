@@ -7,24 +7,34 @@ import java.util.Map;
 /**
  * Created by JianGuo on 1/16/17.
  * POJO for video information extracted from websites
+ * A list of segs represents a steam
  */
 // TODO: 1/16/17 define fields for information in videos
 public class VideoInfo {
 
-    // now four hds are enough
-    public static int HD_0 = 0;
-    public static int HD_1 = 1;
-    public static int HD_2 = 2;
-    public static int HD_3 = 3;
+    public static String FORMAT_3GP = "3gp";
+    public static String FORMAT_3GPHD = "3gphd";
+    public static String FORMAT_FLV = "flv";
+    public static String FORMAT_FLVHD = "flvhd";
+    public static String FORMAT_MP4 = "mp4";
+    public static String FORMAT_MP4HD = "mp4hd";
+    public static String FORMAT_MP4HD2 = "mp4hd2";
+    public static String FORMAT_MP4HD3 = "mp4hd3";
+    public static String FORMAT_HD2 = "hd2";
+    public static String FORMAT_HD3 = "hd3";
 
-    private Map<Integer,List<Seg>> segsMap;
+
+    private Map<String,List<Seg>> segsMap;
     private String title;
 
-    public List<Seg> getSegs(int hd){
-        if (!segsMap.containsKey(hd)) throw new RuntimeException("No such hd in this url");
-        return segsMap.get(hd);
+    public List<Seg> getSegs(String format){
+        if (!segsMap.containsKey(format)) throw new RuntimeException("No such hd in this url");
+        return segsMap.get(format);
     }
-    //TODO:construct this class and use HashMap or ?
 
+    public VideoInfo(Map<String, List<Seg>> segsMap, String title) {
+        this.segsMap = segsMap;
+        this.title = title;
+    }
 }
 

@@ -4,13 +4,17 @@
           package="com.hustunique.jianguo.sample">
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!--this is a workaround to maintain videoview's status when configuration changes-->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.hustunique.jianguo.sample.MainActivity">
+        <activity android:name="com.hustunique.jianguo.sample.MainActivity"
+
+                  android:configChanges="orientation|keyboardHidden|screenSize"
+                  android:screenOrientation="user">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

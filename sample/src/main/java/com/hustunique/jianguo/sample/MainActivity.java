@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         ((RelativeLayout) findViewById(R.id.activity_main)).addView(videoView);
         videoParser.parse("http://v.youku.com/v_show/id_XMTc1ODE5Njcy.html", null);
 
-        videoView.setVideoPath("http://k.youku.com/player/getFlvPath/sid/04851694197901206eabe_00/st/mp4/fileid/03002001004F0C50918C8401A9D5F42F647752-A118-3CF8-C56A-C392EF95399E?ypp=0&myp=0&K=b667e7e6245b23cf261f798f%26sign%3D0bb0bb04126cf170a2e0366091803067&ctype=12&token=0504&ev=1&ep=ciacH0iLX8oB7CTWiD8bZyq3JSVaXP4J9h%2BHgdJjALsgPujMnD7YxpXDRvtCF4gQBidwFOmHrdTgbUUWYYFCqGAQ3D3eMfqT%2B%2FaS5d5QzZJ1EBAzccTewVSeRjD1&hd=1&oip=1001157218");
+        videoView.setVideoPath("http://k.youku.com/player/getFlvPath/sid/048532424789612650177_00/st/flv/fileid/03008002015884C218BA2F2D9B7D2FE635B72E-A1E7-8E04-2D36-880884D5A14D?ypp=0&myp=0&K=eb4be7ee804c38de2412e30a%26sign%3Dbb61f488d675ab5b2fd625336ee5597d&ctype=12&token=0534&ev=1&ep=ciacH0qPUswE4ivWjj8bYSnidXAIXP4J9h%2BNgdJgALohQOC76jzQz%2B%2FBTIlAYvBrdVYEZp73qNWVbUJhYYFC3G8Q1zuoPfriivPl5aVbxJgIYm0zA8zTwFSeRjP1&hd=1&oip=1001157218");
         videoView.start();
     }
 }

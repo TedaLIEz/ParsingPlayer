@@ -7,18 +7,18 @@ package com.hustunique.jianguo.parsingplayer.parser.entity;
 
 public class Seg {
     private String path;
-    private long duration;
+    private int duration;
 
-    public Seg(String path, long duration) {
+    public Seg(String path, int duration) {
         this.path = path;
         this.duration = duration;
     }
 
-    public long getDuration() {
+    public int getDuration() {
         return duration;
     }
 
-    public void setDuration(long duration) {
+    public void setDuration(int duration) {
         this.duration = duration;
     }
 

@@ -29,4 +29,30 @@ public class Seg {
     public void setPath(String path) {
         this.path = path;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Seg seg = (Seg) o;
+
+        if (duration != seg.duration) return false;
+        return path.equals(seg.path);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = path.hashCode();
+        result = 31 * result + duration;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Seg[path=" + path +
+                ", duration=" + duration +
+                ']';
+    }
 }

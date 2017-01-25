@@ -36,5 +36,33 @@ public class VideoInfo {
         this.segsMap = segsMap;
         this.title = title;
     }
+
+    @Override
+    public String toString() {
+        return "VideoInfo{" +
+                "segsMap=" + segsMap +
+                ", title='" + title + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        VideoInfo videoInfo = (VideoInfo) o;
+
+        if (segsMap != null ? !segsMap.equals(videoInfo.segsMap) : videoInfo.segsMap != null)
+            return false;
+        return title.equals(videoInfo.title);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = segsMap != null ? segsMap.hashCode() : 0;
+        result = 31 * result + title.hashCode();
+        return result;
+    }
 }
 

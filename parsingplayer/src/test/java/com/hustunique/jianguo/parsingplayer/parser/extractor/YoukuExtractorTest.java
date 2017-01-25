@@ -42,7 +42,7 @@ public class YoukuExtractorTest {
         YoukuExtractor youkuExtractor = new YoukuExtractor();
         Response response = Mockhelper.mockResponse(TestConstant.YOUKU_URL_1, "");
         mExpectedException.expect(IllegalStateException.class);
-        VideoInfo videoInfo = youkuExtractor.createInfo(response);
+        youkuExtractor.createInfo(response);
     }
 
 
@@ -66,5 +66,20 @@ public class YoukuExtractorTest {
         mExpectedException.expect(IllegalArgumentException.class);
         youkuExtractor.constructBasicUrl(null);
     }
+
+    @Test
+    public void checkErrorInCreateInfo() throws IOException {
+        YoukuExtractor youkuExtractor = new YoukuExtractor();
+        mExpectedException.expect(ExtractException.class);
+        mExpectedException.expectMessage("Youku said: Sorry, this video is private");
+        VideoInfo videoInfo = youkuExtractor.createInfo(Mockhelper.
+                mockResponse(TestConstant.YOUKU_ERROR_URL_1,
+                        TestConstant.YOUKU_ERROR_JSON_1));
+        assertEquals(null, videoInfo);
+    }
+
+
+
+
 
 }

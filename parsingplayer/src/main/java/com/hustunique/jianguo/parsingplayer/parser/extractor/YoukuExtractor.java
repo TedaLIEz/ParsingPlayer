@@ -1,24 +1,28 @@
 package com.hustunique.jianguo.parsingplayer.parser.extractor;
 
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.Base64;
+import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.hustunique.jianguo.parsingplayer.LogUtil;
 import com.hustunique.jianguo.parsingplayer.parser.entity.Seg;
 import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +37,7 @@ public class YoukuExtractor extends Extractor {
     public static final String VALID_URL = "(?:http://(?:v|player)\\.youku\\.com/(?:v_show/id_|player\\.php/sid/)|youku:)([A-Za-z0-9]+)(?:\\.html|/v\\.swf|)";
     private static final String ID_REGEX = "((?<=id_)|(?<=sid/))[A-Za-z0-9]+";
     private static final String TAG = "YoukuExtractor";
-
+    private static final char[] letterTable = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private static int HD_0 = 0;
     private static int HD_1 = 1;
     private static int HD_2 = 2;
@@ -80,16 +84,23 @@ public class YoukuExtractor extends Extractor {
     @Nullable
     VideoInfo createInfo(@NonNull Response response) throws IOException {
         JsonObject data = getData(response.body().string());
+        checkError(data);
         String encrypt = getEncrypt(data);
+        LogUtil.d(TAG, "security string: " + encrypt);
         String[] sidAndToken = new String(rc4("becaf9be", encrypt)).split("_");
         mSid = sidAndToken[0];
         mToken = sidAndToken[1];
         mOip = getOip(data);
         mFiledMap = constructFiledMap(data);
-
         String title = getTitle(data);
-        HashMap<String, List<Seg>> segsMap = new HashMap<>();
+        Map<String, List<Seg>> segsMap = getSegMap(data);
+        return new VideoInfo(segsMap, title);
+    }
 
+    // TODO: 1/25/17 Needs test here
+    @VisibleForTesting
+    Map<String, List<Seg>> getSegMap(JsonObject data) throws UnsupportedEncodingException {
+        HashMap<String, List<Seg>> segsMap = new HashMap<>();
         JsonArray streams = data.getAsJsonArray("stream");
         for (JsonElement stream : streams) {
             if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
@@ -107,32 +118,64 @@ public class YoukuExtractor extends Extractor {
                         "_00" +
                         "/st/" + mExtMap.get(format)
                         + "/fileid/" + getFiled(format, n) + "?" +
-                        "k=" + URLEncoder.encode(key,"utf-8") +
+                        "k=" + URLEncoder.encode(key, "utf-8") +
                         "&hd=" + hd +
                         "&myp=0&ypp=0&ctype=12&ev=1" +
-                        "&token=" + URLEncoder.encode(mToken,"utf-8") +
-                        "&oip=" + URLEncoder.encode(mOip,"utf-8") +
-                        "&ep=" + URLEncoder.encode(ep,"utf-8");
-                int duration = Integer.parseInt(seg.getAsJsonObject().get("total_gitmilliseconds_video").getAsString())/1000;
-                Seg s = new Seg(videoUrl,duration);
+                        "&token=" + URLEncoder.encode(mToken, "utf-8") +
+                        "&oip=" + URLEncoder.encode(mOip, "utf-8") +
+                        "&ep=" + URLEncoder.encode(ep, "utf-8");
+                // FIXME: 1/25/17 404 status code for videoUrl
+                LogUtil.d(TAG, "build url: " + videoUrl + " format: " + format);
+                int duration = Integer.parseInt(seg.getAsJsonObject().get("total_milliseconds_video").getAsString()) / 1000;
+                Seg s = new Seg(videoUrl, duration);
                 segList.add(s);
-                segsMap.put(format,segList);
+                segsMap.put(format, segList);
                 n++;
             }
         }
-        return null;
+        return segsMap;
     }
 
+    // Check error if response return error data
+    private void checkError(JsonObject data) {
+        if (data.has("error")) {
+            JsonObject jsonObject = data.getAsJsonObject("error");
+            String errorMsg = jsonObject.get("note").getAsString();
+            // TODO: 1/25/17 Try to avoid hard-coding
+            if (errorMsg.contains("该视频已经加密")) {
+                throw new ExtractException("Youku said: Sorry, this video is private");
+            } else if (errorMsg.contains("因版权原因无法观看此视频")) {
+                throw new ExtractException("Youku said: Sorry, this video is available in China only");
+            } else {
+                throw new ExtractException("Youku server reported error " + jsonObject.get("error").getAsString());
+            }
+        }
+
+    }
+
+    // this may not be testable because it generates string randomly.
+    private String getYsuid() {
+        StringBuilder sb = new StringBuilder();
+        int time = (int) (new Date().getTime() / 1000);
+        sb.append(time);
+        Random random = new Random();
+        for (int i = 0; i < 3; i++) {
+            int offset = random.nextInt(letterTable.length);
+            char c = letterTable[offset];
+            sb.append(c);
+        }
+        Log.d(TAG, "set cookie: " + sb.toString());
+        return sb.toString();
+    }
 
     @NonNull
     @Override
     Request buildRequest(@NonNull String baseUrl) {
         if (baseUrl == null) throw new IllegalArgumentException();
-        long time = SystemClock.currentThreadTimeMillis();
-        String ysuid = time +"wnV";
+        String ysuid = getYsuid();
         return new Request.Builder().url(baseUrl)
-                .addHeader("cookie","__ysuid="+ysuid)
-                .addHeader("Referer","http://v.youku.com/v_show/id_XMTI4NjU1NDg4NA==.html")
+                .addHeader("Cookie", "xreferrer=http://www.youku.com;" + "__ysuid=" + ysuid)
+                .addHeader("Referer", baseUrl)
                 .build();
     }
 
@@ -241,4 +284,5 @@ public class YoukuExtractor extends Extractor {
     private String getEncrypt(JsonObject data) {
         return data.getAsJsonObject("security").get("encrypt_string").getAsString();
     }
+
 }

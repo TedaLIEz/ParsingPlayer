@@ -2,6 +2,8 @@
 
 package com.hustunique.jianguo.parsingplayer.parser.extractor;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -23,6 +25,7 @@ import okhttp3.Response;
 public abstract class Extractor implements Callback {
     private ExtractCallback mCallback;
     private OkHttpClient mClient;
+    private Handler mHandler = new Handler(Looper.getMainLooper());
     public interface ExtractCallback {
         void onSuccess(VideoInfo videoInfo);
         void onError(Throwable e);
@@ -60,10 +63,17 @@ public abstract class Extractor implements Callback {
 
     @Override
     public void onResponse(Call call, Response response) throws IOException {
-        VideoInfo videoInfo = createInfo(response);
-        if (mCallback != null) {
-            mCallback.onSuccess(videoInfo);
-        }
+        final VideoInfo videoInfo = createInfo(response);
+        // make sure that we run the callback method on the main messaging queue.
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mCallback != null) {
+                    mCallback.onSuccess(videoInfo);
+                }
+            }
+        });
+
     }
 
 }

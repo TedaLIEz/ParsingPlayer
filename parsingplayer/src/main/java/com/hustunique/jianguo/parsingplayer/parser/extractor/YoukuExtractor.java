@@ -75,10 +75,6 @@ public class YoukuExtractor extends Extractor {
         mHdMap.put(VideoInfo.FORMAT_HD3, HD_3);
     }
 
-    // TODO: 1/17/17 Build relationship between stream quality string to integer
-    private int getVideoQuality(String quality) {
-        return 0;
-    }
 
     @Override
     @Nullable
@@ -86,10 +82,11 @@ public class YoukuExtractor extends Extractor {
         JsonObject data = getData(response.body().string());
         checkError(data);
         String encrypt = getEncrypt(data);
-        LogUtil.d(TAG, "security string: " + encrypt);
+
         String[] sidAndToken = new String(rc4("becaf9be", encrypt)).split("_");
         mSid = sidAndToken[0];
         mToken = sidAndToken[1];
+        LogUtil.d(TAG, "sid: " + mSid +" ,mToken: " + mToken);
         mOip = getOip(data);
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
@@ -164,7 +161,6 @@ public class YoukuExtractor extends Extractor {
             char c = letterTable[offset];
             sb.append(c);
         }
-        Log.d(TAG, "set cookie: " + sb.toString());
         return sb.toString();
     }
 
@@ -173,8 +169,10 @@ public class YoukuExtractor extends Extractor {
     Request buildRequest(@NonNull String baseUrl) {
         if (baseUrl == null) throw new IllegalArgumentException();
         String ysuid = getYsuid();
+        Log.d(TAG, "set ysuid: " + ysuid);
         return new Request.Builder().url(baseUrl)
-                .addHeader("Cookie", "xreferrer=http://www.youku.com;" + "__ysuid=" + ysuid)
+                .addHeader("Cookie", "xreferrer=http://www.youku.com")
+                .addHeader("Cookie", "__ysuid=" + ysuid)
                 .addHeader("Referer", baseUrl)
                 .build();
     }
@@ -208,11 +206,13 @@ public class YoukuExtractor extends Extractor {
      */
     private byte[] rc4(String key, String data) {
         byte[] s1 = key.getBytes();
-        byte[] s2 = new byte[0];
+        byte[] s2;
         try {
-            s2 = Base64.decode(data.getBytes("ascii"), Base64.DEFAULT);
+            byte[] tmp = data.getBytes("ascii");
+            s2 = Base64.decode(tmp, Base64.DEFAULT);
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            LogUtil.wtf(TAG, e);
+            return new byte[0];
         }
 
         byte[] result = new byte[s2.length];

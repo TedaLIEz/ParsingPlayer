@@ -42,7 +42,7 @@ dependencies {
     })
     // version just for jianxinli,we can modify it in later
     compile 'com.android.support:appcompat-v7:25.0.1'
-
+    compile 'com.squareup.okhttp3:logging-interceptor:3.5.0'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
     testCompile 'com.squareup.okhttp3:mockwebserver:3.5.0'
     // jsonarray is included in the android SDK, so we have to added it to the test dependency manually

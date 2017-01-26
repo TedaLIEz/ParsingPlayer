@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
                 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         videoView.setLayoutParams(layoutParams);
         ((RelativeLayout) findViewById(R.id.activity_main)).addView(videoView);
-        videoParser.parse("http://v.youku.com/v_show/id_XMTI4NjU1NDg4NA==.html", new Extractor.ExtractCallback() {
+        videoParser.parse("http://v.youku.com/v_show/id_XMjQ3MzE1NDA3Ng", new Extractor.ExtractCallback() {
             @Override
             public void onSuccess(VideoInfo videoInfo) {
                 Log.d(TAG, videoInfo.toString());

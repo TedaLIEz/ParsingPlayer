@@ -28,14 +28,6 @@ public class YoukuExtractorTest {
     @Rule
     public ExpectedException mExpectedException = ExpectedException.none();
 
-    @Test
-    public void createInfo() throws IOException {
-        // log is not included in the jtest dependency, so the log function will be ignored
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        Response response = Mockhelper.mockResponse(TestConstant.YOUKU_URL_1, TestConstant.YOUKU_JSON_1);
-        VideoInfo videoInfo = youkuExtractor.createInfo(response);
-        assert videoInfo != null;
-    }
 
     @Test
     public void createInfoWithEmptyResponseBodyWillFail() throws IOException {
@@ -77,6 +69,7 @@ public class YoukuExtractorTest {
                         TestConstant.YOUKU_ERROR_JSON_1));
         assertEquals(null, videoInfo);
     }
+
 
 
 

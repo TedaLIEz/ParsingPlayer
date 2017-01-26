@@ -2,13 +2,10 @@ package com.hustunique.jianguo.parsingplayer.player;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.MediaController;
 import android.widget.PopupWindow;
@@ -28,9 +25,9 @@ import java.util.Locale;
  */
 // TODO: 1/20/17 Custom media controller panel
 // TODO: 1/26/17 Currently we use popupwindow to show controll panel. Consider using WindowManager in later development.
-public class ParsingMediaController extends FrameLayout implements IMediaController {
+public class ParsingMediaController implements IMediaController {
     private MediaController.MediaPlayerControl mPlayer;
-    private static final int sDefaultTimeOut = 3000;
+    private static final int sDefaultTimeOut = 5000;
     private static final String TAG = "ParsingMediaController";
     private View mRoot;
     private Context mContext;
@@ -45,8 +42,6 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
     private int mX, mY;
 
     public ParsingMediaController(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        mRoot = this;
         mContext = context;
         initPopupWindow();
     }
@@ -60,10 +55,7 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
         mPopupWindow = new PopupWindow(mContext);
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setBackgroundDrawable(mContext.getDrawable(android.R.color.transparent));
-        setFocusable(true);
-        setFocusableInTouchMode(true);
-        setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-        requestFocus();
+        mPopupWindow.setFocusable(true);
     }
 
     private void initControllerView(View v) {
@@ -81,6 +73,25 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
         mCurrentTime = (TextView) v.findViewById(R.id.time_current);
         mFormatBuilder = new StringBuilder();
         mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
+        v.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        show(0);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        show(sDefaultTimeOut);
+                        break;
+                    case MotionEvent.ACTION_CANCEL:
+                        hide();
+                        break;
+                    default:
+                        break;
+                }
+                return true;
+            }
+        });
     }
 
 
@@ -92,11 +103,11 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
     }
 
 
-    private final OnClickListener mPauseListener = new OnClickListener() {
+    private final View.OnClickListener mPauseListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             doPauseResume();
-            show(sDefaultTimeOut);
+            show(0);
         }
     };
 
@@ -107,7 +118,7 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
         public void run() {
             int pos = setProgress();
             if (!mDragging && mShowing && mPlayer.isPlaying()) {
-                postDelayed(mShowProgress, 1000 - (pos % 1000));
+                mRoot.postDelayed(mShowProgress, 1000 - (pos % 1000));
             }
         }
     };
@@ -164,7 +175,7 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
             show(3600000);
 
             mDragging = true;
-            removeCallbacks(mShowProgress);
+            mRoot.removeCallbacks(mShowProgress);
         }
 
         @Override
@@ -177,7 +188,7 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
             // Ensure that progress is properly updated in the future,
             // the call to show() does not guarantee this because it is a
             // no-op if we are already showing.
-            post(mShowProgress);
+            mRoot.post(mShowProgress);
         }
     };
 
@@ -224,10 +235,10 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
 
         if (mShowing) {
             try {
-                removeCallbacks(mShowProgress);
+                mRoot.removeCallbacks(mShowProgress);
                 mPopupWindow.dismiss();
             } catch (IllegalArgumentException ex) {
-                Log.w(TAG, "already removed");
+                LogUtil.w(TAG, "already removed");
             }
             mShowing = false;
         }
@@ -250,32 +261,46 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
     }
 
     @Override
+    public void setEnabled(boolean enabled) {
+        mRoot.setEnabled(enabled);
+    }
+
+    @Override
     public void setMediaPlayer(MediaController.MediaPlayerControl player) {
         mPlayer = player;
         updatePausePlay();
     }
 
 
-    private final OnLayoutChangeListener mOnLayoutChangeListener = new OnLayoutChangeListener() {
+    private final View.OnLayoutChangeListener mOnLayoutChangeListener = new View.OnLayoutChangeListener() {
         @Override
         public void onLayoutChange(View v, int left, int top, int right, int bottom,
                                    int oldLeft, int oldTop, int oldRight, int oldBottom) {
             updateAnchorViewLayout();
+            showPopupWindowLayout();
         }
     };
+
+    private void showPopupWindowLayout() {
+        if (mPopupWindow.isShowing()) {
+            mPopupWindow.dismiss();
+        }
+        mPopupWindow.showAtLocation(mAnchor, Gravity.NO_GRAVITY, mX, mY);
+    }
 
     private void updateAnchorViewLayout() {
         assert mAnchor != null;
         int[] anchorPos = new int[2];
         mAnchor.getLocationOnScreen(anchorPos);
-        mRoot.measure(MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), MeasureSpec.AT_MOST),
-                MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), MeasureSpec.AT_MOST));
+        mRoot.measure(View.MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), View.MeasureSpec.AT_MOST));
         int width = mAnchor.getWidth();
         mX = anchorPos[0] + (mAnchor.getWidth() - width) / 2;
         mY = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
         LogUtil.i(TAG, "update mX: " + mX + ", mY: " + mY);
     }
 
+    // FIXME: 1/26/17 Buggy when toggle controller multiple times in a short period
     @Override
     public void show(int timeout) {
         if (!mShowing && mAnchor != null) {
@@ -283,9 +308,8 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
-            // TODO: 1/26/17 Get correct anchor pos at the first time
             LogUtil.i(TAG, "show popupWindow at top-left pos:" + "(" + mX + ", " + mY + ")");
-            mPopupWindow.showAtLocation(mAnchor, Gravity.NO_GRAVITY, mX, mY);
+            showPopupWindowLayout();
             mShowing = true;
         }
         updatePausePlay();
@@ -294,11 +318,11 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
         // cause the progress bar to be updated even if mShowing
         // was already true.  This happens, for example, if we're
         // paused with the progress bar showing the user hits play.
-        post(mShowProgress);
+        mRoot.post(mShowProgress);
 
         if (timeout != 0) {
-            removeCallbacks(mFadeOut);
-            postDelayed(mFadeOut, timeout);
+            mRoot.removeCallbacks(mFadeOut);
+            mRoot.postDelayed(mFadeOut, timeout);
         }
     }
 
@@ -322,23 +346,7 @@ public class ParsingMediaController extends FrameLayout implements IMediaControl
         return mShowing;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                show(0);
-                break;
-            case MotionEvent.ACTION_UP:
-                show(sDefaultTimeOut);
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                hide();
-                break;
-            default:
-                break;
-        }
-        return true;
-    }
+
 
 
 }

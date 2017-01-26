@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MediaButton">
+        <item name="android:background">@null</item>
+        <item name="android:layout_width">32dp</item>
+        <item name="android:layout_height">32dp</item>
+    </style>
+
+    <style name="MediaButton.Play">
+        <item name="android:src">@drawable/ic_play_arrow_white_24dp</item>
+    </style>
+    <style name="MediaButton.Quality">
+        <item name="android:src">@drawable/ic_video_library_white_24dp</item>
+    </style>
+</resources>

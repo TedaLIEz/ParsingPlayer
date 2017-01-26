@@ -122,7 +122,7 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
-        mMediaController = new ParsingMediaController(context, false);
+        mMediaController = new ParsingMediaController(context);
         setMediaController(mMediaController);
     }
 

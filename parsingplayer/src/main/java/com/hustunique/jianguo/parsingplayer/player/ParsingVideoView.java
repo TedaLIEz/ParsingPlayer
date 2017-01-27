@@ -17,13 +17,14 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.MediaController;
 
 import com.hustunique.jianguo.parsingplayer.BuildConfig;
 import com.hustunique.jianguo.parsingplayer.LogUtil;
+import com.hustunique.jianguo.parsingplayer.R;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +43,7 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
  */
 // TODO: 1/23/17 Implement scale dynamicly in onTouchEvent
 
-public class ParsingVideoView extends FrameLayout implements MediaController.MediaPlayerControl {
+public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
     private Uri mUri;
     private Map<String, String> mHeaders;
@@ -69,7 +70,7 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
 
     private IMediaController mMediaController;
     private IRenderView mRenderView;
-
+    private View mQualityView;
     private int mCurrentState = STATE_IDLE;
     private int mTargetState = STATE_IDLE;
     private int mSeekWhenPrepared;
@@ -83,7 +84,7 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
             IRenderView.AR_16_9_FIT_PARENT,
             IRenderView.AR_4_3_FIT_PARENT};
 
-    private int mCurrentAspectRatio = s_allAspectRatio[0];
+    private int mCurrentAspectRatio = s_allAspectRatio[1];
 
     private int mVideoSarNum;
     private int mVideoSarDen;
@@ -118,12 +119,22 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     private void initView(Context context) {
         mContext = context;
         initRenders();
+        initQualityView();
         mVideoHeight = mVideoWidth = 0;
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
         mMediaController = new ParsingMediaController(context);
         setMediaController(mMediaController);
+    }
+
+    private void initQualityView() {
+        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mQualityView = inflater.inflate(R.layout.quality_choose_view, null);
+        FrameLayout.LayoutParams lp = new LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
+                LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.END);
+        mQualityView.setVisibility(View.GONE);
+        addView(mQualityView, lp);
     }
 
     private void initRenders() {
@@ -605,6 +616,9 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
         if (isInPlayBackState() && mMediaController != null) {
             toggleMediaControlsVisibility();
         }
+        if (mQualityView.getVisibility() == VISIBLE) {
+            mQualityView.setVisibility(GONE);
+        }
         return false;
     }
 
@@ -612,6 +626,9 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     public boolean onTrackballEvent(MotionEvent event) {
         if (isInPlayBackState() && mMediaController != null) {
             toggleMediaControlsVisibility();
+        }
+        if (mQualityView.getVisibility() == VISIBLE) {
+            mQualityView.setVisibility(GONE);
         }
         return false;
     }
@@ -708,6 +725,15 @@ public class ParsingVideoView extends FrameLayout implements MediaController.Med
     @Override
     public int getAudioSessionId() {
         return 0;
+    }
+
+    @Override
+    public void chooseQuality() {
+        if (mQualityView.getVisibility() == VISIBLE) {
+            mQualityView.setVisibility(GONE);
+        } else {
+            mQualityView.setVisibility(VISIBLE);
+        }
     }
 
     @Override

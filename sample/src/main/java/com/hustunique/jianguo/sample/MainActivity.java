@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         VideoParser videoParser = new VideoParser();
         videoParser.parse("http://v.youku.com/v_show/id_XMTc1ODE5Njcy.html", null);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        mVideoView.setVideoPath("http://k.youku.com/player/getFlvPath/sid/0485410264192129d5c64_00/st/mp4/fileid/03002001004F0C50918C8401A9D5F42F647752-A118-3CF8-C56A-C392EF95399E?ypp=0&myp=0&K=5b6b2021d7d8d8c5282c1269%26sign%3Dfc28d62207dea5d1aa5962919aaccbbe&ctype=12&token=0514&ev=1&ep=ciacH02MVswG4SLWij8bbnjnJ3ELXP4J9h%2BHgdJjALsgPujMnD7YxpXDRvtCF4gQBidwFOmHrdTgbUUWYYFCqGAQ3D3eMfqT%2B%2FaS5d5QzZJ1EBAzccTewVSeRjH1&hd=1&oip=1001157218");
+        mVideoView.setVideoPath("http://k.youku.com/player/getFlvPath/sid/04854905498521262fdc9_00/st/flv/fileid/03000201004B6DDBD98C8401A9D5F42F647752-A118-3CF8-C56A-C392EF95399E?ypp=0&myp=0&K=9c1f599030999e4a282c1305%26sign%3De56c44d0aabfc3ff6d9958e16c4b82f3&ctype=12&token=0514&ev=1&ep=ciacH02EVssE7Cvaij8bYS60ICQGXP4J9h%2BFg9JjALsgOu7L7UylzpXDRvtCF4gQBidwFOmHrdTgbUUWYYFCqGAQ3D3eMfqT%2B%2FaS5d5QzZJ1EBAzccTewVSeRjH1&hd=0&oip=1001157218");
         mVideoView.start();
     }
 

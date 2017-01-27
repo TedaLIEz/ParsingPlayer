@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.MediaController;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -26,13 +25,13 @@ import java.util.Locale;
 // TODO: 1/20/17 Custom media controller panel
 // TODO: 1/26/17 Currently we use popupwindow to show controll panel. Consider using WindowManager in later development.
 public class ParsingMediaController implements IMediaController {
-    private MediaController.MediaPlayerControl mPlayer;
+    private IMediaPlayerControl mPlayer;
     private static final int sDefaultTimeOut = 5000;
     private static final String TAG = "ParsingMediaController";
     private View mRoot;
     private Context mContext;
     private View mAnchor;
-    private ImageButton mPauseButton;
+    private ImageButton mPauseButton, mQualityButton;
     private SeekBar mProgress;
     private TextView mCurrentTime, mEndTime;
     private StringBuilder mFormatBuilder;
@@ -40,6 +39,7 @@ public class ParsingMediaController implements IMediaController {
     private boolean mShowing;
     private PopupWindow mPopupWindow;
     private int mX, mY;
+
 
     public ParsingMediaController(Context context, AttributeSet attrs) {
         mContext = context;
@@ -63,6 +63,10 @@ public class ParsingMediaController implements IMediaController {
         if (mPauseButton != null) {
             mPauseButton.requestFocus();
             mPauseButton.setOnClickListener(mPauseListener);
+        }
+        mQualityButton = (ImageButton) v.findViewById(R.id.quality);
+        if (mQualityButton != null) {
+            mQualityButton.setOnClickListener(mQualityListener);
         }
         mProgress = (SeekBar) v.findViewById(R.id.mediacontroller_progress);
         if (mProgress != null) {
@@ -102,6 +106,15 @@ public class ParsingMediaController implements IMediaController {
         return mRoot;
     }
 
+    private final View.OnClickListener mQualityListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mPlayer != null) {
+                mPlayer.chooseQuality();
+            }
+            hide();
+        }
+    };
 
     private final View.OnClickListener mPauseListener = new View.OnClickListener() {
         @Override
@@ -266,7 +279,7 @@ public class ParsingMediaController implements IMediaController {
     }
 
     @Override
-    public void setMediaPlayer(MediaController.MediaPlayerControl player) {
+    public void setMediaPlayer(IMediaPlayerControl player) {
         mPlayer = player;
         updatePausePlay();
     }

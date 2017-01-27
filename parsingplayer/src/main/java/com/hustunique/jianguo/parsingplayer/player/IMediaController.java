@@ -1,7 +1,6 @@
 package com.hustunique.jianguo.parsingplayer.player;
 
 import android.view.View;
-import android.widget.MediaController;
 
 /**
  * Created by JianGuo on 1/20/17.
@@ -17,7 +16,7 @@ public interface IMediaController {
 
     void setEnabled(boolean enabled);
 
-    void setMediaPlayer(MediaController.MediaPlayerControl player);
+    void setMediaPlayer(IMediaPlayerControl player);
 
     void show(int timeout);
 

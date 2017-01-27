@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="dim_foreground_dark">#bebebe</color>
+    <color name="panel_background_dark">#CC000000</color>
+    <color name="panel_background_light">#55000000</color>
+    <color name="panel_background_text">#88000000</color>
 </resources>

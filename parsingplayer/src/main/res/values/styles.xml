@@ -12,4 +12,18 @@
     <style name="MediaButton.Quality">
         <item name="android:src">@drawable/ic_video_library_white_24dp</item>
     </style>
+
+    <style name="MediaQuality">
+        <item name="android:layout_width">128dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/quality_text_bgd</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:layout_margin">16dp</item>
+    </style>
+
+    <style name="MediaQuality.Text">
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/dim_foreground_dark</item>
+    </style>
 </resources>

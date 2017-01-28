@@ -84,7 +84,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             IRenderView.AR_16_9_FIT_PARENT,
             IRenderView.AR_4_3_FIT_PARENT};
 
-    private int mCurrentAspectRatio = s_allAspectRatio[1];
+    private int mCurrentAspectRatio = s_allAspectRatio[0];
 
     private int mVideoSarNum;
     private int mVideoSarDen;

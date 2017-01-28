@@ -32,5 +32,5 @@ dependencies {
     // this will use the default all64release of parsingplayer,uncomment the line below to use other productFlavors
     // compile project(path: ':parsingplayer', configuration: 'all64Debug')
     // ref: http://stackoverflow.com/a/24316133/4380801
-    compile project(':parsingplayer')
+    compile project(path:':parsingplayer', configuration: 'all64Debug')
 }

@@ -62,5 +62,40 @@ public class Util {
         return context.getFileStreamPath(filename).getAbsolutePath();
     }
 
+    /**
+     * RC4 encryption
+     * Refer https://zh.wikipedia.org/wiki/RC4
+     *
+     * @param b1
+     * @param b2
+     * @return decoded byte array
+     */
+    public static byte[] rc4(byte[] b1, byte[] b2) {
+        byte[] result = new byte[b2.length];
+
+        int[] s = new int[256];
+        for (int i = 0; i < 256; i++) {
+            s[i] = i;
+        }
+        int t = 0;
+        int tmp;
+        for (int i = 0; i < 256; i++) {
+            t = (t + s[i] + (b1[i % b1.length] & 0xff)) % 256;
+            tmp = s[i];
+            s[i] = s[t];
+            s[t] = tmp;
+        }
+        int x = 0, y = 0;
+        for (int i = 0; i < b2.length; i++) {
+            y = (y + 1) % 256;
+            x = (x + s[y]) % 256;
+            tmp = s[x];
+            s[x] = s[y];
+            s[y] = tmp;
+            result[i] = (byte) ((b2[i] & 0xff) ^ s[(s[x] + s[y]) % 256]);
+        }
+        return result;
+    }
+
 
 }

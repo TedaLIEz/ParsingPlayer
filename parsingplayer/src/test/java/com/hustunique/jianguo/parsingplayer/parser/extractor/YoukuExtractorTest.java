@@ -1,5 +1,7 @@
 package com.hustunique.jianguo.parsingplayer.parser.extractor;
 
+import android.os.Build;
+
 import com.hustunique.jianguo.parsingplayer.TestConstant;
 import com.hustunique.jianguo.parsingplayer.parser.Mockhelper;
 import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
@@ -8,9 +10,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import okhttp3.Response;
 
@@ -21,28 +25,21 @@ import static junit.framework.Assert.assertEquals;
  * Created by JianGuo on 1/17/17.
  * Unit test for {@link YoukuExtractor}
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = {Build.VERSION_CODES.LOLLIPOP}, manifest = Config.NONE)
 public class YoukuExtractorTest {
 
 
     @Rule
     public ExpectedException mExpectedException = ExpectedException.none();
 
-    @Test
-    public void createInfo() throws IOException {
-        // log is not included in the jtest dependency, so the log function will be ignored
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        Response response = Mockhelper.mockResponse(TestConstant.YOUKU_URL_1, TestConstant.YOUKU_JSON_1);
-        VideoInfo videoInfo = youkuExtractor.createInfo(response);
-        assert videoInfo != null;
-    }
 
     @Test
     public void createInfoWithEmptyResponseBodyWillFail() throws IOException {
         YoukuExtractor youkuExtractor = new YoukuExtractor();
         Response response = Mockhelper.mockResponse(TestConstant.YOUKU_URL_1, "");
         mExpectedException.expect(IllegalStateException.class);
-        VideoInfo videoInfo = youkuExtractor.createInfo(response);
+        youkuExtractor.createInfo(response);
     }
 
 
@@ -66,5 +63,40 @@ public class YoukuExtractorTest {
         mExpectedException.expect(IllegalArgumentException.class);
         youkuExtractor.constructBasicUrl(null);
     }
+
+    @Test
+    public void checkErrorInCreateInfo() throws IOException {
+        YoukuExtractor youkuExtractor = new YoukuExtractor();
+        mExpectedException.expect(ExtractException.class);
+        mExpectedException.expectMessage("Youku said: Sorry, this video is private");
+        VideoInfo videoInfo = youkuExtractor.createInfo(Mockhelper.
+                mockResponse(TestConstant.YOUKU_ERROR_URL_1,
+                        TestConstant.YOUKU_ERROR_JSON_1));
+        assertEquals(null, videoInfo);
+    }
+
+    @Test
+    public void EpGenerateTest() throws UnsupportedEncodingException {
+        YoukuExtractor youkuExtractor = new YoukuExtractor();
+        String ep = youkuExtractor.getEp(TestConstant.YOUKU_EP_INPUT1);
+        assertEquals("ciacH0yFU8kE4SbXjj8bby7jciNcXP4J9h+HgdJjALshQO/M703RwpSy" +
+                "So1AYPkfcSIAE+nyqtiSaUIQYfZHrR4Q2U+oPfrh+vCQ5a1Xx5QFbx9EA8XRx1SZRDL1",
+                ep);
+    }
+
+    @Test
+    public void GetSidAndTokenTest() {
+        YoukuExtractor youkuExtractor = new YoukuExtractor();
+        String[] rst = youkuExtractor.getSidAndToken(TestConstant.YOUKU_ENCRYPT_INPUT1);
+        assertEquals(2, rst.length);
+        assertEquals("0485585744586128216dc", rst[0]);
+        assertEquals("7724", rst[1]);
+    }
+
+
+
+
+
+
 
 }

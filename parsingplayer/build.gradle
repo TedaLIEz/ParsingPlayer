@@ -42,13 +42,14 @@ dependencies {
     })
     // version just for jianxinli,we can modify it in later
     compile 'com.android.support:appcompat-v7:25.0.1'
-
+    compile 'com.squareup.okhttp3:logging-interceptor:3.5.0'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
     testCompile 'com.squareup.okhttp3:mockwebserver:3.5.0'
     // jsonarray is included in the android SDK, so we have to added it to the test dependency manually
     testCompile 'org.json:json:20160810'
     compile 'com.google.code.gson:gson:2.8.0'
     testCompile 'org.mockito:mockito-core:2.6.3'
+    testCompile "org.robolectric:robolectric:3.2.2"
     testCompile 'junit:junit:4.12'
     compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.6'
     all32Compile 'tv.danmaku.ijk.media:ijkplayer-armv5:0.7.6'

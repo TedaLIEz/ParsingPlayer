@@ -11,6 +11,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hustunique.jianguo.parsingplayer.LogUtil;
+import com.hustunique.jianguo.parsingplayer.Util;
 import com.hustunique.jianguo.parsingplayer.parser.entity.Seg;
 import com.hustunique.jianguo.parsingplayer.parser.entity.VideoInfo;
 
@@ -80,23 +81,31 @@ public class YoukuExtractor extends Extractor {
     @Nullable
     VideoInfo createInfo(@NonNull Response response) throws IOException {
         JsonObject data = getData(response.body().string());
+        LogUtil.i(TAG, "encrypt string: " + getEncrypt(data));
         checkError(data);
         String encrypt = getEncrypt(data);
-
-        String[] sidAndToken = new String(rc4("becaf9be", encrypt)).split("_");
+        String[] sidAndToken = getSidAndToken(encrypt);
+        if (sidAndToken.length != 2) {
+            throw new ExtractException("Illegal response data!");
+        }
         mSid = sidAndToken[0];
         mToken = sidAndToken[1];
-        LogUtil.d(TAG, "sid: " + mSid +" ,mToken: " + mToken);
         mOip = getOip(data);
+        LogUtil.i(TAG, "sid: " + mSid +" ,mToken: " + mToken + " ,oip: " + mOip);
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
         Map<String, List<Seg>> segsMap = getSegMap(data);
         return new VideoInfo(segsMap, title);
     }
 
-    // TODO: 1/25/17 Needs test here
     @VisibleForTesting
-    Map<String, List<Seg>> getSegMap(JsonObject data) throws UnsupportedEncodingException {
+    String[] getSidAndToken(@NonNull String encryptStr) {
+        String s = new String(rc4("becaf9be", Base64.decode(encryptStr, Base64.DEFAULT)));
+        String[] rst = s.split("_");
+        return rst;
+    }
+
+    private Map<String, List<Seg>> getSegMap(JsonObject data) throws UnsupportedEncodingException {
         HashMap<String, List<Seg>> segsMap = new HashMap<>();
         JsonArray streams = data.getAsJsonArray("stream");
         for (JsonElement stream : streams) {
@@ -109,19 +118,19 @@ public class YoukuExtractor extends Extractor {
             for (JsonElement seg : segs) {
                 String key = seg.getAsJsonObject().get("key").getAsString();
                 int hd = mHdMap.get(format);
-                String ep = getEp(format, n);
+                String fileId = getFileid(format, n);
+                String ep = getEp(String.format("%s_%s_%s", mSid, fileId, mToken));
                 String videoUrl = "http://k.youku.com/player/getFlvPath/" +
                         "sid/" + mSid +
                         "_00" +
                         "/st/" + mExtMap.get(format)
-                        + "/fileid/" + getFiled(format, n) + "?" +
+                        + "/fileid/" + fileId + "?" +
                         "k=" + URLEncoder.encode(key, "utf-8") +
                         "&hd=" + hd +
                         "&myp=0&ypp=0&ctype=12&ev=1" +
                         "&token=" + URLEncoder.encode(mToken, "utf-8") +
                         "&oip=" + URLEncoder.encode(mOip, "utf-8") +
                         "&ep=" + URLEncoder.encode(ep, "utf-8");
-                // FIXME: 1/25/17 404 status code for videoUrl
                 LogUtil.d(TAG, "build url: " + videoUrl + " format: " + format);
                 int duration = Integer.parseInt(seg.getAsJsonObject().get("total_milliseconds_video").getAsString()) / 1000;
                 Seg s = new Seg(videoUrl, duration);
@@ -171,8 +180,7 @@ public class YoukuExtractor extends Extractor {
         String ysuid = getYsuid();
         Log.d(TAG, "set ysuid: " + ysuid);
         return new Request.Builder().url(baseUrl)
-                .addHeader("Cookie", "xreferrer=http://www.youku.com")
-                .addHeader("Cookie", "__ysuid=" + ysuid)
+                .addHeader("Cookie", "xreferrer=http://www.youku.com;__ysuid=" + ysuid)
                 .addHeader("Referer", baseUrl)
                 .build();
     }
@@ -196,67 +204,33 @@ public class YoukuExtractor extends Extractor {
         return null;
     }
 
-    /**
-     * RC4 encryption
-     * Refer https://zh.wikipedia.org/wiki/RC4
-     *
-     * @param key
-     * @param data
-     * @return
-     */
     private byte[] rc4(String key, String data) {
-        byte[] s1 = key.getBytes();
-        byte[] s2;
+        byte[] s2 = new byte[0];
         try {
-            byte[] tmp = data.getBytes("ascii");
-            s2 = Base64.decode(tmp, Base64.DEFAULT);
+            s2 = data.getBytes("ascii");
         } catch (UnsupportedEncodingException e) {
             LogUtil.wtf(TAG, e);
-            return new byte[0];
+            return s2;
         }
-
-        byte[] result = new byte[s2.length];
-
-        int[] s = new int[256];
-        for (int i = 0; i < 256; i++) {
-            s[i] = i;
-        }
-        int t = 0;
-        int tmp;
-        for (int i = 0; i < 256; i++) {
-            t = (t + s[i] + (s1[i % s1.length] & 0xff)) % 256;
-            tmp = s[i];
-            s[i] = s[t];
-            s[t] = tmp;
-        }
-        int x = 0, y = 0;
-        for (int i = 0; i < s2.length; i++) {
-            y = (y + 1) % 256;
-            x = (x + s[y]) % 256;
-            tmp = s[x];
-            s[x] = s[y];
-            s[y] = tmp;
-            result[i] = (byte) ((s2[i] & 0xff) ^ s[(s[x] + s[y]) % 256]);
-        }
-        return result;
+        return rc4(key, s2);
     }
 
     private String getOip(JsonObject data) {
         return data.getAsJsonObject("security").get("ip").getAsString();
     }
 
-    private String getFiled(String format, int index) {
-        String sIndex = String.valueOf(index);
+    private String getFileid(String format, int index) {
+        String sIndex = Integer.toString(index, 16).toUpperCase();
         if (sIndex.length() == 1)
             sIndex = "0" + sIndex;
         String streamFileids = mFiledMap.get(format);
         return streamFileids.substring(0, 8) + sIndex + streamFileids.substring(10);
     }
 
-    private String getEp(String format, int index) {
-        String filed = getFiled(format, index);
-        byte[] epT = rc4("bf7e5f01", String.format("%s_%s_%s", mSid, filed, mToken));
-        return Base64.encodeToString(epT, Base64.DEFAULT);
+    @VisibleForTesting
+    String getEp(@NonNull String data) {
+        byte[] epT = rc4("bf7e5f01", data);
+        return Base64.encodeToString(epT, Base64.NO_WRAP);
     }
 
     private HashMap<String, String> constructFiledMap(JsonObject data) {
@@ -266,8 +240,8 @@ public class YoukuExtractor extends Extractor {
             if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
                 continue;
             String format = stream.getAsJsonObject().get("stream_type").getAsString();
-            String filed = stream.getAsJsonObject().get("stream_fileid").getAsString();
-            fileidMap.put(format, filed);
+            String fileid = stream.getAsJsonObject().get("stream_fileid").getAsString();
+            fileidMap.put(format, fileid);
         }
         return fileidMap;
     }
@@ -285,4 +259,13 @@ public class YoukuExtractor extends Extractor {
         return data.getAsJsonObject("security").get("encrypt_string").getAsString();
     }
 
+    private byte[] rc4(@NonNull String key, byte[] data) {
+        byte[] s1 = key.getBytes();
+        return Util.rc4(s1, data);
+    }
+
 }
+
+
+
+

@@ -32,4 +32,6 @@ public class TestConstant {
             ",\"seconds\":\"7264.50\",\"encodeid\":\"XNjA1NzA2Njgw\",\"category_letter_id\":" +
             "\"t\",\"subcategories\":[{\"id\":\"252\",\"name\":\"校园课堂\"}]}},\"cost\"" +
             ":0.006000000052154064}";
+    public static final String YOUKU_EP_INPUT1 = "0485585744586128216dc_0300200100587CFC05924B2F0630632318E324-644F-6104-140C-0434596BA86C_7724";
+    public static final String YOUKU_ENCRYPT_INPUT1 = "NwXYSwgWI7ze1fXJ8+JxWoL1v0du1wrMWhs=";
 }

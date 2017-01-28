@@ -38,7 +38,6 @@ public class VideoParserTest {
     }
 
     @Test
-    // TODO: 1/17/17 Test this case
     public void parseValidURL() {
         VideoParser videoParser = new VideoParser();
         videoParser.parse(TestConstant.YOUKU_URL_1, null);

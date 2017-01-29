@@ -12,7 +12,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.hustunique.jianguo.sample.MainActivity">
 
-    <com.hustunique.jianguo.parsingplayer.player.ParsingVideoView
+    <com.hustunique.parsingplayer.player.ParsingVideoView
         android:id="@+id/videoView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.hustunique.jianguo.sample">
+          package="com.hustunique.sample">
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <!--this is a workaround to maintain videoview's status when configuration changes-->
@@ -11,7 +11,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.hustunique.jianguo.sample.MainActivity"
+        <activity android:name=".MainActivity"
                   android:configChanges="orientation|keyboardHidden|screenSize"
                   android:screenOrientation="user">
             <intent-filter>

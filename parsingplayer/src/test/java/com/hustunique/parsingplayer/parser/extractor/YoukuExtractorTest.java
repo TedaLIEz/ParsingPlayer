@@ -26,7 +26,7 @@ import static junit.framework.Assert.assertEquals;
  * Unit test for {@link YoukuExtractor}
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = {Build.VERSION_CODES.LOLLIPOP}, manifest = Config.NONE)
+@Config(sdk = {Build.VERSION_CODES.LOLLIPOP}, manifest = "src/main/AndroidManifest.xml")
 public class YoukuExtractorTest {
 
 

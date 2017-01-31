@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -45,6 +46,7 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 
 public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
+    private static final int SCALE_POINTER_COUNT = 2;
     private Uri mUri;
     private Map<String, String> mHeaders;
     private IjkMediaPlayer mMediaPlayer;
@@ -108,13 +110,16 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView(context);
+        initGesture();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
+        initGesture();
     }
+
 
     private void initView(Context context) {
         mContext = context;
@@ -144,7 +149,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             renderView.setVideoSize(mMediaPlayer.getVideoWidth(), mMediaPlayer.getVideoHeight());
             renderView.setVideoSampleAspectRatio(mMediaPlayer.getVideoSarNum(),
                     mMediaPlayer.getVideoSarDen());
-            renderView.setAspectRatio(mCurrentAspectRatio);
+            renderView.setAspectRatioMode(mCurrentAspectRatio);
         }
         setRenderView(renderView);
     }
@@ -555,7 +560,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             return;
 
         mRenderView = renderView;
-        renderView.setAspectRatio(mCurrentAspectRatio);
+        renderView.setAspectRatioMode(mCurrentAspectRatio);
         if (mVideoWidth > 0 && mVideoHeight > 0)
             renderView.setVideoSize(mVideoWidth, mVideoHeight);
         if (mVideoSarNum > 0 && mVideoSarDen > 0)
@@ -614,16 +619,48 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         return super.onKeyDown(keyCode, event);
     }
 
+    private ScaleGestureDetector mScaleGestureDetector;
+    private android.view.ScaleGestureDetector.OnScaleGestureListener mScaleListener = new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            float scaleFactorDiff = detector.getScaleFactor();
+            if (detector.isInProgress()) {
+                handleScale(scaleFactorDiff);
+            }
+            return Float.compare(scaleFactorDiff, 1.0f) != 0;
+        }
+
+
+    };
+
+    private void handleScale(float scaleFactorDiff) {
+        LogUtil.d(TAG, "scale factor: " + scaleFactorDiff);
+        if (mRenderView != null)
+            mRenderView.setAspectRatio(scaleFactorDiff);
+    }
+
+    private void initGesture() {
+        mScaleGestureDetector = new ScaleGestureDetector(mContext, mScaleListener);
+    }
+
     @Override
     // TODO: 1/23/17 Implement scaling feature
     public boolean onTouchEvent(MotionEvent event) {
-        if (isInPlayBackState() && mMediaController != null) {
-            toggleMediaControlsVisibility();
+        mScaleGestureDetector.onTouchEvent(event);
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN:
+                if (isInPlayBackState() && mMediaController != null) {
+                    toggleMediaControlsVisibility();
+                }
+                if (mQualityView.getVisibility() == VISIBLE) {
+                    mQualityView.setVisibility(GONE);
+                }
+                break;
+            default:
+                break;
         }
-        if (mQualityView.getVisibility() == VISIBLE) {
-            mQualityView.setVisibility(GONE);
-        }
-        return false;
+        return true;
     }
 
     @Override

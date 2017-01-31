@@ -112,7 +112,13 @@ public class TextureRenderView extends TextureView implements IRenderView {
     }
 
     @Override
-    public void setAspectRatio(int aspectRatio) {
+    public void setAspectRatioMode(int aspectRatio) {
+        mMeasureHelper.setAspectRatioMode(aspectRatio);
+        requestLayout();
+    }
+
+    @Override
+    public void setAspectRatio(float aspectRatio) {
         mMeasureHelper.setAspectRatio(aspectRatio);
         requestLayout();
     }

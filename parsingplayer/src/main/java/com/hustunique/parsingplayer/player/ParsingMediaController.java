@@ -6,6 +6,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
@@ -101,7 +102,7 @@ public class ParsingMediaController implements IMediaController {
 
     private View makeControllerView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mRoot = inflater.inflate(R.layout.media_controller, null);
+        mRoot = inflater.inflate(R.layout.media_controller, new FrameLayout(mContext), false);
         initControllerView(mRoot);
         return mRoot;
     }

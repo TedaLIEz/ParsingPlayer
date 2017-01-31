@@ -18,10 +18,13 @@ package com.hustunique.parsingplayer.player;
 
 import android.view.View;
 
+import com.hustunique.parsingplayer.LogUtil;
+
 import java.lang.ref.WeakReference;
 
 
 public final class MeasureHelper {
+    private static final String TAG = "MeasureHelper";
     private WeakReference<View> mWeakView;
 
     private int mVideoWidth;
@@ -33,8 +36,9 @@ public final class MeasureHelper {
 
     private int mMeasuredWidth;
     private int mMeasuredHeight;
-
-    private int mCurrentAspectRatio = IRenderView.AR_ASPECT_FIT_PARENT;
+    // TODO: 1/31/17 Compress Aspect Ratio and Aspect Mode in some way
+    private float mCurrentAspectRatio;
+    private int mCurrentAspectRatioMode = IRenderView.AR_ASPECT_FIT_PARENT;
 
     public MeasureHelper(View view) {
         mWeakView = new WeakReference<View>(view);
@@ -77,7 +81,7 @@ public final class MeasureHelper {
 
         int width = View.getDefaultSize(mVideoWidth, widthMeasureSpec);
         int height = View.getDefaultSize(mVideoHeight, heightMeasureSpec);
-        if (mCurrentAspectRatio == IRenderView.AR_MATCH_PARENT) {
+        if (mCurrentAspectRatioMode == IRenderView.AR_MATCH_PARENT) {
             width = widthMeasureSpec;
             height = heightMeasureSpec;
         } else if (mVideoWidth > 0 && mVideoHeight > 0) {
@@ -89,7 +93,7 @@ public final class MeasureHelper {
             if (widthSpecMode == View.MeasureSpec.AT_MOST && heightSpecMode == View.MeasureSpec.AT_MOST) {
                 float specAspectRatio = (float) widthSpecSize / (float) heightSpecSize;
                 float displayAspectRatio;
-                switch (mCurrentAspectRatio) {
+                switch (mCurrentAspectRatioMode) {
                     case IRenderView.AR_16_9_FIT_PARENT:
                         displayAspectRatio = 16.0f / 9.0f;
                         if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
@@ -97,6 +101,11 @@ public final class MeasureHelper {
                         break;
                     case IRenderView.AR_4_3_FIT_PARENT:
                         displayAspectRatio = 4.0f / 3.0f;
+                        if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
+                            displayAspectRatio = 1.0f / displayAspectRatio;
+                        break;
+                    case IRenderView.AR_ASPECT_EXACTLY:
+                        displayAspectRatio = mCurrentAspectRatio;
                         if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
                             displayAspectRatio = 1.0f / displayAspectRatio;
                         break;
@@ -111,7 +120,12 @@ public final class MeasureHelper {
                 }
                 boolean shouldBeWider = displayAspectRatio > specAspectRatio;
 
-                switch (mCurrentAspectRatio) {
+                switch (mCurrentAspectRatioMode) {
+                    case IRenderView.AR_ASPECT_EXACTLY:
+                        // FIXME: 1/31/17 Currently we set the mode to EXACTLY after first measurement
+                        width = (int) (mMeasuredWidth * displayAspectRatio);
+                        height = (int) (mMeasuredHeight * displayAspectRatio);
+                        break;
                     case IRenderView.AR_ASPECT_FIT_PARENT:
                     case IRenderView.AR_16_9_FIT_PARENT:
                     case IRenderView.AR_4_3_FIT_PARENT:
@@ -194,7 +208,7 @@ public final class MeasureHelper {
                 }
             }
         }
-
+        LogUtil.d(TAG, "Measure size:(" + width + ", " + height + ")");
         mMeasuredWidth = width;
         mMeasuredHeight = height;
     }
@@ -207,8 +221,13 @@ public final class MeasureHelper {
         return mMeasuredHeight;
     }
 
-    public void setAspectRatio(int aspectRatio) {
+    public void setAspectRatioMode(int aspectRatioMode) {
+        mCurrentAspectRatioMode = aspectRatioMode;
+    }
+
+    public void setAspectRatio(float aspectRatio) {
         mCurrentAspectRatio = aspectRatio;
+        setAspectRatioMode(IRenderView.AR_ASPECT_EXACTLY);
     }
 
 }

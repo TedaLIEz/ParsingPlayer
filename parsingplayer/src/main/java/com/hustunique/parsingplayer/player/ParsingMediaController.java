@@ -248,13 +248,13 @@ public class ParsingMediaController implements IMediaController {
             return;
 
         if (mShowing) {
+            mShowing = false;
             try {
                 mRoot.removeCallbacks(mShowProgress);
-                mPopupWindow.dismiss();
+//                mPopupWindow.dismiss();
             } catch (IllegalArgumentException ex) {
                 LogUtil.w(TAG, "already removed");
             }
-            mShowing = false;
         }
         for (View view : mShowOnceArray)
             view.setVisibility(View.GONE);
@@ -318,13 +318,13 @@ public class ParsingMediaController implements IMediaController {
     @Override
     public void show(int timeout) {
         if (!mShowing && mAnchor != null) {
+            mShowing = true;
             setProgress();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
             LogUtil.i(TAG, "show popupWindow at top-left pos:" + "(" + mX + ", " + mY + ")");
             showPopupWindowLayout();
-            mShowing = true;
         }
         updatePausePlay();
 

@@ -18,8 +18,6 @@ package com.hustunique.parsingplayer.player;
 
 import android.view.View;
 
-import com.hustunique.parsingplayer.LogUtil;
-
 import java.lang.ref.WeakReference;
 
 
@@ -36,7 +34,6 @@ public final class MeasureHelper {
 
     private int mMeasuredWidth;
     private int mMeasuredHeight;
-    // TODO: 1/31/17 Compress Aspect Ratio and Aspect Mode in some way
     private float mCurrentAspectRatio;
     private int mCurrentAspectRatioMode = IRenderView.AR_ASPECT_FIT_PARENT;
 
@@ -122,7 +119,6 @@ public final class MeasureHelper {
 
                 switch (mCurrentAspectRatioMode) {
                     case IRenderView.AR_ASPECT_EXACTLY:
-                        // FIXME: 1/31/17 Currently we set the mode to EXACTLY after first measurement
                         width = (int) (mMeasuredWidth * displayAspectRatio);
                         height = (int) (mMeasuredHeight * displayAspectRatio);
                         break;
@@ -208,7 +204,7 @@ public final class MeasureHelper {
                 }
             }
         }
-        LogUtil.d(TAG, "Measure size:(" + width + ", " + height + ")");
+//        LogUtil.d(TAG, "Measure size:(" + width + ", " + height + ")");
         mMeasuredWidth = width;
         mMeasuredHeight = height;
     }
@@ -225,7 +221,13 @@ public final class MeasureHelper {
         mCurrentAspectRatioMode = aspectRatioMode;
     }
 
+    /**
+     * Change ratio of video size, this will only apply after the first measurement
+     * @param aspectRatio the ratio
+     */
     public void setAspectRatio(float aspectRatio) {
+        if (mMeasuredWidth == 0 || mMeasuredHeight == 0)
+            throw new IllegalStateException("You must set ratio after first measurement");
         mCurrentAspectRatio = aspectRatio;
         setAspectRatioMode(IRenderView.AR_ASPECT_EXACTLY);
     }

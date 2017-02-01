@@ -42,11 +42,10 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
  * Created by JianGuo on 1/16/17.
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
-// TODO: 1/23/17 Implement scale dynamicly in onTouchEvent
+// TODO: 1/23/17 Implement move dynamically in onTouchEvent
 
 public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
-    private static final int SCALE_POINTER_COUNT = 2;
     private Uri mUri;
     private Map<String, String> mHeaders;
     private IjkMediaPlayer mMediaPlayer;
@@ -129,8 +128,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
-        mMediaController = new ParsingMediaController(context);
-        setMediaController(mMediaController);
+
     }
 
     private void initQualityView() {
@@ -227,6 +225,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         @Override
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
+
+            setMediaController(new ParsingMediaController(mContext));
             if (mOnPreparedListener != null) {
                 mOnPreparedListener.onPrepared(mp);
 
@@ -253,7 +253,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                             }
                         } else if (!isPlaying() && (seekToPosition != 0 || getCurrentPosition() > 0)) {
                             if (mMediaController != null) {
-                                mMediaController.show(0);
+                                mMediaController.show();
                             }
                         }
                     }
@@ -620,7 +620,14 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     private ScaleGestureDetector mScaleGestureDetector;
+    private boolean onScale = false;
     private android.view.ScaleGestureDetector.OnScaleGestureListener mScaleListener = new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            onScale = true;
+            return super.onScaleBegin(detector);
+        }
+
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             float scaleFactorDiff = detector.getScaleFactor();
@@ -630,11 +637,14 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             return Float.compare(scaleFactorDiff, 1.0f) != 0;
         }
 
-
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+            super.onScaleEnd(detector);
+            onScale = false;
+        }
     };
 
     private void handleScale(float scaleFactorDiff) {
-        LogUtil.d(TAG, "scale factor: " + scaleFactorDiff);
         if (mRenderView != null)
             mRenderView.setAspectRatio(scaleFactorDiff);
     }
@@ -644,41 +654,28 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     @Override
-    // TODO: 1/23/17 Implement scaling feature
+    // TODO: 1/23/17 Implement moving feature
     public boolean onTouchEvent(MotionEvent event) {
         mScaleGestureDetector.onTouchEvent(event);
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_POINTER_DOWN:
-                if (isInPlayBackState() && mMediaController != null) {
-                    toggleMediaControlsVisibility();
-                }
-                if (mQualityView.getVisibility() == VISIBLE) {
-                    mQualityView.setVisibility(GONE);
-                }
-                break;
-            default:
-                break;
+        // FIXME: 2/1/17 Buggy when ACTION_POINTER_DOWN(1)
+        if (!onScale) {
+            if (isInPlayBackState() && mMediaController != null) {
+                toggleMediaControlsVisibility();
+            }
+            if (mQualityView.getVisibility() == VISIBLE) {
+                mQualityView.setVisibility(GONE);
+            }
+
         }
         return true;
     }
 
-    @Override
-    public boolean onTrackballEvent(MotionEvent event) {
-        if (isInPlayBackState() && mMediaController != null) {
-            toggleMediaControlsVisibility();
-        }
-        if (mQualityView.getVisibility() == VISIBLE) {
-            mQualityView.setVisibility(GONE);
-        }
-        return false;
-    }
 
     private void toggleMediaControlsVisibility() {
         if (mMediaController.isShowing()) {
             mMediaController.hide();
         } else {
-            mMediaController.show();
+            mMediaController.show(0);
         }
     }
 

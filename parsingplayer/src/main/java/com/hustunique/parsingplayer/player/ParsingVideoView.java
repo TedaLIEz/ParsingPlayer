@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -23,18 +22,14 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.hustunique.parsingplayer.BuildConfig;
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 
@@ -48,7 +43,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private static final String TAG = "ParsingVideoView";
     private Uri mUri;
     private Map<String, String> mHeaders;
-    private IjkMediaPlayer mMediaPlayer;
+    private IParsingPlayer mMediaPlayer;
     private int mVideoWidth;
     private int mVideoHeight;
     private int mSurfaceWidth;
@@ -85,7 +80,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             IRenderView.AR_16_9_FIT_PARENT,
             IRenderView.AR_4_3_FIT_PARENT};
 
-    private int mCurrentAspectRatio = s_allAspectRatio[0];
+    private int mCurrentAspectRatio = IRenderView.AR_ASPECT_FIT_PARENT;
 
     private int mVideoSarNum;
     private int mVideoSarDen;
@@ -381,7 +376,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         try {
-            mMediaPlayer = createPlayer();
+            mMediaPlayer = new ParsingPlayer(mContext);
             mMediaPlayer.setOnPreparedListener(mPreparedListener);
             mMediaPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
             mMediaPlayer.setOnCompletionListener(mCompletionListener);
@@ -435,55 +430,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     public void setOnPreparedListener(@Nullable IMediaPlayer.OnPreparedListener onPreparedListener) {
         mOnPreparedListener = onPreparedListener;
-    }
-
-    /**
-     * This will restrict the annotated param into  integers defined in the {@link IntDef} range
-     */
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({IjkMediaPlayer.OPT_CATEGORY_CODEC, IjkMediaPlayer.OPT_CATEGORY_FORMAT,
-            IjkMediaPlayer.OPT_CATEGORY_PLAYER, IjkMediaPlayer.OPT_CATEGORY_SWS})
-    @interface OptionCategory {
-    }
-
-    public void setOption(@OptionCategory int category, String name, String value) {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.setOption(category, name, value);
-        }
-    }
-
-    public void setOption(@OptionCategory int category, String name, long value) {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.setOption(category, name, value);
-        }
-    }
-
-    private IjkMediaPlayer createPlayer() {
-        IjkMediaPlayer ijkMediaPlayer = null;
-        if (mUri != null) {
-            IjkMediaPlayer.loadLibrariesOnce(null);
-            IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-            ijkMediaPlayer = new IjkMediaPlayer();
-            IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG
-                    ? IjkMediaPlayer.IJK_LOG_DEBUG : IjkMediaPlayer.IJK_LOG_INFO);
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "safe", 0);
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "protocol_whitelist", "ffconcat,file,http,https");
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", 1);
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", 1);
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-handle-resolution-change", 1);
-
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "opensles", 1);
-
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "overlay-format", IjkMediaPlayer.SDL_FCC_RV32);
-
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1);
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0);
-
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "http-detect-range-support", 0);
-
-            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_CODEC, "skip_loop_filter", 48);
-        }
-        return ijkMediaPlayer;
     }
 
 
@@ -658,6 +604,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public boolean onTouchEvent(MotionEvent event) {
         mScaleGestureDetector.onTouchEvent(event);
         // FIXME: 2/1/17 Buggy when ACTION_POINTER_DOWN(1)
+        // log: Attempted to finish an input event but the input event receiver has already been disposed.
         if (!onScale) {
             if (isInPlayBackState() && mMediaController != null) {
                 toggleMediaControlsVisibility();

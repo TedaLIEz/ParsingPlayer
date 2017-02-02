@@ -26,7 +26,7 @@ public class ProtocolHelper {
         sb.append("ffconcat version 1.0\n");
         for (Seg seg : segs) {
             sb.append("file ").append(seg.getPath()).append("\n");
-            sb.append("duration ").append(seg.getDuration());
+            sb.append("duration ").append(seg.getDuration()).append("\n");
         }
         return sb.toString();
     }

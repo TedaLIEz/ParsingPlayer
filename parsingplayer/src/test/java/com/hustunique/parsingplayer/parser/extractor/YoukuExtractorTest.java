@@ -2,6 +2,7 @@ package com.hustunique.parsingplayer.parser.extractor;
 
 import android.os.Build;
 
+import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.Mockhelper;
 import com.hustunique.parsingplayer.parser.TestConstant;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;

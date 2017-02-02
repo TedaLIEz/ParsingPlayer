@@ -47,12 +47,16 @@ public class ConcatFileTask extends AsyncTask<String, Void, FileDescriptor> {
     protected void onPostExecute(FileDescriptor fileDescriptor) {
         if (fileDescriptor == null) return;
         if (mCallback != null) {
-            mCallback.onFileSaved(fileDescriptor);
+            try {
+                mCallback.onFileSaved(fileDescriptor);
+            } catch (IOException e) {
+                LogUtil.wtf(TAG, e);
+            }
         }
     }
 
     public interface Callback {
-        void onFileSaved(FileDescriptor fd);
+        void onFileSaved(FileDescriptor fd) throws IOException;
     }
 
 }

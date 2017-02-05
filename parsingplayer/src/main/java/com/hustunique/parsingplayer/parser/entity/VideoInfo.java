@@ -12,16 +12,16 @@ import java.util.Map;
 // TODO: 1/16/17 define fields for information in videos
 public class VideoInfo {
 
-    public static String FORMAT_3GP = "3gp";
-    public static String FORMAT_3GPHD = "3gphd";
-    public static String FORMAT_FLV = "flv";
-    public static String FORMAT_FLVHD = "flvhd";
-    public static String FORMAT_MP4 = "mp4";
-    public static String FORMAT_MP4HD = "mp4hd";
-    public static String FORMAT_MP4HD2 = "mp4hd2";
-    public static String FORMAT_MP4HD3 = "mp4hd3";
-    public static String FORMAT_HD2 = "hd2";
-    public static String FORMAT_HD3 = "hd3";
+    public static final String FORMAT_3GP = "3gp";
+    public static final String FORMAT_3GPHD = "3gphd";
+    public static final String FORMAT_FLV = "flv";
+    public static final String FORMAT_FLVHD = "flvhd";
+    public static final String FORMAT_MP4 = "mp4";
+    public static final String FORMAT_MP4HD = "mp4hd";
+    public static final String FORMAT_MP4HD2 = "mp4hd2";
+    public static final String FORMAT_MP4HD3 = "mp4hd3";
+    public static final String FORMAT_HD2 = "hd2";
+    public static final String FORMAT_HD3 = "hd3";
 
 
     private Map<String,List<Seg>> segsMap;
@@ -35,6 +35,10 @@ public class VideoInfo {
     public VideoInfo(Map<String, List<Seg>> segsMap, String title) {
         this.segsMap = segsMap;
         this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     @Override

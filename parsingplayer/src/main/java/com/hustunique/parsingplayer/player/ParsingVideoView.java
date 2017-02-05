@@ -9,11 +9,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -24,6 +26,9 @@ import android.widget.FrameLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
+import com.hustunique.parsingplayer.parser.entity.ProtocolHelper;
+import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,6 +94,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
+    private VideoInfo mInfo;
 
 
     // TODO: 1/20/17 Subtitle
@@ -369,7 +375,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     };
 
     private void openVideo() {
-        if (mUri == null || mSurfaceHolder == null) {
+        if ((mInfo == null && mUri == null) || mSurfaceHolder == null) {
             return;
         }
         release(false);
@@ -386,15 +392,47 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             mMediaPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
             mMediaPlayer.setOnTimedTextListener(mOnTimedTextListener);
             mCurrentBufferPercentage = 0;
-            String scheme = mUri.getScheme();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                    && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
-                IMediaDataSource dataSource = new FileMediaDataSource(new File(mUri.toString()));
-                mMediaPlayer.setDataSource(dataSource);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                mMediaPlayer.setDataSource(mContext, mUri, mHeaders);
+            if (mUri != null) {
+                String scheme = mUri.getScheme();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
+                    IMediaDataSource dataSource = new FileMediaDataSource(new File(mUri.toString()));
+                    mMediaPlayer.setDataSource(dataSource);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                    mMediaPlayer.setDataSource(mContext, mUri, mHeaders);
+                } else {
+                    mMediaPlayer.setDataSource(mUri.toString());
+                }
+            } else if (mInfo != null) {
+                mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
+                        ProtocolHelper.concat(mInfo.getSegs(VideoInfo.FORMAT_3GPHD)),
+                        new LoadingCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                Log.d(TAG, "write to file : " + result);
+                                try {
+                                    IMediaDataSource dataSource = new FileMediaDataSource(new File(result));
+                                    mMediaPlayer.setDataSource(dataSource);
+                                } catch (IOException e) {
+                                    onFailed(e);
+                                    return;
+                                }
+                                bindSurfaceHolder(mMediaPlayer, mSurfaceHolder);
+                                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                                mMediaPlayer.setScreenOnWhilePlaying(true);
+                                mMediaPlayer.prepareAsync();
+                                mCurrentState = STATE_PREPARING;
+                                attachMediaController();
+                            }
+
+                            @Override
+                            public void onFailed(Exception e) {
+                                Log.wtf(TAG, e);
+                            }
+                        });
+                return;
             } else {
-                mMediaPlayer.setDataSource(mUri.toString());
+                return;
             }
             bindSurfaceHolder(mMediaPlayer, mSurfaceHolder);
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -432,6 +470,17 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mOnPreparedListener = onPreparedListener;
     }
 
+
+    public void setConcatVideos(VideoInfo videoInfo) {
+        String title = videoInfo.getTitle();
+        mInfo = videoInfo;
+        mSeekWhenPrepared = 0;
+        openVideo();
+        requestLayout();
+        invalidate();
+
+
+    }
 
     public void setVideoPath(String path) {
         setVideoURI(Uri.parse(path));

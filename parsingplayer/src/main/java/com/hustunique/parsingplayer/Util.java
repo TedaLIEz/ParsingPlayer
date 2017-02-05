@@ -2,22 +2,28 @@
 
 package com.hustunique.parsingplayer;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Environment;
+import android.os.Process;
 
-import java.io.FileDescriptor;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.util.concurrent.ThreadFactory;
+
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 /**
  * Created by JianGuo on 1/16/17.
  * Util class
  */
 
-public class Util {
+public final class Util {
 
     public static boolean isLollipop() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
@@ -40,19 +46,32 @@ public class Util {
     /**
      * Write <tt>data</tt> to the <tt>context</tt> application package
      *
+     * @param directory the parent directory
      * @param filename the filename
-     * @param data     the data to be written
-     * @param context  the context
+     * @param content  the content of data
      */
-    public static FileDescriptor writeToFile(String filename, String data, Context context)
-            throws IOException {
-        FileOutputStream fos = context.openFileOutput(filename,
-                Context.MODE_PRIVATE);
-        OutputStreamWriter writer = new OutputStreamWriter(fos);
-        writer.write(data);
-        writer.close();
-        return fos.getFD();
+    public static String writeToFile(File directory, String filename, String content)
+            throws FileNotFoundException {
+        File f = new File(directory, filename);
+        FileOutputStream fos = new FileOutputStream(f);
+        try {
+            if (!f.exists()) f.createNewFile();
+            byte[] contentBytes = content.getBytes();
+            fos.write(contentBytes);
+            fos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return f.getAbsolutePath();
     }
+
 
     /**
      * Read data from target filename saved privately in <tt>context</tt> application package
@@ -61,6 +80,7 @@ public class Util {
      * @param context  context
      * @return Stream data
      */
+    @Deprecated
     public static String readFromFile(String filename, Context context) {
         return context.getFileStreamPath(filename).getAbsolutePath();
     }
@@ -101,4 +121,65 @@ public class Util {
     }
 
 
+    public static File getDiskCacheDir(Context context, String uniqueName) {
+        // Check if media is mounted or storage is built-in, if so, try and use external cache dir
+        // otherwise use internal cache dir
+        final String cachePath =
+                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
+                        !Util.isExternalStorageRemovable() ? Util.getExternalCacheDir(context).getPath() :
+                        context.getCacheDir().getPath();
+
+        return new File(cachePath + File.separator + uniqueName);
+    }
+
+    @TargetApi(Build.VERSION_CODES.FROYO)
+    public static File getExternalCacheDir(Context context) {
+        if (hasFroyo()) {
+            return context.getExternalCacheDir();
+        }
+
+        // Before Froyo we need to construct the external cache dir ourselves
+        final String cacheDir = "/Android/data/" + context.getPackageName() + "/cache/";
+        return new File(Environment.getExternalStorageDirectory().getPath() + cacheDir);
+    }
+
+
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    public static boolean isExternalStorageRemovable() {
+        if (hasGingerbread()) {
+            return Environment.isExternalStorageRemovable();
+        }
+        return true;
+    }
+
+    public static boolean hasFroyo() {
+        // Can use static final constants like FROYO, declared in later versions
+        // of the OS since they are inlined at compile time. This is guaranteed behavior.
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO;
+    }
+
+    public static boolean hasGingerbread() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD;
+    }
+
+
+    public static class ParsingThreadFactory implements ThreadFactory {
+        @Override
+        public Thread newThread(Runnable r) {
+            return new ConcatThread(r);
+        }
+
+        private class ConcatThread extends Thread {
+
+            ConcatThread(Runnable r) {
+                super(r);
+            }
+
+            @Override
+            public void run() {
+                Process.setThreadPriority(THREAD_PRIORITY_BACKGROUND);
+                super.run();
+            }
+        }
+    }
 }

@@ -25,8 +25,8 @@ public class MainActivity extends AppCompatActivity {
         videoParser.parse("http://v.youku.com/v_show/id_XMjQ3MzE1NDA3Ng", new Extractor.ExtractCallback() {
             @Override
             public void onSuccess(VideoInfo videoInfo) {
-                Log.d(TAG, videoInfo.toString());
-                mVideoView.setVideoPath(videoInfo.getSegs("3gphd").get(0).getPath());
+//                Log.d(TAG, videoInfo.toString());
+                mVideoView.setConcatVideos(videoInfo);
                 mVideoView.start();
             }
 

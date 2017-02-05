@@ -3,10 +3,14 @@ package com.hustunique.parsingplayer.player;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.IntDef;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import com.hustunique.parsingplayer.BuildConfig;
+import com.hustunique.parsingplayer.Util;
+import com.hustunique.parsingplayer.player.io.LoadingCallback;
+import com.hustunique.parsingplayer.player.io.ParsingFileManager;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -25,10 +29,11 @@ import tv.danmaku.ijk.media.player.misc.ITrackInfo;
  */
 
 public class ParsingPlayer implements IParsingPlayer {
-
+    private static final String CACHE_DIR = "pPlayer";
+    private static final String TAG = "ParsingPlayer";
     private IjkMediaPlayer mMediaPlayer;
     private Context mContext;
-
+    private final ParsingFileManager mManager;
     public ParsingPlayer(Context context) {
         this(context, new Config());
     }
@@ -36,6 +41,7 @@ public class ParsingPlayer implements IParsingPlayer {
     public ParsingPlayer(Context context, Config config) {
         mContext = context;
         mMediaPlayer = createPlayer(config);
+        mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(context, CACHE_DIR));
     }
 
 
@@ -58,8 +64,7 @@ public class ParsingPlayer implements IParsingPlayer {
         IjkMediaPlayer ijkMediaPlayer = new IjkMediaPlayer();
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-        IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG
-                ? IjkMediaPlayer.IJK_LOG_DEBUG : IjkMediaPlayer.IJK_LOG_INFO);
+        IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG ? IjkMediaPlayer.IJK_LOG_DEBUG : IjkMediaPlayer.IJK_LOG_INFO);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "safe", config.safe ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
@@ -87,15 +92,12 @@ public class ParsingPlayer implements IParsingPlayer {
 
 
     @Override
-    public void setConcatVideoPath(String concatVideoPath) {
-        ConcatFileTask concatFileTask = new ConcatFileTask(mContext, new ConcatFileTask.Callback() {
-            @Override
-            public void onFileSaved(FileDescriptor fd) throws IOException {
-                setDataSource(fd);
-            }
-        });
-        concatFileTask.execute(concatVideoPath);
+    public void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback) {
+        mManager.write(concatVideoPath, content, callback);
+    }
 
+    private void cleanUp() {
+        mManager.cleanUp();
     }
 
     @Override
@@ -114,8 +116,12 @@ public class ParsingPlayer implements IParsingPlayer {
     }
 
     @Override
-    public void setDataSource(FileDescriptor fileDescriptor) throws IOException, IllegalArgumentException, IllegalStateException {
-        mMediaPlayer.setDataSource(fileDescriptor);
+    public void setDataSource(FileDescriptor fileDescriptor) {
+        try {
+            mMediaPlayer.setDataSource(fileDescriptor);
+        } catch (IOException e) {
+            Log.wtf(TAG, e);
+        }
     }
 
     @Override
@@ -187,7 +193,7 @@ public class ParsingPlayer implements IParsingPlayer {
     public void release() {
         mMediaPlayer.stop();
         mMediaPlayer.release();
-
+        cleanUp();
     }
 
     @Override
@@ -322,7 +328,7 @@ public class ParsingPlayer implements IParsingPlayer {
         private boolean startOnPrepared = true;
 
 
-        private String whiteList = "ffconcat,file,http,https";
+        private String whiteList = "ffconcat,file,http,https,crypto";
         private boolean mediacodec = true;
         private boolean mediacodecAutoRotate = true;
         private boolean mediacodecHandleResolutionChange = true;

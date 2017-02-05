@@ -2,6 +2,8 @@ package com.hustunique.parsingplayer.player;
 
 import android.support.annotation.IntDef;
 
+import com.hustunique.parsingplayer.player.io.LoadingCallback;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -22,7 +24,7 @@ public interface IParsingPlayer extends IMediaPlayer {
     @interface OptionCategory {
     }
 
-    void setConcatVideoPath(String concatVideoPath);
+    void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback);
     void setOption(@OptionCategory int category, String name, String value);
     void setOption(@OptionCategory int category, String name, long value);
 }

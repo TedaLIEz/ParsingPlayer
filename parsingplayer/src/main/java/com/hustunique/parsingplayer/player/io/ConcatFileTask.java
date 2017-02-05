@@ -1,11 +1,11 @@
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.io;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
 import com.hustunique.parsingplayer.LogUtil;
-import com.hustunique.parsingplayer.Util;
+import com.hustunique.parsingplayer.player.ParsingVideoView;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -18,29 +18,30 @@ import java.io.IOException;
  */
 // TODO: 1/23/17 DiskLruCache may be needed here
 // TODO: 1/29/17 Maybe use some pojo class here as param is better than using string
-public class ConcatFileTask extends AsyncTask<String, Void, FileDescriptor> {
+@Deprecated
+public final class ConcatFileTask extends AsyncTask<String, Void, FileDescriptor> {
     private static final String TAG = "ConcatFileTask";
     private Context mContext;
     private Callback mCallback;
+
     public ConcatFileTask(@NonNull Context context, Callback callback) {
         mContext = context;
         mCallback = callback;
     }
 
 
-
     @Override
     protected FileDescriptor doInBackground(String... params) {
-        String filename = params[0];
-        String data = params[1];
-        FileDescriptor fd;
-        try {
-            fd = Util.writeToFile(filename, data, mContext);
-        } catch (IOException e) {
-            LogUtil.wtf(TAG, e);
-            return null;
-        }
-        return fd;
+//        String filename = params[0];
+//        String data = params[1];
+//        FileDescriptor fd;
+//        try {
+//            fd = Util.writeToFile(filename, data, mContext);
+//        } catch (IOException e) {
+//            LogUtil.wtf(TAG, e);
+        return null;
+//        }
+//        return fd;
     }
 
     @Override

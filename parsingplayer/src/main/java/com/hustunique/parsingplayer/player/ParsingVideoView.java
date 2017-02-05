@@ -46,8 +46,6 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 
 public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
-    private Uri mUri;
-    private Map<String, String> mHeaders;
     private IParsingPlayer mMediaPlayer;
     private int mVideoWidth;
     private int mVideoHeight;
@@ -77,13 +75,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private int mSeekWhenPrepared;
     private int mCurrentBufferPercentage;
 
-    private static final int[] s_allAspectRatio = {
-            IRenderView.AR_ASPECT_FIT_PARENT,
-            IRenderView.AR_ASPECT_FILL_PARENT,
-            IRenderView.AR_ASPECT_WRAP_CONTENT,
-            // IRenderView.AR_MATCH_PARENT,
-            IRenderView.AR_16_9_FIT_PARENT,
-            IRenderView.AR_4_3_FIT_PARENT};
 
     private int mCurrentAspectRatio = IRenderView.AR_ASPECT_FIT_PARENT;
 
@@ -94,7 +85,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
-    private VideoInfo mInfo;
 
 
     // TODO: 1/20/17 Subtitle
@@ -110,6 +100,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView(context);
+        initPlayer();
         initGesture();
     }
 
@@ -117,7 +108,23 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
+        initPlayer();
         initGesture();
+    }
+
+    private void initPlayer() {
+        release(false);
+        AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        mMediaPlayer = new ParsingPlayer(mContext);
+        mMediaPlayer.setOnPreparedListener(mPreparedListener);
+        mMediaPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
+        mMediaPlayer.setOnCompletionListener(mCompletionListener);
+        mMediaPlayer.setOnErrorListener(mErrorListener);
+        mMediaPlayer.setOnInfoListener(mInfoListener);
+        mMediaPlayer.setOnBufferingUpdateListener(mBufferingUpdateListener);
+        mMediaPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
+        mMediaPlayer.setOnTimedTextListener(mOnTimedTextListener);
     }
 
 
@@ -163,7 +170,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             }
             mSurfaceHolder = holder;
             if (mMediaPlayer != null) bindSurfaceHolder(mMediaPlayer, holder);
-            else openVideo();
         }
 
         @Override
@@ -375,79 +381,13 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     };
 
     private void openVideo() {
-        if ((mInfo == null && mUri == null) || mSurfaceHolder == null) {
-            return;
-        }
-        release(false);
-        AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        try {
-            mMediaPlayer = new ParsingPlayer(mContext);
-            mMediaPlayer.setOnPreparedListener(mPreparedListener);
-            mMediaPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
-            mMediaPlayer.setOnCompletionListener(mCompletionListener);
-            mMediaPlayer.setOnErrorListener(mErrorListener);
-            mMediaPlayer.setOnInfoListener(mInfoListener);
-            mMediaPlayer.setOnBufferingUpdateListener(mBufferingUpdateListener);
-            mMediaPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
-            mMediaPlayer.setOnTimedTextListener(mOnTimedTextListener);
-            mCurrentBufferPercentage = 0;
-            if (mUri != null) {
-                String scheme = mUri.getScheme();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                        && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
-                    IMediaDataSource dataSource = new FileMediaDataSource(new File(mUri.toString()));
-                    mMediaPlayer.setDataSource(dataSource);
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                    mMediaPlayer.setDataSource(mContext, mUri, mHeaders);
-                } else {
-                    mMediaPlayer.setDataSource(mUri.toString());
-                }
-            } else if (mInfo != null) {
-                mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
-                        ProtocolHelper.concat(mInfo.getSegs(VideoInfo.FORMAT_3GPHD)),
-                        new LoadingCallback<String>() {
-                            @Override
-                            public void onSuccess(String result) {
-                                Log.d(TAG, "write to file : " + result);
-                                try {
-                                    IMediaDataSource dataSource = new FileMediaDataSource(new File(result));
-                                    mMediaPlayer.setDataSource(dataSource);
-                                } catch (IOException e) {
-                                    onFailed(e);
-                                    return;
-                                }
-                                bindSurfaceHolder(mMediaPlayer, mSurfaceHolder);
-                                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                                mMediaPlayer.setScreenOnWhilePlaying(true);
-                                mMediaPlayer.prepareAsync();
-                                mCurrentState = STATE_PREPARING;
-                                attachMediaController();
-                            }
-
-                            @Override
-                            public void onFailed(Exception e) {
-                                Log.wtf(TAG, e);
-                            }
-                        });
-                return;
-            } else {
-                return;
-            }
-            bindSurfaceHolder(mMediaPlayer, mSurfaceHolder);
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mMediaPlayer.setScreenOnWhilePlaying(true);
-            mMediaPlayer.prepareAsync();
-            mCurrentState = STATE_PREPARING;
-            attachMediaController();
-        } catch (IOException e) {
-            LogUtil.wtf(TAG, e);
-            mCurrentState = STATE_ERROR;
-            mTargetState = STATE_ERROR;
-            mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
-        }
-
-
+        mCurrentBufferPercentage = 0;
+        bindSurfaceHolder(mMediaPlayer, mSurfaceHolder);
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mMediaPlayer.setScreenOnWhilePlaying(true);
+        mMediaPlayer.prepareAsync();
+        mCurrentState = STATE_PREPARING;
+        attachMediaController();
     }
 
     public void setQuality(int quality) {
@@ -471,15 +411,28 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
 
-    public void setConcatVideos(VideoInfo videoInfo) {
-        String title = videoInfo.getTitle();
-        mInfo = videoInfo;
-        mSeekWhenPrepared = 0;
-        openVideo();
-        requestLayout();
-        invalidate();
+    // TODO: 2/5/17 Show sth if the io is running
+    public void setConcatVideos(@NonNull VideoInfo videoInfo) {
+        mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
+                ProtocolHelper.concat(videoInfo.getSegs(VideoInfo.FORMAT_3GPHD)),
+                new LoadingCallback<String>() {
+                    @Override
+                    public void onSuccess(final String result) {
+                        // use post here to run in main thread
+                        post(new Runnable() {
+                            @Override
+                            public void run() {
+                                setVideoPath(result);
+                            }
+                        });
 
+                    }
 
+                    @Override
+                    public void onFailed(Exception e) {
+                        Log.wtf(TAG, e);
+                    }
+                });
     }
 
     public void setVideoPath(String path) {
@@ -491,12 +444,28 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
-        mUri = uri;
-        mHeaders = headers;
         mSeekWhenPrepared = 0;
-        openVideo();
-        requestLayout();
-        invalidate();
+        String scheme = uri.getScheme();
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
+                IMediaDataSource dataSource = new FileMediaDataSource(new File(uri.toString()));
+                mMediaPlayer.setDataSource(dataSource);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                mMediaPlayer.setDataSource(mContext, uri, headers);
+            } else {
+                mMediaPlayer.setDataSource(uri.toString());
+            }
+            openVideo();
+            requestLayout();
+            invalidate();
+        } catch (IOException e) {
+            LogUtil.wtf(TAG, e);
+            mCurrentState = STATE_ERROR;
+            mTargetState = STATE_ERROR;
+            mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
+        }
+
     }
 
     public void setMediaController(IMediaController controller) {
@@ -783,10 +752,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mCurrentState = ss.currentState;
         mTargetState = ss.targetState;
         mCurrentBufferPercentage = ss.currentBufferPercentage;
-        if (ss.uri != null)
-            mUri = ss.uri;
-        else return;
-        if (ss.headers != null) mHeaders = ss.headers;
         int currPos = ss.currentPos;
 
         seekTo(currPos);
@@ -800,8 +765,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         ss.currentState = mCurrentState;
         ss.targetState = mTargetState;
         ss.currentPos = (int) mMediaPlayer.getCurrentPosition();
-        ss.uri = mUri;
-        ss.headers = mHeaders;
         ss.currentBufferPercentage = mCurrentBufferPercentage;
         LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
         return ss;
@@ -811,8 +774,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     class SavedState extends BaseSavedState {
         int currentState;
         int targetState;
-        Map<String, String> headers;
-        Uri uri;
         int currentBufferPercentage;
         int currentPos;
         private ClassLoader mClassLoader;
@@ -823,14 +784,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             currentState = in.readInt();
             targetState = in.readInt();
             currentPos = in.readInt();
-            int hasMap = in.readInt();
-            if (hasMap == 1) {
-                headers = in.readHashMap(mClassLoader);
-            }
-            int hasUri = in.readInt();
-            if (hasUri == 1) {
-                uri = in.readParcelable(mClassLoader);
-            }
             currentBufferPercentage = in.readInt();
         }
 
@@ -854,30 +807,16 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             out.writeInt(currentState);
             out.writeInt(targetState);
             out.writeInt(currentPos);
-            if (headers != null) {
-                out.writeInt(1);
-                out.writeMap(headers);
-            } else {
-                out.writeInt(0);
-            }
-            if (uri != null) {
-                out.writeInt(1);
-                out.writeParcelable(uri, flags);
-            } else {
-                out.writeInt(0);
-            }
             out.writeInt(currentBufferPercentage);
         }
 
         @Override
         public String toString() {
             return "SavedState{" +
-                    "currentPos=" + currentPos +
-                    ", currentState=" + currentState +
+                    "currentState=" + currentState +
                     ", targetState=" + targetState +
-                    ", headers=" + headers +
-                    ", uri=" + uri +
                     ", currentBufferPercentage=" + currentBufferPercentage +
+                    ", currentPos=" + currentPos +
                     '}';
         }
     }

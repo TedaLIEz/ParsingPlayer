@@ -1,5 +1,7 @@
 package com.hustunique.parsingplayer.player.io;
 
+import android.util.Log;
+
 import com.hustunique.parsingplayer.Util;
 
 import java.io.File;
@@ -18,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public final class ParsingFileManager {
+    private static final String TAG = "ParsingFileManager";
     private final ExecutorService fileService;
     private final File directory;
     private final ExecutorService cleanupService = new ThreadPoolExecutor(0, 1,
@@ -26,7 +29,7 @@ public final class ParsingFileManager {
         @Override
         public Void call() throws Exception {
             deleteContents(directory);
-            // TODO: 2/5/17 Cleanup
+            Log.d(TAG, "done with cleanup");
             return null;
         }
     };

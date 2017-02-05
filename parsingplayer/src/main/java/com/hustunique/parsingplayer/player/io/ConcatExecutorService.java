@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  * Created by JianGuo on 2/5/17.
  * Thread pool for file io
  */
-public class ConcatExecutorService extends ThreadPoolExecutor {
+class ConcatExecutorService extends ThreadPoolExecutor {
     private static final String TAG = "ConcatExecutorService";
     private static final int DEFAULT_THREAD_COUNT = 3;
 
@@ -20,7 +20,7 @@ public class ConcatExecutorService extends ThreadPoolExecutor {
                 new PriorityBlockingQueue<Runnable>(), new Util.ParsingThreadFactory());
     }
 
-    public static ConcatExecutorService createService() {
+    static ConcatExecutorService createService() {
         return new ConcatExecutorService();
     }
 

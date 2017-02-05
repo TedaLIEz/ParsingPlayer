@@ -7,11 +7,11 @@ import java.util.concurrent.Callable;
  * Async callback used in thread pool
  */
 
-public final class CallbackTask<T> implements Runnable {
+final class CallbackTask<T> implements Runnable {
     private final Callable<T> mCallable;
     private final LoadingCallback<T> mCallback;
 
-    public CallbackTask(Callable<T> callable, LoadingCallback<T> callback) {
+    CallbackTask(Callable<T> callable, LoadingCallback<T> callback) {
         mCallable = callable;
         mCallback = callback;
     }

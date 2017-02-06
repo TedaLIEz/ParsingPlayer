@@ -2,7 +2,7 @@ package com.hustunique.parsingplayer.player.io;
 
 import com.hustunique.parsingplayer.Util;
 
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +17,7 @@ class ConcatExecutorService extends ThreadPoolExecutor {
 
     private ConcatExecutorService() {
         super(DEFAULT_THREAD_COUNT, DEFAULT_THREAD_COUNT, 0, TimeUnit.MILLISECONDS,
-                new PriorityBlockingQueue<Runnable>(), new Util.ParsingThreadFactory());
+                new LinkedBlockingQueue<Runnable>(), new Util.ParsingThreadFactory());
     }
 
     static ConcatExecutorService createService() {

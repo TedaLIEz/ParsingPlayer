@@ -233,11 +233,12 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
 
-            setMediaController(new ParsingMediaController(mContext));
+
             if (mOnPreparedListener != null) {
                 mOnPreparedListener.onPrepared(mp);
 
             }
+            setMediaController(new ParsingMediaController(mContext));
             if (mMediaController != null) {
                 mMediaController.setEnabled(true);
             }
@@ -251,6 +252,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 if (mRenderView != null) {
                     mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
                     mRenderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
+
                     if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == mVideoWidth
                             || mSurfaceHeight == mVideoHeight) {
                         if (mTargetState == STATE_PLAYING) {
@@ -387,7 +389,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mMediaPlayer.setScreenOnWhilePlaying(true);
         mMediaPlayer.prepareAsync();
         mCurrentState = STATE_PREPARING;
-        attachMediaController();
     }
 
     public void setQuality(int quality) {
@@ -480,9 +481,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private void attachMediaController() {
         if (mMediaPlayer != null && mMediaController != null) {
             mMediaController.setMediaPlayer(this);
-            View anchorView = this.getParent() instanceof View ?
-                    (View) this.getParent() : this;
-            mMediaController.setAnchorView(anchorView);
+            // TODO: 2/6/17 MediaController should suit with video's size, not view's size
+            mMediaController.setAnchorView(this);
             mMediaController.setEnabled(isInPlayBackState());
         }
     }
@@ -640,7 +640,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         if (mMediaController.isShowing()) {
             mMediaController.hide();
         } else {
-            mMediaController.show(0);
+            mMediaController.show();
         }
     }
 

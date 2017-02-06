@@ -2,6 +2,7 @@ package com.hustunique.parsingplayer.player;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -57,6 +58,12 @@ public class ParsingMediaController implements IMediaController {
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setBackgroundDrawable(mContext.getDrawable(android.R.color.transparent));
         mPopupWindow.setFocusable(true);
+        mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                Log.d(TAG, "controller dismissed");
+            }
+        });
     }
 
     private void initControllerView(View v) {
@@ -131,7 +138,7 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void run() {
             int pos = setProgress();
-            if (!mDragging && mShowing && mPlayer.isPlaying()) {
+            if (!mDragging && mPlayer.isPlaying()) {
                 mRoot.postDelayed(mShowProgress, 1000 - (pos % 1000));
             }
         }
@@ -249,12 +256,7 @@ public class ParsingMediaController implements IMediaController {
 
         if (mShowing) {
             mShowing = false;
-            try {
-                mRoot.removeCallbacks(mShowProgress);
-//                mPopupWindow.dismiss();
-            } catch (IllegalArgumentException ex) {
-                LogUtil.w(TAG, "already removed");
-            }
+            mRoot.removeCallbacks(mShowProgress);
         }
         for (View view : mShowOnceArray)
             view.setVisibility(View.GONE);
@@ -296,6 +298,7 @@ public class ParsingMediaController implements IMediaController {
     };
 
     private void showPopupWindowLayout() {
+        LogUtil.i(TAG, "show popupWindow at top-left pos:" + "(" + mX + ", " + mY + ")");
         if (mPopupWindow.isShowing()) {
             mPopupWindow.dismiss();
         }
@@ -314,7 +317,6 @@ public class ParsingMediaController implements IMediaController {
         LogUtil.i(TAG, "update mX: " + mX + ", mY: " + mY);
     }
 
-    // FIXME: 1/26/17 Buggy when toggle controller multiple times in a short period
     @Override
     public void show(int timeout) {
         if (!mShowing && mAnchor != null) {
@@ -323,7 +325,7 @@ public class ParsingMediaController implements IMediaController {
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
-            LogUtil.i(TAG, "show popupWindow at top-left pos:" + "(" + mX + ", " + mY + ")");
+
             showPopupWindowLayout();
         }
         updatePausePlay();
@@ -334,10 +336,6 @@ public class ParsingMediaController implements IMediaController {
         // paused with the progress bar showing the user hits play.
         mRoot.post(mShowProgress);
 
-        if (timeout != 0) {
-            mRoot.removeCallbacks(mFadeOut);
-            mRoot.postDelayed(mFadeOut, timeout);
-        }
     }
 
 
@@ -359,8 +357,6 @@ public class ParsingMediaController implements IMediaController {
     public boolean isShowing() {
         return mShowing;
     }
-
-
 
 
 }

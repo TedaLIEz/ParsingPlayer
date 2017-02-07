@@ -26,7 +26,7 @@ import android.widget.FrameLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.ExtractException;
+import com.hustunique.parsingplayer.ParsingTask;
 import com.hustunique.parsingplayer.parser.VideoParser;
 import com.hustunique.parsingplayer.parser.entity.ProtocolHelper;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
@@ -34,10 +34,7 @@ import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -733,19 +730,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     @Override
     public void play(String videoUrl) {
-        VideoParser videoParser = VideoParser.getInstance();
-        videoParser.parse(videoUrl, new Extractor.ExtractCallback() {
-            @Override
-            public void onSuccess(VideoInfo videoInfo) {
-                setConcatVideos(videoInfo);
-                start();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.wtf(TAG,e);
-            }
-        });
+        ParsingTask parsingTask = new ParsingTask(this);
+        parsingTask.execute(videoUrl);
     }
 
     @Override

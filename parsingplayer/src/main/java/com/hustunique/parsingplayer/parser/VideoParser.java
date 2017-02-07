@@ -4,8 +4,10 @@ package com.hustunique.parsingplayer.parser;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.hustunique.parsingplayer.LogUtil;
+import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.parser.extractor.YoukuExtractor;
 
@@ -68,13 +70,14 @@ public class VideoParser {
         return null;
     }
 
-    public void parse(String url, Extractor.ExtractCallback callback) {
+    public VideoInfo parse(String url) {
         try {
             mExtractor = createExtractor(url);
-            mExtractor.extract(url, callback);
+            return mExtractor.extract(url);
         } catch (ExtractException e) {
-            callback.onError(e);
+            Log.wtf(TAG,e);
         }
+        return null;
     }
 
 

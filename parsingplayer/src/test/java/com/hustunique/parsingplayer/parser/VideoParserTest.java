@@ -14,30 +14,30 @@ public class VideoParserTest {
 
     @Test
     public void parseNullStringThrowException() {
-        VideoParser videoParser = new VideoParser();
+        VideoParser videoParser = VideoParser.getInstance();
         thrown.expect(IllegalArgumentException.class);
         videoParser.createExtractor(null);
     }
 
     @Test
     public void parseUnsupportedURLThrowException() {
-        VideoParser videoParser = new VideoParser();
+        VideoParser videoParser = VideoParser.getInstance();
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("This url is not valid or unsupported yet");
-        videoParser.parse(TestConstant.UNSUPPORTED_URL_1, null);
+        videoParser.parse(TestConstant.UNSUPPORTED_URL_1);
     }
 
     @Test
     public void parseInvalidURLThrowException() {
-        VideoParser videoParser = new VideoParser();
+        VideoParser videoParser = VideoParser.getInstance();
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("This url is not valid or unsupported yet");
-        videoParser.parse("", null);
+        videoParser.parse("");
     }
 
     @Test
     public void parseValidURL() {
-        VideoParser videoParser = new VideoParser();
-        videoParser.parse(TestConstant.YOUKU_URL_1, null);
+        VideoParser videoParser = VideoParser.getInstance();
+        videoParser.parse(TestConstant.YOUKU_URL_1);
     }
 }

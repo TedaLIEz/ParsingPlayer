@@ -1,5 +1,7 @@
 package com.hustunique.parsingplayer.player;
 
+import com.hustunique.parsingplayer.parser.ExtractException;
+
 /**
  * Created by JianGuo on 1/27/17.
  */
@@ -15,6 +17,13 @@ public interface IMediaPlayerControl {
     boolean canPause();
     boolean canSeekBackward();
     boolean canSeekForward();
+
+    /**
+     * As ParsingPlayer animated to parse video url and play real video address,
+     * the param videoUrl is limited.
+     * @param videoUrl
+     */
+    void play(String videoUrl);
 
     /**
      * Get the audio session id for the player used by this VideoView. This can be used to

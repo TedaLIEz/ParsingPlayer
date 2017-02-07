@@ -20,22 +20,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        VideoParser videoParser = new VideoParser();
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        videoParser.parse("http://v.youku.com/v_show/id_XMjQ3MzE1NDA3Ng", new Extractor.ExtractCallback() {
-            @Override
-            public void onSuccess(VideoInfo videoInfo) {
-//                Log.d(TAG, videoInfo.toString());
-                mVideoView.setConcatVideos(videoInfo);
-                mVideoView.start();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.wtf(TAG, e);
-            }
-        });
-
-
+        mVideoView.play("http://v.youku.com/v_show/id_XMjQ3MzE1NDA3Ng");
     }
 }

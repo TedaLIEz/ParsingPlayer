@@ -9,6 +9,7 @@ import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.parser.extractor.YoukuExtractor;
 
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -24,14 +25,26 @@ public class VideoParser {
     private Extractor mExtractor;
     private static Map<String, Class<? extends Extractor>> sMatchMap = new HashMap<>();
 
+    private static VideoParser mParser;
+
+    private VideoParser() {
+    }
+
+    public static VideoParser getInstance(){
+        if (mParser == null){
+            mParser = new VideoParser();
+        }
+        return mParser;
+    }
+
     static {
         // TODO: 1/17/17 Maybe there is a better solution to register map between regex and IExtractor here
         sMatchMap.put(YoukuExtractor.VALID_URL, YoukuExtractor.class);
     }
 
     @NonNull
-    Extractor createExtractor(@NonNull String url) {
-        if (url == null) throw new IllegalArgumentException("Url shouldn't be null");
+    Extractor createExtractor(@NonNull String url) throws ExtractException{
+        if (url == null) throw new ExtractException("Url shouldn't be null");
         Class<? extends Extractor> clz = findClass(url);
         if (clz != null) {
             try {
@@ -40,7 +53,7 @@ public class VideoParser {
                 LogUtil.wtf(TAG, e);
             }
         }
-        throw new IllegalArgumentException("This url is not valid or unsupported yet");
+        throw new ExtractException("This url is not valid or unsupported yet");
     }
 
     @Nullable
@@ -56,8 +69,12 @@ public class VideoParser {
     }
 
     public void parse(String url, Extractor.ExtractCallback callback) {
-        mExtractor = createExtractor(url);
-        mExtractor.extract(url, callback);
+        try {
+            mExtractor = createExtractor(url);
+            mExtractor.extract(url, callback);
+        } catch (ExtractException e) {
+            callback.onError(e);
+        }
     }
 
 

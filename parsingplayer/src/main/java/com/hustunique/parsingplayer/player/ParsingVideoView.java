@@ -27,10 +27,9 @@ import android.widget.FrameLayout;
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.ParsingTask;
-import com.hustunique.parsingplayer.parser.VideoParser;
+
 import com.hustunique.parsingplayer.parser.entity.ProtocolHelper;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.File;
@@ -45,7 +44,6 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
  * Created by JianGuo on 1/16/17.
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
-// TODO: 1/23/17 Implement move dynamically in onTouchEvent
 
 public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
@@ -90,7 +88,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private boolean mCanSeekForward = true;
 
 
-    // TODO: 1/20/17 Subtitle
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -417,6 +414,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     // TODO: 2/5/17 Show sth if the io is running
     public void setConcatVideos(@NonNull VideoInfo videoInfo) {
+        // TODO: 2/7/17 Choose video quality by user, avoid hard-coding
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
                 ProtocolHelper.concat(videoInfo.getSegs(VideoInfo.FORMAT_3GPHD)),
                 new LoadingCallback<String>() {
@@ -624,15 +622,18 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     // TODO: 1/23/17 Implement moving feature
     public boolean onTouchEvent(MotionEvent event) {
         mScaleGestureDetector.onTouchEvent(event);
-        // FIXME: 2/1/17 Buggy when ACTION_POINTER_DOWN(1)
-        // log: Attempted to finish an input event but the input event receiver has already been disposed.
         if (!onScale) {
-            if (isInPlayBackState() && mMediaController != null) {
-                toggleMediaControlsVisibility();
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                if (mQualityView.getVisibility() == VISIBLE) {
+                    mQualityView.setVisibility(GONE);
+                }
+                if (isInPlayBackState() && mMediaController != null) {
+                    toggleMediaControlsVisibility();
+                }
+
             }
-            if (mQualityView.getVisibility() == VISIBLE) {
-                mQualityView.setVisibility(GONE);
-            }
+
+
 
         }
         return true;
@@ -740,16 +741,23 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     @Override
-    public void chooseQuality() {
-        if (mQualityView.getVisibility() == VISIBLE) {
-            mQualityView.setVisibility(GONE);
-        } else {
-            mQualityView.setVisibility(VISIBLE);
-        }
+    public void hideQualityView() {
+        mQualityView.setVisibility(GONE);
     }
 
     @Override
-    // FIXME: 1/23/17 Can't maintain View status after configuration changes
+    public void showQualityView() {
+        mQualityView.setVisibility(VISIBLE);
+    }
+
+    @Override
+    public boolean isQualityViewShown() {
+        return mQualityView.getVisibility() == View.VISIBLE;
+    }
+
+
+    @Override
+    // FIXME: 1/23/17 Can't maintain View status after configuration changes, as we can't maintain mediaplayer here
     protected void onRestoreInstanceState(Parcelable state) {
         if (!(state instanceof SavedState)) {
             super.onRestoreInstanceState(state);

@@ -81,6 +81,7 @@ public class YoukuExtractor extends Extractor {
     @Override
     @Nullable
     VideoInfo createInfo(@NonNull Response response) throws IOException {
+        // TODO: 2/7/17 Check response info if we are in no-network case
         JsonObject data = getData(response.body().string());
         LogUtil.i(TAG, "encrypt string: " + getEncrypt(data));
         checkError(data);

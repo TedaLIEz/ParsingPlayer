@@ -1,6 +1,8 @@
 
 package com.hustunique.parsingplayer.parser.entity;
 
+import android.support.annotation.NonNull;
+
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +13,15 @@ import java.util.Map;
  */
 // TODO: 1/16/17 define fields for information in videos
 public class VideoInfo {
-
+    /**
+     * There are four qualities 0 ~4 for these formats.
+     * <ul>
+     * <li>3gp,flv,flvhd: 0</li>
+     * <li>3gphd,mp4,mp4hd,mp4hd2,mp4hd3: 1</li>
+     * <li>hd2: 2</li>
+     * <li>hd3: 3</li>
+     * </ul>
+     */
     public static final String FORMAT_3GP = "3gp";
     public static final String FORMAT_3GPHD = "3gphd";
     public static final String FORMAT_FLV = "flv";
@@ -24,15 +34,17 @@ public class VideoInfo {
     public static final String FORMAT_HD3 = "hd3";
 
 
-    private Map<String,List<Seg>> segsMap;
+    private Map<String, List<Seg>> segsMap;
     private String title;
 
-    public List<Seg> getSegs(String format){
+    public List<Seg> getSegs(String format) {
         if (!segsMap.containsKey(format)) throw new RuntimeException("No such hd in this url");
         return segsMap.get(format);
     }
 
-    public VideoInfo(Map<String, List<Seg>> segsMap, String title) {
+    public VideoInfo(@NonNull Map<String, List<Seg>> segsMap, @NonNull String title) {
+        if (segsMap == null) throw new IllegalArgumentException("SegsMap can't be null");
+        if (title == null) throw new IllegalArgumentException("Title can't be null");
         this.segsMap = segsMap;
         this.title = title;
     }
@@ -52,14 +64,11 @@ public class VideoInfo {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        VideoInfo videoInfo = (VideoInfo) o;
-
-        if (segsMap != null ? !segsMap.equals(videoInfo.segsMap) : videoInfo.segsMap != null)
-            return false;
-        return title.equals(videoInfo.title);
-
+        if (o instanceof VideoInfo){
+            VideoInfo anotherInfo = (VideoInfo) o;
+            return anotherInfo.segsMap.equals(segsMap) && anotherInfo.title.equals(title);
+        }
+        return false;
     }
 
     @Override

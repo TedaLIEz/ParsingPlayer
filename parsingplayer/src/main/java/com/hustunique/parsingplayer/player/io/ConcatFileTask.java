@@ -16,8 +16,6 @@ import java.io.IOException;
  * a temporary file and set a file uri path to our {@link ParsingVideoView}.
  * This class is utilized in writing information to file
  */
-// TODO: 1/23/17 DiskLruCache may be needed here
-// TODO: 1/29/17 Maybe use some pojo class here as param is better than using string
 @Deprecated
 public final class ConcatFileTask extends AsyncTask<String, Void, FileDescriptor> {
     private static final String TAG = "ConcatFileTask";

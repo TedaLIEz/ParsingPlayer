@@ -1,7 +1,5 @@
 package com.hustunique.parsingplayer.player;
 
-import com.hustunique.parsingplayer.parser.ExtractException;
-
 /**
  * Created by JianGuo on 1/27/17.
  */
@@ -31,5 +29,8 @@ public interface IMediaPlayerControl {
      * @return The audio session, or 0 if there was an error.
      */
     int     getAudioSessionId();
-    void chooseQuality();
+
+    void hideQualityView();
+    void showQualityView();
+    boolean isQualityViewShown();
 }

@@ -143,7 +143,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mQualityView = inflater.inflate(R.layout.quality_choose_view, null);
         FrameLayout.LayoutParams lp = new LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.END);
+                LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.END);
         mQualityView.setVisibility(View.GONE);
         addView(mQualityView, lp);
     }

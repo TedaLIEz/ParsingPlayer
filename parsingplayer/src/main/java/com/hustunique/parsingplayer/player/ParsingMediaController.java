@@ -1,15 +1,16 @@
 package com.hustunique.parsingplayer.player;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
+import android.os.IBinder;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -23,7 +24,6 @@ import java.util.Locale;
  * Created by JianGuo on 1/20/17.
  * Custom media controller view for video view.
  */
-// TODO: 1/26/17 Currently we use popupwindow to show controll panel. Consider using WindowManager in later development.
 public class ParsingMediaController implements IMediaController {
     private IMediaPlayerControl mPlayer;
     private static final int sDefaultTimeOut = 5000;
@@ -36,13 +36,17 @@ public class ParsingMediaController implements IMediaController {
     private TextView mCurrentTime, mEndTime;
     private StringBuilder mFormatBuilder;
     private Formatter mFormatter;
-    private PopupWindow mPopupWindow;
     private int mX, mY;
+    private WindowManager mWindowManager;
+    private WindowManager.LayoutParams mParams;
+    private boolean mIsShowing = false;
 
 
     public ParsingMediaController(Context context, AttributeSet attrs) {
         mContext = context;
+        mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         initControllerView();
+        initPopupWindow();
     }
 
     public ParsingMediaController(Context context) {
@@ -51,19 +55,18 @@ public class ParsingMediaController implements IMediaController {
 
 
     private void initPopupWindow() {
-        mPopupWindow = new PopupWindow(mContext);
-        mPopupWindow.setBackgroundDrawable(null);
-        mPopupWindow.setContentView(mRoot);
-        mPopupWindow.setOutsideTouchable(true);
-        mPopupWindow.setFocusable(true);
-        mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
-            @Override
-            public void onDismiss() {
-                Log.d(TAG, "controller dismissed");
-                mPlayer.hideQualityView();
-            }
-        });
-        mPopupWindow.update();
+        mParams = createLayoutParams(mRoot.getWindowToken());
+    }
+
+    private WindowManager.LayoutParams createLayoutParams(IBinder windowToken) {
+        final WindowManager.LayoutParams p = new WindowManager.LayoutParams();
+        p.token = windowToken;
+        p.format = PixelFormat.TRANSLUCENT;
+        p.gravity = Gravity.END | Gravity.TOP;
+        p.packageName = mContext.getPackageName();
+        p.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+        return p;
     }
 
     private void initControllerView() {
@@ -251,18 +254,30 @@ public class ParsingMediaController implements IMediaController {
         if (mAnchor == null)
             return;
 
-        if (mPopupWindow.isShowing()) {
+        if (mIsShowing) {
+            if (mRoot.getParent() != null) {
+                mWindowManager.removeViewImmediate(mRoot);
+            }
+            mIsShowing = false;
             mRoot.removeCallbacks(mShowProgress);
         }
     }
 
 
+
+    private View.OnLayoutChangeListener mOnLayoutListener = new View.OnLayoutChangeListener() {
+        @Override
+        public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+            updateAnchorViewLayout();
+        }
+    };
+
     @Override
     public void setAnchorView(View view) {
+        view.removeOnLayoutChangeListener(mOnLayoutListener);
         mAnchor = view;
-        if (mAnchor != null)
-            updateAnchorViewLayout();
-        initPopupWindow();
+        mAnchor.addOnLayoutChangeListener(mOnLayoutListener);
+
     }
 
     @Override
@@ -278,25 +293,35 @@ public class ParsingMediaController implements IMediaController {
 
 
     private void showPopupWindowLayout() {
+        updateAnchorViewLayout();
         LogUtil.i(TAG, "show popupWindow at top-left pos:" + "(" + mX + ", " + mY + ")");
-        mPopupWindow.showAtLocation(mAnchor, Gravity.NO_GRAVITY, mX, mY);
+        mWindowManager.addView(mRoot, mParams);
     }
 
+    // FIXME: 2/8/17 Wrong position when in wrap_content mode
     private void updateAnchorViewLayout() {
         assert mAnchor != null;
         int[] anchorPos = new int[2];
+        LogUtil.i(TAG, "anchorView: " + mAnchor);
         mAnchor.getLocationOnScreen(anchorPos);
         mRoot.measure(View.MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), View.MeasureSpec.AT_MOST));
         int width = mAnchor.getWidth();
+        LogUtil.i(TAG, "anchorView height: " + mAnchor.getHeight());
+        LogUtil.i(TAG, "contentView height: " + mRoot.getMeasuredHeight());
         mX = anchorPos[0] + (mAnchor.getWidth() - width) / 2;
         mY = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
+        mParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        mParams.width = width;
+        mParams.x = mX;
+        mParams.y = mY;
         LogUtil.i(TAG, "update mX: " + mX + ", mY: " + mY);
     }
 
     @Override
     public void show(int timeout) {
-        if (!mPopupWindow.isShowing() && mAnchor != null) {
+        if (!mIsShowing && mAnchor != null) {
+            mIsShowing = true;
             setProgress();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
@@ -322,7 +347,7 @@ public class ParsingMediaController implements IMediaController {
 
     @Override
     public boolean isShowing() {
-        return mPopupWindow.isShowing();
+        return mIsShowing;
     }
 
 

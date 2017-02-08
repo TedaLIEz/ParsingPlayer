@@ -16,7 +16,6 @@ import android.widget.TextView;
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
 
-import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Locale;
 
@@ -255,9 +254,6 @@ public class ParsingMediaController implements IMediaController {
         if (mPopupWindow.isShowing()) {
             mRoot.removeCallbacks(mShowProgress);
         }
-        for (View view : mShowOnceArray)
-            view.setVisibility(View.GONE);
-        mShowOnceArray.clear();
     }
 
 
@@ -322,15 +318,6 @@ public class ParsingMediaController implements IMediaController {
     @Override
     public void show() {
         show(sDefaultTimeOut);
-    }
-
-    private ArrayList<View> mShowOnceArray = new ArrayList<View>();
-
-    @Override
-    public void showOnce(View view) {
-        mShowOnceArray.add(view);
-        view.setVisibility(View.VISIBLE);
-        show();
     }
 
     @Override

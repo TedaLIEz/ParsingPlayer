@@ -11,38 +11,23 @@ import java.util.Map;
  * POJO for video information extracted from websites
  * A list of segs represents a steam
  */
-// TODO: 1/16/17 define fields for information in videos
 public class VideoInfo {
-    /**
-     * There are four qualities 0 ~4 for these formats.
-     * <ul>
-     * <li>3gp,flv,flvhd: 0</li>
-     * <li>3gphd,mp4,mp4hd,mp4hd2,mp4hd3: 1</li>
-     * <li>hd2: 2</li>
-     * <li>hd3: 3</li>
-     * </ul>
-     */
-    public static final String FORMAT_3GP = "3gp";
-    public static final String FORMAT_3GPHD = "3gphd";
-    public static final String FORMAT_FLV = "flv";
-    public static final String FORMAT_FLVHD = "flvhd";
-    public static final String FORMAT_MP4 = "mp4";
-    public static final String FORMAT_MP4HD = "mp4hd";
-    public static final String FORMAT_MP4HD2 = "mp4hd2";
-    public static final String FORMAT_MP4HD3 = "mp4hd3";
-    public static final String FORMAT_HD2 = "hd2";
-    public static final String FORMAT_HD3 = "hd3";
+    public static final int HD_0 = 0;
+    public static final int HD_1 = 1;
+    public static final int HD_2 = 2;
+    public static final int HD_3 = 3;
 
 
-    private Map<String, List<Seg>> segsMap;
+    // the key is hd
+    private Map<Integer, List<Seg>> segsMap;
     private String title;
 
-    public List<Seg> getSegs(String format) {
-        if (!segsMap.containsKey(format)) throw new RuntimeException("No such hd in this url");
-        return segsMap.get(format);
+    public List<Seg> getSegs(int hd) {
+        if (!segsMap.containsKey(hd)) throw new RuntimeException("No such hd in this url");
+        return segsMap.get(hd);
     }
 
-    public VideoInfo(@NonNull Map<String, List<Seg>> segsMap, @NonNull String title) {
+    public VideoInfo(@NonNull Map<Integer, List<Seg>> segsMap, @NonNull String title) {
         if (segsMap == null) throw new IllegalArgumentException("SegsMap can't be null");
         if (title == null) throw new IllegalArgumentException("Title can't be null");
         this.segsMap = segsMap;

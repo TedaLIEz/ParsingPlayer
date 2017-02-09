@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_2;
+
 /**
  * Created by CoXier on 17-1-17.
  */
@@ -40,10 +42,25 @@ public class YoukuExtractor extends Extractor {
     private static final String ID_REGEX = "((?<=id_)|(?<=sid/))[A-Za-z0-9]+";
     private static final String TAG = "YoukuExtractor";
     private static final char[] letterTable = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    private static int HD_0 = 0;
-    private static int HD_1 = 1;
-    private static int HD_2 = 2;
-    private static int HD_3 = 3;
+    /**
+     * There are four qualities 0 ~4 for these formats.
+     * <ul>
+     * <li>3gp,flv,flvhd: 0</li>
+     * <li>3gphd,mp4,mp4hd,mp4hd2,mp4hd3: 1</li>
+     * <li>hd2: 2</li>
+     * <li>hd3: 3</li>
+     * </ul>
+     */
+    public static final String FORMAT_3GP = "3gp";
+    public static final String FORMAT_3GPHD = "3gphd";
+    public static final String FORMAT_FLV = "flv";
+    public static final String FORMAT_FLVHD = "flvhd";
+    public static final String FORMAT_MP4 = "mp4";
+    public static final String FORMAT_MP4HD = "mp4hd";
+    public static final String FORMAT_MP4HD2 = "mp4hd2";
+    public static final String FORMAT_MP4HD3 = "mp4hd3";
+    public static final String FORMAT_HD2 = "hd2";
+    public static final String FORMAT_HD3 = "hd3";
 
     private static HashMap<String, String> mExtMap = new HashMap<>();
     private static HashMap<String, Integer> mHdMap = new HashMap<>();
@@ -54,27 +71,27 @@ public class YoukuExtractor extends Extractor {
     private String mOip;
 
     static {
-        mExtMap.put(VideoInfo.FORMAT_3GP, "flv");
-        mExtMap.put(VideoInfo.FORMAT_3GPHD, "mp4");
-        mExtMap.put(VideoInfo.FORMAT_FLV, "flv");
-        mExtMap.put(VideoInfo.FORMAT_FLVHD, "flv");
-        mExtMap.put(VideoInfo.FORMAT_MP4, "mp4");
-        mExtMap.put(VideoInfo.FORMAT_MP4HD, "mp4");
-        mExtMap.put(VideoInfo.FORMAT_MP4HD2, "flv");
-        mExtMap.put(VideoInfo.FORMAT_MP4HD3, "flv");
-        mExtMap.put(VideoInfo.FORMAT_HD2, "flv");
-        mExtMap.put(VideoInfo.FORMAT_HD3, "flv");
+        mExtMap.put(FORMAT_3GP, "flv");
+        mExtMap.put(FORMAT_3GPHD, "mp4");
+        mExtMap.put(FORMAT_FLV, "flv");
+        mExtMap.put(FORMAT_FLVHD, "flv");
+        mExtMap.put(FORMAT_MP4, "mp4");
+        mExtMap.put(FORMAT_MP4HD, "mp4");
+        mExtMap.put(FORMAT_MP4HD2, "flv");
+        mExtMap.put(FORMAT_MP4HD3, "flv");
+        mExtMap.put(FORMAT_HD2, "flv");
+        mExtMap.put(FORMAT_HD3, "flv");
 
-        mHdMap.put(VideoInfo.FORMAT_3GP, HD_0);
-        mHdMap.put(VideoInfo.FORMAT_3GPHD, HD_1);
-        mHdMap.put(VideoInfo.FORMAT_FLV, HD_0);
-        mHdMap.put(VideoInfo.FORMAT_FLVHD, HD_0);
-        mHdMap.put(VideoInfo.FORMAT_MP4, HD_1);
-        mHdMap.put(VideoInfo.FORMAT_MP4HD, HD_1);
-        mHdMap.put(VideoInfo.FORMAT_MP4HD2, HD_1);
-        mHdMap.put(VideoInfo.FORMAT_MP4HD3, HD_1);
-        mHdMap.put(VideoInfo.FORMAT_HD2, HD_2);
-        mHdMap.put(VideoInfo.FORMAT_HD3, HD_3);
+        mHdMap.put(FORMAT_3GP, VideoInfo.HD_0);
+        mHdMap.put(FORMAT_3GPHD, VideoInfo.HD_1);
+        mHdMap.put(FORMAT_FLV, VideoInfo.HD_0);
+        mHdMap.put(FORMAT_FLVHD, VideoInfo.HD_0);
+        mHdMap.put(FORMAT_MP4, VideoInfo.HD_1);
+        mHdMap.put(FORMAT_MP4HD, VideoInfo.HD_1);
+        mHdMap.put(FORMAT_MP4HD2, VideoInfo.HD_1);
+        mHdMap.put(FORMAT_MP4HD3, VideoInfo.HD_1);
+        mHdMap.put(FORMAT_HD2, VideoInfo.HD_2);
+        mHdMap.put(FORMAT_HD3, VideoInfo.HD_3);
     }
 
 
@@ -96,7 +113,7 @@ public class YoukuExtractor extends Extractor {
         LogUtil.i(TAG, "sid: " + mSid +" ,mToken: " + mToken + " ,oip: " + mOip);
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
-        Map<String, List<Seg>> segsMap = getSegMap(data);
+        Map<Integer, List<Seg>> segsMap = getSegMap(data);
         return new VideoInfo(segsMap, title);
     }
 
@@ -107,8 +124,8 @@ public class YoukuExtractor extends Extractor {
         return rst;
     }
 
-    private Map<String, List<Seg>> getSegMap(JsonObject data) throws UnsupportedEncodingException {
-        HashMap<String, List<Seg>> segsMap = new HashMap<>();
+    private Map<Integer, List<Seg>> getSegMap(JsonObject data) throws UnsupportedEncodingException {
+        HashMap<Integer, List<Seg>> segsMap = new HashMap<>();
         JsonArray streams = data.getAsJsonArray("stream");
         for (JsonElement stream : streams) {
             if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
@@ -137,9 +154,9 @@ public class YoukuExtractor extends Extractor {
                 int duration = Integer.parseInt(seg.getAsJsonObject().get("total_milliseconds_video").getAsString()) / 1000;
                 Seg s = new Seg(videoUrl, duration);
                 segList.add(s);
-                segsMap.put(format, segList);
                 n++;
             }
+            segsMap.put(mHdMap.get(format), segList);
         }
         return segsMap;
     }
@@ -190,8 +207,6 @@ public class YoukuExtractor extends Extractor {
     @Override
     String constructBasicUrl(@NonNull String url) {
         String id = extractId(url);
-        if (id == null)
-            throw new IllegalArgumentException("Can't find id of this video.Please check");
         return String.format("http://play.youku.com/play/get.json?vid=%s&ct=12", id);
     }
 
@@ -203,7 +218,7 @@ public class YoukuExtractor extends Extractor {
         if (matcher.find()) {
             return matcher.group(0);
         }
-        return null;
+        throw new IllegalArgumentException("Can't find id of this video.Please check");
     }
 
     private byte[] rc4(String key, String data) {

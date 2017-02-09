@@ -9,9 +9,16 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -60,12 +67,15 @@ public abstract class Extractor {
         return null;
     }
 
+    protected JsonObject parseResponse(Response response) throws IOException{
+        JsonParser parser = new JsonParser();
+        return parser.parse(response.body().string()).getAsJsonObject();
+    }
+
     abstract String constructBasicUrl(@NonNull String url);
 
     @Nullable
     abstract VideoInfo createInfo(@NonNull Response response) throws IOException;
     @NonNull
     abstract Request buildRequest(@NonNull String baseUrl);
-
-
 }

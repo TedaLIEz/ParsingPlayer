@@ -7,14 +7,14 @@ package com.hustunique.parsingplayer.parser.entity;
 
 public class Seg {
     private String path;
-    private int duration;
+    private double duration;
 
-    public Seg(String path, int duration) {
+    public Seg(String path, double duration) {
         this.path = path;
         this.duration = duration;
     }
 
-    public int getDuration() {
+    public double getDuration() {
         return duration;
     }
 
@@ -45,7 +45,7 @@ public class Seg {
     @Override
     public int hashCode() {
         int result = path.hashCode();
-        result = 31 * result + duration;
+        result = (int) (31 * result + duration);
         return result;
     }
 

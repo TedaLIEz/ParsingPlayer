@@ -416,7 +416,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public void setConcatVideos(@NonNull VideoInfo videoInfo) {
         // TODO: 2/7/17 Choose video quality by user, avoid hard-coding
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
-                ProtocolHelper.concat(videoInfo.getSegs(VideoInfo.FORMAT_3GPHD)),
+                ProtocolHelper.concat(videoInfo.getSegs(0)),
                 new LoadingCallback<String>() {
                     @Override
                     public void onSuccess(final String result) {

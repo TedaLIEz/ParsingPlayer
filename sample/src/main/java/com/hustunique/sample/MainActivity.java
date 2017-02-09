@@ -17,6 +17,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        mVideoView.play("http://v.youku.com/v_show/id_XMjQ3MzE1NDA3Ng");
+        mVideoView.play("http://my.tv.sohu.com/us/232799889/78693464.shtml");
     }
 }

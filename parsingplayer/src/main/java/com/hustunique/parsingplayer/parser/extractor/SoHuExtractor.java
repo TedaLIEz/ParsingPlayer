@@ -32,7 +32,7 @@ import okhttp3.Response;
  * Created by CoXier on 17-2-7.
  */
 
-public class SouHuExtractor extends Extractor {
+public class SoHuExtractor extends Extractor {
     public static final String VALID_URL = "https?://(my\\.)?tv\\.sohu\\.com/.+/(n)?\\d+\\.shtml.*";
 
 

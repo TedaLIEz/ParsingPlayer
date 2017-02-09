@@ -9,10 +9,9 @@ import android.util.Log;
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.extractor.Extractor;
-import com.hustunique.parsingplayer.parser.extractor.SouHuExtractor;
+import com.hustunique.parsingplayer.parser.extractor.SoHuExtractor;
 import com.hustunique.parsingplayer.parser.extractor.YoukuExtractor;
 
-import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -43,7 +42,7 @@ public class VideoParser {
     static {
         // TODO: 1/17/17 Maybe there is a better solution to register map between regex and IExtractor here
         sMatchMap.put(YoukuExtractor.VALID_URL, YoukuExtractor.class);
-        sMatchMap.put(SouHuExtractor.VALID_URL,SouHuExtractor.class);
+        sMatchMap.put(SoHuExtractor.VALID_URL,SoHuExtractor.class);
     }
 
     @NonNull

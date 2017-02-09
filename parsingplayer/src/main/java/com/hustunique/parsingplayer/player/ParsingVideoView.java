@@ -34,6 +34,7 @@ import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -443,22 +444,26 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     public void setVideoURI(Uri uri) {
-        setVideoURI(uri, null);
+        Map<String,String> headers = new HashMap<>();
+        headers.put("Range"," ");
+        setVideoURI(uri, headers);
     }
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         mSeekWhenPrepared = 0;
         String scheme = uri.getScheme();
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                    && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
-                IMediaDataSource dataSource = new FileMediaDataSource(new File(uri.toString()));
-                mMediaPlayer.setDataSource(dataSource);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                mMediaPlayer.setDataSource(mContext, uri, headers);
-            } else {
-                mMediaPlayer.setDataSource(uri.toString());
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+//                    && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
+//                IMediaDataSource dataSource = new FileMediaDataSource(new File(uri.toString()));
+//                mMediaPlayer.setDataSource(dataSource);
+//            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//                mMediaPlayer.setDataSource(mContext, uri, headers);
+//            } else {
+//                mMediaPlayer.setDataSource(uri.toString());
+//            }
+            // Fixme different setting for different build version
+            mMediaPlayer.setDataSource(mContext, uri, headers);
             openVideo();
             requestLayout();
             invalidate();

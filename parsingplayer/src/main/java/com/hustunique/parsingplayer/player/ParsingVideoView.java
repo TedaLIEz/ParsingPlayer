@@ -210,6 +210,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
 
+
     IMediaPlayer.OnVideoSizeChangedListener mSizeChangedListener =
             new IMediaPlayer.OnVideoSizeChangedListener() {
                 public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sarNum, int sarDen) {
@@ -482,7 +483,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private void attachMediaController() {
         if (mMediaPlayer != null && mMediaController != null) {
             mMediaController.setMediaPlayer(this);
-            // TODO: 2/6/17 MediaController should suit with video's size, not view's size
             mMediaController.setAnchorView(this);
             mMediaController.setEnabled(isInPlayBackState());
         }
@@ -533,12 +533,12 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
         View renderUIView = mRenderView.getView();
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT,
                 Gravity.CENTER);
         renderUIView.setLayoutParams(lp);
         addView(renderUIView);
-
+        LogUtil.d(TAG, "width: " + renderUIView.getMeasuredWidth() + " height: " + renderUIView.getMeasuredHeight());
         mRenderView.addRenderCallback(mSHCallback);
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }
@@ -623,6 +623,9 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public boolean onTouchEvent(MotionEvent event) {
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
+            if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
+                return false;
+            }
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 if (mQualityView.getVisibility() == VISIBLE) {
                     mQualityView.setVisibility(GONE);
@@ -632,9 +635,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 }
 
             }
-
-
-
         }
         return true;
     }
@@ -839,9 +839,20 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        release(true);
-    }
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == GONE && mMediaPlayer.isPlaying()) {
+            mMediaPlayer.pause();
+            if (mMediaController != null) {
+                mMediaController.hide();
+            }
+        }
+        if (visibility == VISIBLE && !mMediaPlayer.isPlaying()) {
+            mMediaPlayer.start();
+            if (mMediaController != null) {
+                mMediaController.show();
 
+            }
+        }
+    }
 }

@@ -4,11 +4,7 @@ package com.hustunique.sample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
-import com.hustunique.parsingplayer.parser.VideoParser;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.player.ParsingVideoView;
 
 public class MainActivity extends AppCompatActivity {

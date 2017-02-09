@@ -1,22 +1,22 @@
 package com.hustunique.parsingplayer.player;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
+import android.os.IBinder;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
 
-import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Locale;
 
@@ -24,9 +24,10 @@ import java.util.Locale;
  * Created by JianGuo on 1/20/17.
  * Custom media controller view for video view.
  */
-// TODO: 1/26/17 Currently we use popupwindow to show controll panel. Consider using WindowManager in later development.
 public class ParsingMediaController implements IMediaController {
     private IMediaPlayerControl mPlayer;
+    public static final int INPUT_METHOD_FROM_FOCUSABLE = 0;
+    private int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     private static final int sDefaultTimeOut = 5000;
     private static final String TAG = "ParsingMediaController";
     private View mRoot;
@@ -37,37 +38,41 @@ public class ParsingMediaController implements IMediaController {
     private TextView mCurrentTime, mEndTime;
     private StringBuilder mFormatBuilder;
     private Formatter mFormatter;
-    private PopupWindow mPopupWindow;
-    private int mX, mY;
+    private WindowManager mWindowManager;
+    private WindowManager.LayoutParams mParams;
+    private boolean mIsShowing = false;
 
 
-    public ParsingMediaController(Context context, AttributeSet attrs) {
+    ParsingMediaController(Context context, AttributeSet attrs) {
         mContext = context;
-        initControllerView();
+        mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        mRoot = initControllerView();
+        initPopupWindow();
     }
 
-    public ParsingMediaController(Context context) {
+    ParsingMediaController(Context context) {
         this(context, null);
     }
 
 
     private void initPopupWindow() {
-        mPopupWindow = new PopupWindow(mContext);
-        mPopupWindow.setBackgroundDrawable(null);
-        mPopupWindow.setContentView(mRoot);
-        mPopupWindow.setOutsideTouchable(true);
-        mPopupWindow.setFocusable(true);
-        mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
-            @Override
-            public void onDismiss() {
-                Log.d(TAG, "controller dismissed");
-                mPlayer.hideQualityView();
-            }
-        });
-        mPopupWindow.update();
+        mParams = createLayoutParams(mRoot.getWindowToken());
     }
 
-    private void initControllerView() {
+    private WindowManager.LayoutParams createLayoutParams(IBinder windowToken) {
+        final WindowManager.LayoutParams p = new WindowManager.LayoutParams();
+        p.token = windowToken;
+        p.format = PixelFormat.TRANSLUCENT;
+        p.gravity = Gravity.START | Gravity.TOP;
+        p.packageName = mContext.getPackageName();
+        p.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        return p;
+    }
+
+    // for override in inheritance
+    protected View initControllerView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRoot = inflater.inflate(R.layout.media_controller, new FrameLayout(mContext), false);
         mPauseButton = (ImageButton) mRoot.findViewById(R.id.pause);
@@ -107,6 +112,7 @@ public class ParsingMediaController implements IMediaController {
                 return true;
             }
         });
+        return mRoot;
     }
 
 
@@ -142,12 +148,6 @@ public class ParsingMediaController implements IMediaController {
         }
     };
 
-    private final Runnable mFadeOut = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
 
     private int setProgress() {
         if (mPlayer == null || mDragging) {
@@ -252,21 +252,33 @@ public class ParsingMediaController implements IMediaController {
         if (mAnchor == null)
             return;
 
-        if (mPopupWindow.isShowing()) {
+        if (mIsShowing) {
+            if (mRoot.getParent() != null) {
+                mWindowManager.removeViewImmediate(mRoot);
+            }
+            mIsShowing = false;
             mRoot.removeCallbacks(mShowProgress);
         }
-        for (View view : mShowOnceArray)
-            view.setVisibility(View.GONE);
-        mShowOnceArray.clear();
     }
 
 
+
+    private View.OnLayoutChangeListener mOnLayoutListener = new View.OnLayoutChangeListener() {
+        @Override
+        public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+            updateAnchorViewLayout();
+            if (isShowing()) {
+                mWindowManager.updateViewLayout(mRoot, mParams);
+            }
+        }
+    };
+
     @Override
     public void setAnchorView(View view) {
+        view.removeOnLayoutChangeListener(mOnLayoutListener);
         mAnchor = view;
-        if (mAnchor != null)
-            updateAnchorViewLayout();
-        initPopupWindow();
+        mAnchor.addOnLayoutChangeListener(mOnLayoutListener);
+
     }
 
     @Override
@@ -282,25 +294,34 @@ public class ParsingMediaController implements IMediaController {
 
 
     private void showPopupWindowLayout() {
-        LogUtil.i(TAG, "show popupWindow at top-left pos:" + "(" + mX + ", " + mY + ")");
-        mPopupWindow.showAtLocation(mAnchor, Gravity.NO_GRAVITY, mX, mY);
+        updateAnchorViewLayout();
+        mWindowManager.addView(mRoot, mParams);
     }
 
     private void updateAnchorViewLayout() {
         assert mAnchor != null;
         int[] anchorPos = new int[2];
+        LogUtil.i(TAG, "anchorView: " + mAnchor);
         mAnchor.getLocationOnScreen(anchorPos);
         mRoot.measure(View.MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), View.MeasureSpec.AT_MOST));
-        int width = mAnchor.getWidth();
-        mX = anchorPos[0] + (mAnchor.getWidth() - width) / 2;
-        mY = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
-        LogUtil.i(TAG, "update mX: " + mX + ", mY: " + mY);
+        mParams.width = mAnchor.getWidth();
+        mParams.height = mRoot.getMeasuredHeight();
+        LogUtil.i(TAG, "anchorView top Y: " + anchorPos[1]);
+        LogUtil.i(TAG, "anchorView height: " + mAnchor.getHeight());
+        LogUtil.i(TAG, "contentView height: " + mRoot.getMeasuredHeight());
+        int x = anchorPos[0] + (mAnchor.getWidth() - mParams.width) / 2;
+        // TODO: 2/8/17 Weird position when setting videoView in WRAP_CONTENT
+        int y = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
+
+        mParams.x = x;
+        mParams.y = y;
     }
 
     @Override
     public void show(int timeout) {
-        if (!mPopupWindow.isShowing() && mAnchor != null) {
+        if (!mIsShowing && mAnchor != null) {
+            mIsShowing = true;
             setProgress();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
@@ -324,18 +345,9 @@ public class ParsingMediaController implements IMediaController {
         show(sDefaultTimeOut);
     }
 
-    private ArrayList<View> mShowOnceArray = new ArrayList<View>();
-
-    @Override
-    public void showOnce(View view) {
-        mShowOnceArray.add(view);
-        view.setVisibility(View.VISIBLE);
-        show();
-    }
-
     @Override
     public boolean isShowing() {
-        return mPopupWindow.isShowing();
+        return mIsShowing;
     }
 
 

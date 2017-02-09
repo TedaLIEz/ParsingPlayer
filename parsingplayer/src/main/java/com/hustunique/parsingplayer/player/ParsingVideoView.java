@@ -839,9 +839,20 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        release(true);
-    }
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == GONE && mMediaPlayer.isPlaying()) {
+            mMediaPlayer.pause();
+            if (mMediaController != null) {
+                mMediaController.hide();
+            }
+        }
+        if (visibility == VISIBLE && !mMediaPlayer.isPlaying()) {
+            mMediaPlayer.start();
+            if (mMediaController != null) {
+                mMediaController.show();
 
+            }
+        }
+    }
 }

@@ -26,7 +26,8 @@ public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
     @Override
     protected void onPostExecute(VideoInfo videoInfo) {
         super.onPostExecute(videoInfo);
+        // videoView will start playing automatically when process prepared
         mVideoView.setConcatVideos(videoInfo);
-        mVideoView.start();
+
     }
 }

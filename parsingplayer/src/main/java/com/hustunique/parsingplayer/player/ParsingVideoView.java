@@ -13,7 +13,6 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -25,21 +24,19 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
-import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.ParsingTask;
-
-import com.hustunique.parsingplayer.parser.entity.ProtocolHelper;
+import com.hustunique.parsingplayer.R;
+import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
-import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -142,7 +139,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private void initQualityView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mQualityView = inflater.inflate(R.layout.quality_choose_view, null);
+        mQualityView = inflater.inflate(R.layout.quality_choose_view, this, false);
         FrameLayout.LayoutParams lp = new LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
                 LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.END);
         mQualityView.setVisibility(View.GONE);
@@ -393,7 +390,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mCurrentState = STATE_PREPARING;
     }
 
-    public void setQuality(int quality) {
+    public void setQuality(@Quality int quality) {
 
     }
 
@@ -416,9 +413,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     // TODO: 2/5/17 Show sth if the io is running
     public void setConcatVideos(@NonNull VideoInfo videoInfo) {
-        // TODO: 2/7/17 Choose video quality by user, avoid hard-coding
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
-                ProtocolHelper.concat(videoInfo.getSegs(0)),
+                new ConcatSourceProvider(mContext).provideSource(videoInfo),
                 new LoadingCallback<String>() {
                     @Override
                     public void onSuccess(final String result) {
@@ -445,23 +441,14 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     public void setVideoURI(Uri uri) {
         Map<String,String> headers = new HashMap<>();
+        // TODO: 2/10/17 Not reasonable to set range headers for all uri
         headers.put("Range"," ");
         setVideoURI(uri, headers);
     }
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         mSeekWhenPrepared = 0;
-        String scheme = uri.getScheme();
         try {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-//                    && (TextUtils.isEmpty(scheme) || scheme.equalsIgnoreCase("file"))) {
-//                IMediaDataSource dataSource = new FileMediaDataSource(new File(uri.toString()));
-//                mMediaPlayer.setDataSource(dataSource);
-//            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-//                mMediaPlayer.setDataSource(mContext, uri, headers);
-//            } else {
-//                mMediaPlayer.setDataSource(uri.toString());
-//            }
             // Fixme different setting for different build version
             mMediaPlayer.setDataSource(mContext, uri, headers);
             openVideo();

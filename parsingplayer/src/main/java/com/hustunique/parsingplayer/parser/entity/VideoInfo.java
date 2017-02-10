@@ -22,7 +22,8 @@ public class VideoInfo {
     private Map<Integer, List<Seg>> segsMap;
     private String title;
 
-    public List<Seg> getSegs(int hd) {
+
+    public List<Seg> getSegs(@Quality int hd) {
         if (!segsMap.containsKey(hd)) throw new RuntimeException("No such hd in this url");
         return segsMap.get(hd);
     }

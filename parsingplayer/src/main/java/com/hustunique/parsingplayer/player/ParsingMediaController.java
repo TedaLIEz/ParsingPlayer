@@ -8,6 +8,8 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -26,8 +28,6 @@ import java.util.Locale;
  */
 public class ParsingMediaController implements IMediaController {
     private IMediaPlayerControl mPlayer;
-    public static final int INPUT_METHOD_FROM_FOCUSABLE = 0;
-    private int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     private static final int sDefaultTimeOut = 5000;
     private static final String TAG = "ParsingMediaController";
     private View mRoot;
@@ -255,6 +255,10 @@ public class ParsingMediaController implements IMediaController {
         if (mIsShowing) {
             if (mRoot.getParent() != null) {
                 mWindowManager.removeViewImmediate(mRoot);
+                ViewParent contentParent = mRoot.getParent();
+                if (contentParent instanceof ViewGroup) {
+                    ((ViewGroup) contentParent).removeView(mRoot);
+                }
             }
             mIsShowing = false;
             mRoot.removeCallbacks(mShowProgress);

@@ -61,6 +61,37 @@ public final class MeasureHelper {
         mVideoRotationDegree = videoRotationDegree;
     }
 
+
+    private float getDisplayRatio() {
+        float displayAspectRatio;
+        switch (mCurrentAspectRatioMode) {
+            case IRenderView.AR_16_9_FIT_PARENT:
+                displayAspectRatio = 16.0f / 9.0f;
+                if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
+                    displayAspectRatio = 1.0f / displayAspectRatio;
+                break;
+            case IRenderView.AR_4_3_FIT_PARENT:
+                displayAspectRatio = 4.0f / 3.0f;
+                if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
+                    displayAspectRatio = 1.0f / displayAspectRatio;
+                break;
+            case IRenderView.AR_ASPECT_EXACTLY:
+                displayAspectRatio = mCurrentAspectRatio;
+                if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
+                    displayAspectRatio = 1.0f / displayAspectRatio;
+                break;
+            case IRenderView.AR_ASPECT_FIT_PARENT:
+            case IRenderView.AR_ASPECT_FILL_PARENT:
+            case IRenderView.AR_ASPECT_WRAP_CONTENT:
+            default:
+                displayAspectRatio = (float) mVideoWidth / (float) mVideoHeight;
+                if (mVideoSarNum > 0 && mVideoSarDen > 0)
+                    displayAspectRatio = displayAspectRatio * mVideoSarNum / mVideoSarDen;
+                break;
+        }
+        return displayAspectRatio;
+    }
+
     /**
      * Must be called by View.onMeasure(int, int)
      *
@@ -75,7 +106,7 @@ public final class MeasureHelper {
             widthMeasureSpec  = heightMeasureSpec;
             heightMeasureSpec = tempSpec;
         }
-
+        float displayAspectRatio = getDisplayRatio();
         int width = View.getDefaultSize(mVideoWidth, widthMeasureSpec);
         int height = View.getDefaultSize(mVideoHeight, heightMeasureSpec);
         if (mCurrentAspectRatioMode == IRenderView.AR_MATCH_PARENT) {
@@ -89,32 +120,6 @@ public final class MeasureHelper {
 
             if (widthSpecMode == View.MeasureSpec.AT_MOST && heightSpecMode == View.MeasureSpec.AT_MOST) {
                 float specAspectRatio = (float) widthSpecSize / (float) heightSpecSize;
-                float displayAspectRatio;
-                switch (mCurrentAspectRatioMode) {
-                    case IRenderView.AR_16_9_FIT_PARENT:
-                        displayAspectRatio = 16.0f / 9.0f;
-                        if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
-                            displayAspectRatio = 1.0f / displayAspectRatio;
-                        break;
-                    case IRenderView.AR_4_3_FIT_PARENT:
-                        displayAspectRatio = 4.0f / 3.0f;
-                        if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
-                            displayAspectRatio = 1.0f / displayAspectRatio;
-                        break;
-                    case IRenderView.AR_ASPECT_EXACTLY:
-                        displayAspectRatio = mCurrentAspectRatio;
-                        if (mVideoRotationDegree == 90 || mVideoRotationDegree == 270)
-                            displayAspectRatio = 1.0f / displayAspectRatio;
-                        break;
-                    case IRenderView.AR_ASPECT_FIT_PARENT:
-                    case IRenderView.AR_ASPECT_FILL_PARENT:
-                    case IRenderView.AR_ASPECT_WRAP_CONTENT:
-                    default:
-                        displayAspectRatio = (float) mVideoWidth / (float) mVideoHeight;
-                        if (mVideoSarNum > 0 && mVideoSarDen > 0)
-                            displayAspectRatio = displayAspectRatio * mVideoSarNum / mVideoSarDen;
-                        break;
-                }
                 boolean shouldBeWider = displayAspectRatio > specAspectRatio;
 
                 switch (mCurrentAspectRatioMode) {
@@ -164,6 +169,10 @@ public final class MeasureHelper {
                 width = widthSpecSize;
                 height = heightSpecSize;
 
+                if (mCurrentAspectRatioMode == IRenderView.AR_ASPECT_EXACTLY) {
+                    width = (int) (mMeasuredWidth * displayAspectRatio);
+                    height = (int) (mMeasuredHeight * displayAspectRatio);
+                }
                 // for compatibility, we adjust size based on aspect ratio
                 if (mVideoWidth * height < width * mVideoHeight) {
                     //Log.i("@@@", "image too wide, correcting");
@@ -204,7 +213,7 @@ public final class MeasureHelper {
                 }
             }
         }
-//        LogUtil.d(TAG, "Measure size:(" + width + ", " + height + ")");
+
         mMeasuredWidth = width;
         mMeasuredHeight = height;
     }

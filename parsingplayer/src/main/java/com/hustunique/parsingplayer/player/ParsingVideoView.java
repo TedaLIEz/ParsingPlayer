@@ -22,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.ParsingTask;
@@ -37,6 +38,10 @@ import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
+
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_0;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_1;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_2;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -98,16 +103,16 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView(context);
-        initPlayer();
         initGesture();
+        initPlayer();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
-        initPlayer();
         initGesture();
+        initPlayer();
     }
 
     private void initPlayer() {
@@ -140,6 +145,27 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private void initQualityView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mQualityView = inflater.inflate(R.layout.quality_choose_view, this, false);
+        TextView tvHigh = (TextView) mQualityView.findViewById(R.id.tv_high);
+        TextView tvMedium = (TextView) mQualityView.findViewById(R.id.tv_medium);
+        TextView tvLow = (TextView) mQualityView.findViewById(R.id.tv_low);
+        tvHigh.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setQuality(HD_0);
+            }
+        });
+        tvMedium.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setQuality(HD_1);
+            }
+        });
+        tvLow.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setQuality(HD_2);
+            }
+        });
         FrameLayout.LayoutParams lp = new LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
                 LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.END);
         mQualityView.setVisibility(View.GONE);
@@ -306,6 +332,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                     LogUtil.d(TAG, "MEDIA_INFO_BUFFERING_START:");
                     break;
                 case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
+                    LogUtil.w(TAG, "Bad networking!");
                     LogUtil.d(TAG, "MEDIA_INFO_BUFFERING_END:");
                     break;
                 case IMediaPlayer.MEDIA_INFO_NETWORK_BANDWIDTH:
@@ -343,7 +370,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private IMediaPlayer.OnErrorListener mErrorListener = new IMediaPlayer.OnErrorListener() {
         @Override
         public boolean onError(IMediaPlayer mp, int framework_err, int impl_err) {
-            LogUtil.d(TAG, "Error: " + framework_err + "," + impl_err);
+            LogUtil.e(TAG, "Error: " + framework_err + "," + impl_err);
             mCurrentState = STATE_ERROR;
             mTargetState = STATE_ERROR;
             if (mMediaController != null) {
@@ -391,7 +418,9 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     public void setQuality(@Quality int quality) {
-
+        // TODO: 2/12/17 Set quality
+        LogUtil.d(TAG, "choose quality : " + quality);
+        hideQualityView();
     }
 
     public void setOnCompletionListener(@Nullable IMediaPlayer.OnCompletionListener onCompletionListener) {
@@ -530,7 +559,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 Gravity.CENTER);
         renderUIView.setLayoutParams(lp);
         addView(renderUIView);
-        LogUtil.d(TAG, "width: " + renderUIView.getMeasuredWidth() + " height: " + renderUIView.getMeasuredHeight());
+//        LogUtil.d(TAG, "width: " + renderUIView.getMeasuredWidth() + " height: " + renderUIView.getMeasuredHeight());
         mRenderView.addRenderCallback(mSHCallback);
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }
@@ -615,9 +644,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     public boolean onTouchEvent(MotionEvent event) {
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
-            if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
-                return false;
-            }
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 if (mQualityView.getVisibility() == VISIBLE) {
                     mQualityView.setVisibility(GONE);
@@ -625,7 +651,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 if (isInPlayBackState() && mMediaController != null) {
                     toggleMediaControlsVisibility();
                 }
-
             }
         }
         return true;

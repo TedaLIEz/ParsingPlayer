@@ -7,12 +7,15 @@
               android:gravity="center"
               android:layout_height="match_parent">
             <TextView
+                android:id="@+id/tv_high"
                 style="@style/MediaQuality.Text"
                 android:text="High"/>
             <TextView
+                android:id="@+id/tv_medium"
                 style="@style/MediaQuality.Text"
                 android:text="Medium"/>
             <TextView
+                android:id="@+id/tv_low"
                 style="@style/MediaQuality.Text"
                 android:text="Low"/>
 </LinearLayout>

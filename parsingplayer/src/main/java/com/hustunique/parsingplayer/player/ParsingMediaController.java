@@ -33,7 +33,6 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
 
 import java.util.Formatter;
@@ -322,15 +321,11 @@ public class ParsingMediaController implements IMediaController {
     private void updateAnchorViewLayout() {
         assert mAnchor != null;
         int[] anchorPos = new int[2];
-        LogUtil.i(TAG, "anchorView: " + mAnchor);
         mAnchor.getLocationOnScreen(anchorPos);
         mRoot.measure(View.MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), View.MeasureSpec.AT_MOST));
         mParams.width = mAnchor.getWidth();
         mParams.height = mRoot.getMeasuredHeight();
-        LogUtil.i(TAG, "anchorView top Y: " + anchorPos[1]);
-        LogUtil.i(TAG, "anchorView height: " + mAnchor.getHeight());
-        LogUtil.i(TAG, "contentView height: " + mRoot.getMeasuredHeight());
         int x = anchorPos[0] + (mAnchor.getWidth() - mParams.width) / 2;
         // TODO: 2/8/17 Weird position when setting videoView in WRAP_CONTENT
         int y = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();

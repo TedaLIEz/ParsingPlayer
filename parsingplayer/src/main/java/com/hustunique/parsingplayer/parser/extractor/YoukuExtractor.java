@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2017 UniqueStudio
+ *
+ * This file is part of ParsingPlayer.
+ *
+ * ParsingPlayer is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with ParsingPlayer; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 package com.hustunique.parsingplayer.parser.extractor;
 
 import android.support.annotation.NonNull;
@@ -25,13 +42,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import okhttp3.Request;
 import okhttp3.Response;
-
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_2;
 
 /**
  * Created by CoXier on 17-1-17.
@@ -206,20 +219,12 @@ public class YoukuExtractor extends Extractor {
 
     @Override
     String constructBasicUrl(@NonNull String url) {
-        String id = extractId(url);
+        String id = searchValue(url,ID_REGEX);
+        if (id == null)
+            throw new IllegalArgumentException("Can't find id of this video.Please check");
         return String.format("http://play.youku.com/play/get.json?vid=%s&ct=12", id);
     }
 
-    @Nullable
-    private String extractId(String url) {
-        if (url == null) throw new IllegalArgumentException();
-        Pattern pattern = Pattern.compile(ID_REGEX);
-        Matcher matcher = pattern.matcher(url);
-        if (matcher.find()) {
-            return matcher.group(0);
-        }
-        throw new IllegalArgumentException("Can't find id of this video.Please check");
-    }
 
     private byte[] rc4(String key, String data) {
         byte[] s2 = new byte[0];

@@ -1,4 +1,19 @@
-
+/*
+ *
+ * Copyright (c) 2017 UniqueStudio
+ *
+ * This file is part of ParsingPlayer.
+ *
+ * ParsingPlayer is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with ParsingPlayer; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 
 package com.hustunique.parsingplayer.parser.extractor;
 
@@ -19,6 +34,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -34,7 +51,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 public abstract class Extractor {
     private static final String TAG = "Extractor";
-    private OkHttpClient mClient;
+    protected OkHttpClient mClient;
 
     public Extractor() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
@@ -67,9 +84,23 @@ public abstract class Extractor {
         return null;
     }
 
-    protected JsonObject parseResponse(Response response) throws IOException{
+    protected JsonObject parseResponse(String response){
         JsonParser parser = new JsonParser();
-        return parser.parse(response.body().string()).getAsJsonObject();
+        return parser.parse(response).getAsJsonObject();
+    }
+
+    protected String searchValue(String s, String regex){
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(s);
+        matcher.find();
+        return matcher.group(0);
+    }
+
+    protected String downloadData(String url) throws IOException{
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        return mClient.newCall(request).execute().body().string();
     }
 
     abstract String constructBasicUrl(@NonNull String url);

@@ -1,4 +1,4 @@
-package com.hustunique.parsingplayer.parser.entity;
+package com.hustunique.parsingplayer.parser.provider;
 
 import android.support.annotation.IntDef;
 

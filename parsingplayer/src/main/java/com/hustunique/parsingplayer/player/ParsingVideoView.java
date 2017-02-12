@@ -26,9 +26,9 @@ import android.widget.FrameLayout;
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.ParsingTask;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.Quality;
+import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.parsingplayer.parser.entity.provider.ConcatSourceProvider;
+import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.IOException;

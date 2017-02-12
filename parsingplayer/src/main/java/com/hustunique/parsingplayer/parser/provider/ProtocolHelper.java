@@ -1,4 +1,6 @@
-package com.hustunique.parsingplayer.parser.entity;
+package com.hustunique.parsingplayer.parser.provider;
+
+import com.hustunique.parsingplayer.parser.entity.Seg;
 
 import java.util.List;
 

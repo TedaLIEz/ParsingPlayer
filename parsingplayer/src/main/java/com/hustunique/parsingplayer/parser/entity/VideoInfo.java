@@ -3,6 +3,8 @@ package com.hustunique.parsingplayer.parser.entity;
 
 import android.support.annotation.NonNull;
 
+import com.hustunique.parsingplayer.parser.provider.Quality;
+
 import java.util.List;
 import java.util.Map;
 

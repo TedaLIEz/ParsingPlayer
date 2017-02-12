@@ -1,4 +1,4 @@
-package com.hustunique.parsingplayer.parser.entity.provider;
+package com.hustunique.parsingplayer.parser.provider;
 
 /**
  * Created by JianGuo on 1/29/17.

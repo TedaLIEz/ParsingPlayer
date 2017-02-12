@@ -1,12 +1,10 @@
-package com.hustunique.parsingplayer.parser.entity.provider;
+package com.hustunique.parsingplayer.parser.provider;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
-import com.hustunique.parsingplayer.parser.entity.ProtocolHelper;
-import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_0;

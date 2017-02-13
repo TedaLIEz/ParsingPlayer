@@ -49,7 +49,6 @@ import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -163,6 +162,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         requestFocus();
     }
 
+    // TODO: 2/13/17 Create View by quality counted in VideoInfo
     private void initQualityView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mQualityView = inflater.inflate(R.layout.quality_choose_view, this, false);
@@ -498,10 +498,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
      * @param uri the video source uri
      */
     public void setVideoURI(Uri uri) {
-        Map<String, String> headers = new HashMap<>();
-        // TODO: 2/10/17 Not reasonable to set range headers for all uri
-        headers.put("Range", " ");
-        setVideoURI(uri, headers);
+        setVideoURI(uri, null);
     }
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {

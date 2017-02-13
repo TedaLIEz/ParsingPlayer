@@ -32,6 +32,7 @@ import com.hustunique.parsingplayer.Util;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -55,8 +56,10 @@ public class YoukuExtractor extends Extractor {
     private static final String ID_REGEX = "((?<=id_)|(?<=sid/))[A-Za-z0-9]+";
     private static final String TAG = "YoukuExtractor";
     private static final char[] letterTable = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+
+    public static final String TEST_URL = "http://v.youku.com/v_show/id_XMjUwODc1MTY5Mg==.html";
     /**
-     * There are four qualities 0 ~4 for these formats.
+     * There are four qualities 0 ~3 for these formats.
      * <ul>
      * <li>3gp,flv,flvhd: 0</li>
      * <li>3gphd,mp4,mp4hd,mp4hd2,mp4hd3: 1</li>
@@ -127,6 +130,7 @@ public class YoukuExtractor extends Extractor {
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
         Map<Integer, List<Seg>> segsMap = getSegMap(data);
+        Logger.d("hd length:"+segsMap.keySet().size());
         return new VideoInfo(segsMap, title);
     }
 

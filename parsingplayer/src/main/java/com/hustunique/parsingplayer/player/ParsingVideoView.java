@@ -27,9 +27,10 @@ import android.widget.TextView;
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.ParsingTask;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
+import com.hustunique.parsingplayer.parser.provider.ProtocolHelper;
+import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
-
+    private VideoInfo mVideoInfo;
 
 
     public ParsingVideoView(Context context) {
@@ -232,7 +233,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             mMediaPlayer.setDisplay(null);
         }
     }
-
 
 
     IMediaPlayer.OnVideoSizeChangedListener mSizeChangedListener =
@@ -419,7 +419,11 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     public void setQuality(@Quality int quality) {
         // TODO: 2/12/17 Set quality
-        LogUtil.d(TAG, "choose quality : " + quality);
+        assert mVideoInfo != null;
+        // FIXME: 2/12/17 We need to recreate a instance of player to play another video
+        // ref:https://github.com/Bilibili/ijkplayer/issues/400
+        initPlayer();
+        setConcatContent(ProtocolHelper.concat(mVideoInfo.getSegs(quality)));
         hideQualityView();
     }
 
@@ -440,11 +444,10 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
 
-    // TODO: 2/5/17 Show sth if the io is running
-    public void setConcatVideos(@NonNull VideoInfo videoInfo) {
+
+    private void setConcatContent(String content) {
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
-                new ConcatSourceProvider(mContext).provideSource(videoInfo),
-                new LoadingCallback<String>() {
+                content, new LoadingCallback<String>() {
                     @Override
                     public void onSuccess(final String result) {
                         // use post here to run in main thread
@@ -464,14 +467,20 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 });
     }
 
+    // TODO: 2/5/17 Show sth if the io is running
+    public void setConcatVideos(@NonNull VideoInfo videoInfo) {
+        mVideoInfo = videoInfo;
+        setConcatContent(new ConcatSourceProvider(mContext).provideSource(videoInfo));
+    }
+
     public void setVideoPath(String path) {
         setVideoURI(Uri.parse(path));
     }
 
     public void setVideoURI(Uri uri) {
-        Map<String,String> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         // TODO: 2/10/17 Not reasonable to set range headers for all uri
-        headers.put("Range"," ");
+        headers.put("Range", " ");
         setVideoURI(uri, headers);
     }
 

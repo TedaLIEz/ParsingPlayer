@@ -14,6 +14,7 @@ import java.util.Map;
  * A list of segs represents a steam
  */
 public class VideoInfo {
+    public static final int HD_UNSPECIFIED = -1;
     public static final int HD_0 = 0;
     public static final int HD_1 = 1;
     public static final int HD_2 = 2;

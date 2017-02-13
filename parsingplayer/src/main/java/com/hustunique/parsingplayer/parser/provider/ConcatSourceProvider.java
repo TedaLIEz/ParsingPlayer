@@ -17,7 +17,7 @@ import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_3;
  * Implementation for concat protocol
  */
 
-public class ConcatSourceProvider implements VideoSourceProvider<VideoInfo> {
+public class ConcatSourceProvider extends VideoInfoSourceProvider {
     private NetworkInfo mNetworkInfo;
     @Override
     public String provideSource(VideoInfo videoInfo) {

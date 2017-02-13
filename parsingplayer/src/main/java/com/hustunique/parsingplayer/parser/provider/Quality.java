@@ -9,6 +9,7 @@ import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_0;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_1;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_2;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_3;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_UNSPECIFIED;
 
 /**
  * Created by JianGuo on 2/10/17.
@@ -16,6 +17,6 @@ import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_3;
  */
 
 @Retention(RetentionPolicy.SOURCE)
-@IntDef({HD_0, HD_1, HD_2, HD_3})
+@IntDef({HD_UNSPECIFIED, HD_0, HD_1, HD_2, HD_3})
 public @interface Quality {
 }

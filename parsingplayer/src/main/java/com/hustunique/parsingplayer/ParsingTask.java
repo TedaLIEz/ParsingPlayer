@@ -13,6 +13,7 @@ import com.hustunique.parsingplayer.player.ParsingVideoView;
 public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
     private ParsingVideoView mVideoView;
 
+
     public ParsingTask(ParsingVideoView videoView) {
         this.mVideoView = videoView;
     }
@@ -28,6 +29,7 @@ public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
         super.onPostExecute(videoInfo);
         // videoView will start playing automatically when process prepared
         mVideoView.setConcatVideos(videoInfo);
+
 
     }
 }

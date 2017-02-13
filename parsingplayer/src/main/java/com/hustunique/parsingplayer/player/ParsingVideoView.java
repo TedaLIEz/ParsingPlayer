@@ -21,6 +21,7 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -40,8 +41,8 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.LogUtil;
-import com.hustunique.parsingplayer.ParsingTask;
 import com.hustunique.parsingplayer.R;
+import com.hustunique.parsingplayer.parser.VideoParser;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
@@ -763,7 +764,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     @Override
     public void play(String videoUrl) {
-        ParsingTask parsingTask = new ParsingTask(this);
+        ParsingTask parsingTask = new ParsingTask();
         parsingTask.execute(videoUrl);
     }
 
@@ -885,6 +886,23 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 mMediaController.show();
 
             }
+        }
+    }
+
+
+    class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
+
+        @Override
+        protected VideoInfo doInBackground(String... strings) {
+            VideoParser videoParser = VideoParser.getInstance();
+            return videoParser.parse(strings[0]);
+        }
+
+        @Override
+        protected void onPostExecute(VideoInfo videoInfo) {
+            super.onPostExecute(videoInfo);
+            // videoView will start playing automatically when process prepared
+            setConcatVideos(videoInfo);
         }
     }
 }

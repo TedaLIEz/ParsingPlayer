@@ -18,6 +18,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        mVideoView.play(BilibiliExtractor.TEST_URL[0]);
+        mVideoView.play(BilibiliExtractor.TEST_URL[1]);
     }
 }

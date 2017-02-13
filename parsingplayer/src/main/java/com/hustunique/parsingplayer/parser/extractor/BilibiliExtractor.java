@@ -27,6 +27,7 @@ import com.google.gson.JsonObject;
 import com.hustunique.parsingplayer.Util;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,12 +53,10 @@ public class BilibiliExtractor extends Extractor {
             , "http://bangumi.bilibili.com/anime/5802/play#100643"};
 
     private static final String ID_REGEX = "(?<=av|#)\\d+";
-    private static final String ANIME_ID_REGEX = "(?<=anime/)\\d+";
 
     private String TAG = "Bilibili";
 
     private String mId;
-    private String mAnimeId;
     private String mCid;
 
     private String mTitle;
@@ -66,16 +65,23 @@ public class BilibiliExtractor extends Extractor {
     String constructBasicUrl(@NonNull String url) {
         mId = searchValue(url, ID_REGEX);
         String webPage = null;
-        String cid = null;
         try {
             webPage = downloadData(url);
         } catch (IOException e) {
             e.printStackTrace();
         }
         mTitle = searchValue(webPage,"(?<=<h1 title=\")[^\"]+");
-        Log.d(TAG,mTitle);
         if (url.contains("anime/")) {
-            mAnimeId = searchValue(url, ANIME_ID_REGEX);
+            HashMap<String,String> headers = new HashMap<>();
+            headers.put("Content-Type","application/x-www-form-urlencoded; charset=UTF-8");
+            HashMap<String,String> postData = new HashMap<>();
+            postData.put("episode_id",mId);
+            try {
+                String js = downloadData("http://bangumi.bilibili.com/web_api/get_source",headers,postData);
+                mCid = parseResponse(js).get("result").getAsJsonObject().get("cid").getAsString();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             mCid = searchValue(webPage, "(?<=cid=)[^&]+");
         }

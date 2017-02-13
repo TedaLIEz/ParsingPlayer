@@ -39,8 +39,11 @@ import java.util.regex.Pattern;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 
@@ -100,6 +103,21 @@ public abstract class Extractor {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
+        return mClient.newCall(request).execute().body().string();
+    }
+
+    protected String downloadData(String url,Map<String,String> headers,Map<String,String> postData) throws IOException {
+        Request.Builder requestBuilder = new Request.Builder();
+        for (String headerKey:headers.keySet()){
+            requestBuilder.addHeader(headerKey,headers.get(headerKey));
+        }
+
+        FormBody.Builder bodyBuilder = new FormBody.Builder();
+        for (String bodyKey:postData.keySet()){
+            bodyBuilder.add(bodyKey,postData.get(bodyKey));
+        }
+        RequestBody body = bodyBuilder.build();
+        Request request = requestBuilder.url(url).post(body).build();
         return mClient.newCall(request).execute().body().string();
     }
 

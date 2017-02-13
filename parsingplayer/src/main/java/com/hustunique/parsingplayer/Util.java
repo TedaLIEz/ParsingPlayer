@@ -1,4 +1,19 @@
-
+/*
+ *
+ * Copyright (c) 2017 UniqueStudio
+ *
+ * This file is part of ParsingPlayer.
+ *
+ * ParsingPlayer is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with ParsingPlayer; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 
 package com.hustunique.parsingplayer;
 
@@ -14,6 +29,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ThreadFactory;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -181,5 +199,20 @@ public final class Util {
                 super.run();
             }
         }
+    }
+
+    public static String getMD5(String str){
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        md.update(str.getBytes());
+        String hashText = new BigInteger(1, md.digest()).toString(16);
+        while(hashText.length() < 32 ){
+            hashText = "0"+hashText ;
+        }
+        return hashText;
     }
 }

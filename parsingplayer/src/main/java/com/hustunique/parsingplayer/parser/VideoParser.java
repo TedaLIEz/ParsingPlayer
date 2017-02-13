@@ -1,4 +1,19 @@
-
+/*
+ *
+ * Copyright (c) 2017 UniqueStudio
+ *
+ * This file is part of ParsingPlayer.
+ *
+ * ParsingPlayer is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with ParsingPlayer; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 
 package com.hustunique.parsingplayer.parser;
 
@@ -8,6 +23,7 @@ import android.util.Log;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.extractor.BilibiliExtractor;
 import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.parser.extractor.SoHuExtractor;
 import com.hustunique.parsingplayer.parser.extractor.YoukuExtractor;
@@ -43,6 +59,7 @@ public class VideoParser {
         // TODO: 1/17/17 Maybe there is a better solution to register map between regex and IExtractor here
         sMatchMap.put(YoukuExtractor.VALID_URL, YoukuExtractor.class);
         sMatchMap.put(SoHuExtractor.VALID_URL,SoHuExtractor.class);
+        sMatchMap.put(BilibiliExtractor.VALID_URL,BilibiliExtractor.class);
     }
 
     @NonNull

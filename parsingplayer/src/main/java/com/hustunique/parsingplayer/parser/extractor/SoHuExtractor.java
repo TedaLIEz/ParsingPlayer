@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2017 UniqueStudio
+ *
+ * This file is part of ParsingPlayer.
+ *
+ * ParsingPlayer is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with ParsingPlayer; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 package com.hustunique.parsingplayer.parser.extractor;
 
 import android.support.annotation.NonNull;
@@ -7,24 +24,20 @@ import android.util.Log;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -35,15 +48,10 @@ import okhttp3.Response;
 public class SoHuExtractor extends Extractor {
     public static final String VALID_URL = "https?://(my\\.)?tv\\.sohu\\.com/.+/(n)?\\d+\\.shtml.*";
 
-
+    public static String TEST_URL = "http://my.tv.sohu.com/us/232799889/78693464.shtml";
     private String mTitle;
     private boolean mMytv;
     private String mId;
-    private static OkHttpClient mClient;
-
-    static {
-        mClient = new OkHttpClient();
-    }
 
     @Override
     String constructBasicUrl(@NonNull String url) {
@@ -55,10 +63,10 @@ public class SoHuExtractor extends Extractor {
     @Nullable
     @Override
     VideoInfo createInfo(@NonNull Response response) throws IOException {
-        JsonObject vidDataJson = parseResponse(response);
+        JsonObject vidDataJson = parseResponse(response.body().string());
         checkError(vidDataJson);
         Map<Integer, List<Seg>> segsMap = getSegsMap(vidDataJson);
-        return new VideoInfo(segsMap,mTitle);
+        return new VideoInfo(segsMap, mTitle);
     }
 
 
@@ -70,27 +78,15 @@ public class SoHuExtractor extends Extractor {
 
     @NonNull
     private String extractId(String url) {
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-        Response response = null;
+        String result = null;
         try {
-            response = mClient.newCall(request).execute();
-            String result = new String(response.body().bytes(), "GB2312");
-            Pattern pattern = Pattern.compile("var vid ?= ?[\"\\'](\\d+)[\"\\']");
-            Matcher matcher = pattern.matcher(result);
-            matcher.find();
-
-            Pattern patternVid = Pattern.compile("\\d+");
-            Matcher matcherVid = patternVid.matcher(matcher.group(0));
-            matcherVid.find();
-
-            mTitle = getTitle(result);
-            return matcherVid.group(0);
+            result = new String(downloadData(url).getBytes("GB2312"), "GB2312");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        throw new IllegalArgumentException("Can't find id of this video.Please check");
+        mTitle = getTitle(result);
+        Logger.d(mTitle);
+        return searchValue(searchValue(result, "var vid ?= ?[\"\\'](\\d+)[\"\\']"), "\\d+");
     }
 
     private boolean checkMytv(String url) {
@@ -113,18 +109,14 @@ public class SoHuExtractor extends Extractor {
     }
 
     private String getTitle(String response) {
-        Pattern pattern = Pattern.compile("(?<=<meta property=\"og:title\" content=\").+?(?=\" />)");
-        Matcher matcher = pattern.matcher(response);
-        matcher.find();
-        return matcher.group(0).replace(" - 搜狐视频", "");
+        String title = searchValue(response, "(?<=<meta property=\"og:title\" content=\").+?(?=\" />)");
+        return title.replace(" - 搜狐视频", "");
     }
 
     private JsonObject fetchData(String vid) {
         String basicUrl = constructUrl(vid);
-        Request request = new Request.Builder().url(basicUrl).build();
         try {
-            Response response = mClient.newCall(request).execute();
-            return parseResponse(response);
+            return parseResponse(downloadData(basicUrl));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -142,7 +134,7 @@ public class SoHuExtractor extends Extractor {
         int partCount = vidDataJson.getAsJsonObject("data").get("totalBlocks").getAsInt();
         JsonArray durationArray = vidDataJson.getAsJsonObject("data").getAsJsonArray("clipsDuration");
         String[] formatArray = new String[]{"nor", "high", "super", "ori"};
-        HashMap<Integer,List<Seg>> segsMap = new HashMap<>();
+        HashMap<Integer, List<Seg>> segsMap = new HashMap<>();
         int hd = 0;
         for (String formatId : formatArray) {
             JsonElement formatIdVidElement = vidDataJson.getAsJsonObject("data").get(formatId + "Vid");
@@ -175,11 +167,8 @@ public class SoHuExtractor extends Extractor {
                             + "&rb=1";
                     if (cdnId != null)
                         url = url + "&idc=" + URLEncoder.encode(cdnId);
-
-                    Request request = new Request.Builder().url(url).build();
                     try {
-                        Response response = mClient.newCall(request).execute();
-                        JsonObject partInfo = parseResponse(response);
+                        JsonObject partInfo = parseResponse(downloadData(url));
                         videoUrl = partInfo.get("url").getAsString();
                         if (partInfo.get("nid") != null)
                             cdnId = partInfo.get("nid").getAsString();
@@ -188,7 +177,7 @@ public class SoHuExtractor extends Extractor {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    Seg seg = new Seg(videoUrl,durationArray.get(i).getAsDouble());
+                    Seg seg = new Seg(videoUrl, durationArray.get(i).getAsDouble());
                     segList.add(seg);
 
                     retries += 1;
@@ -196,7 +185,7 @@ public class SoHuExtractor extends Extractor {
                         throw new ExtractException("Failed to get video URL");
                 }
             }
-            segsMap.put(hd,segList);
+            segsMap.put(hd, segList);
             hd++;
         }
         return segsMap;

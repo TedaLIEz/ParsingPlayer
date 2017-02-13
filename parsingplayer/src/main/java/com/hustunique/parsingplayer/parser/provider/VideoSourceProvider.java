@@ -25,8 +25,8 @@ interface VideoSourceProvider {
     /**
      * return video data source by quality
      * @param quality integer specified in {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_UNSPECIFIED},
-     *                {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_0}, {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_1},
-     *                {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_2}, {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_3}
+     *                {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_LOW}, {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_MEDIUM},
+     *                {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_STANDARD}, {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_HIGH}
      * @return string describing data source
      */
     String provideSource(@Quality int quality);

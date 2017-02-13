@@ -31,10 +31,10 @@ import java.util.Map;
  */
 public class VideoInfo {
     public static final int HD_UNSPECIFIED = -1;
-    public static final int HD_0 = 0;
-    public static final int HD_1 = 1;
-    public static final int HD_2 = 2;
-    public static final int HD_3 = 3;
+    public static final int HD_LOW = 0;
+    public static final int HD_MEDIUM = 1;
+    public static final int HD_STANDARD = 2;
+    public static final int HD_HIGH = 3;
 
 
     // the key is hd

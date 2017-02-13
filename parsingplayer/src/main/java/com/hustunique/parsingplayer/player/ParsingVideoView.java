@@ -55,9 +55,9 @@ import java.util.Map;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
 
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_0;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_1;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_2;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -90,8 +90,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private IMediaController mMediaController;
     private IRenderView mRenderView;
     private View mQualityView;
-    private int mCurrentState = STATE_IDLE;
-    private int mTargetState = STATE_IDLE;
+    private int mCurrentState;
+    private int mTargetState;
     private int mSeekWhenPrepared;
     private int mCurrentBufferPercentage;
 
@@ -119,7 +119,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         super(context, attrs, defStyleAttr);
         initView(context);
         initGesture();
-        initPlayer();
+        configurePlayer();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -127,14 +127,17 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
         initGesture();
-        initPlayer();
+        configurePlayer();
     }
 
-    private void initPlayer() {
+    private void configurePlayer() {
+        mCurrentState = mTargetState = STATE_IDLE;
+        mVideoHeight = mVideoWidth = 0;
         release(false);
         AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         mMediaPlayer = createPlayer();
+        configureRenderView();
     }
 
     // visible for override
@@ -154,37 +157,34 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private void initView(Context context) {
         mContext = context;
-        initRenders();
         initQualityView();
-        mVideoHeight = mVideoWidth = 0;
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
-
     }
 
     private void initQualityView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mQualityView = inflater.inflate(R.layout.quality_choose_view, null);
+        mQualityView = inflater.inflate(R.layout.quality_choose_view, this, false);
         TextView tvHigh = (TextView) mQualityView.findViewById(R.id.tv_high);
         TextView tvMedium = (TextView) mQualityView.findViewById(R.id.tv_medium);
         TextView tvLow = (TextView) mQualityView.findViewById(R.id.tv_low);
         tvHigh.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                setQuality(HD_0);
+                setQuality(HD_HIGH);
             }
         });
         tvMedium.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                setQuality(HD_1);
+                setQuality(HD_MEDIUM);
             }
         });
         tvLow.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                setQuality(HD_2);
+                setQuality(HD_LOW);
             }
         });
         FrameLayout.LayoutParams lp = new LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -193,7 +193,18 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         addView(mQualityView, lp);
     }
 
-    private void initRenders() {
+    private void setQuality(@Quality int quality) {
+        // We need to recreate a instance of player to play another video
+        // ref: https://github.com/Bilibili/ijkplayer/issues/400
+        // TODO: 2/13/17 seek to current playing position.
+        mSeekWhenPrepared = (int) mMediaPlayer.getCurrentPosition();
+        LogUtil.d(TAG, "current Pos: " + mSeekWhenPrepared);
+        configurePlayer();
+        setConcatContent(mProvider.provideSource(quality));
+        hideQualityView();
+    }
+
+    private void configureRenderView() {
         TextureRenderView renderView = new TextureRenderView(mContext);
         if (mMediaPlayer != null) {
             renderView.getSurfaceHolder().bindToMediaPlayer(mMediaPlayer);
@@ -433,62 +444,10 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mCurrentState = STATE_PREPARING;
     }
 
-    private void setQuality(@Quality int quality) {
-        // TODO: 2/12/17 Set quality
-        // FIXME: 2/12/17 We need to recreate a instance of player to play another video
-        // ref:https://github.com/Bilibili/ijkplayer/issues/400
-        // TODO: 2/13/17 SeekTo current playing position.
-        mSeekWhenPrepared = (int) mMediaPlayer.getCurrentPosition();
-        LogUtil.d(TAG, "current Pos: " + mSeekWhenPrepared);
-        mMediaPlayer = createPlayer();
-        mCurrentState = mTargetState = STATE_IDLE;
-        initRenders();
-        setConcatContent(mProvider.provideSource(quality));
-        hideQualityView();
-    }
 
-    /**
-     * set listener when loading is completed.
-     *
-     * @param onCompletionListener the listener,
-     *                             {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnCompletionListener#onCompletion(IMediaPlayer)}
-     *                             will be called when player loads the video
-     */
-    public void setOnCompletionListener(@Nullable IMediaPlayer.OnCompletionListener onCompletionListener) {
-        mOnCompletionListener = onCompletionListener;
-    }
-
-    /**
-     * set listener when error occurs
-     *
-     * @param onErrorListener {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnErrorListener#onError(IMediaPlayer, int, int)}
-     *                        will be called when error occurs
-     */
-    public void setOnErrorListener(@Nullable IMediaPlayer.OnErrorListener onErrorListener) {
-        mOnErrorListener = onErrorListener;
-    }
-
-    /**
-     * set listener for info
-     *
-     * @param onInfoListener the listener
-     */
-    public void setOnInfoListener(@Nullable IMediaPlayer.OnInfoListener onInfoListener) {
-        mOnInfoListener = onInfoListener;
-    }
-
-    /**
-     * set listener when player prepares the data source
-     *
-     * @param onPreparedListener {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnPreparedListener#onPrepared(IMediaPlayer)}
-     *                           will be called when player has done the preparation.
-     */
-    public void setOnPreparedListener(@Nullable IMediaPlayer.OnPreparedListener onPreparedListener) {
-        mOnPreparedListener = onPreparedListener;
-    }
-
-
+    // TODO: 2/5/17 Show sth if the io is running
     private void setConcatContent(String content) {
+        LogUtil.i(TAG, "set temp file content: \n" + content);
         // TODO: 2/14/17 create a meaningful temp file name
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
                 content, new LoadingCallback<String>() {
@@ -498,7 +457,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                         post(new Runnable() {
                             @Override
                             public void run() {
-                                LogUtil.d(TAG, "set concat temp file path: " + result);
+
                                 setVideoPath(result);
                             }
                         });
@@ -512,7 +471,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 });
     }
 
-    // TODO: 2/5/17 Show sth if the io is running
+
 
     /**
      * Set video source info for concat segments.
@@ -564,7 +523,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     /**
      * Set controller for this video view, see {@link IMediaController}
      *
-     * @param controller
+     * @param controller {@link IMediaController} for controlling video playing
      */
     public void setMediaController(IMediaController controller) {
         if (mMediaController != null) {
@@ -756,6 +715,47 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 mCurrentState != STATE_PREPARING);
     }
 
+    /**
+     * set listener when loading is completed.
+     *
+     * @param onCompletionListener the listener,
+     *                             {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnCompletionListener#onCompletion(IMediaPlayer)}
+     *                             will be called when player loads the video
+     */
+    public void setOnCompletionListener(@Nullable IMediaPlayer.OnCompletionListener onCompletionListener) {
+        mOnCompletionListener = onCompletionListener;
+    }
+
+    /**
+     * set listener when error occurs
+     *
+     * @param onErrorListener {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnErrorListener#onError(IMediaPlayer, int, int)}
+     *                        will be called when error occurs
+     */
+    public void setOnErrorListener(@Nullable IMediaPlayer.OnErrorListener onErrorListener) {
+        mOnErrorListener = onErrorListener;
+    }
+
+    /**
+     * set listener for info
+     *
+     * @param onInfoListener the listener
+     */
+    public void setOnInfoListener(@Nullable IMediaPlayer.OnInfoListener onInfoListener) {
+        mOnInfoListener = onInfoListener;
+    }
+
+    /**
+     * set listener when player prepares the data source
+     *
+     * @param onPreparedListener {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnPreparedListener#onPrepared(IMediaPlayer)}
+     *                           will be called when player has done the preparation.
+     */
+    public void setOnPreparedListener(@Nullable IMediaPlayer.OnPreparedListener onPreparedListener) {
+        mOnPreparedListener = onPreparedListener;
+    }
+
+
     @Override
     public void start() {
         if (isInPlayBackState()) {
@@ -795,6 +795,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     @Override
     public void seekTo(int pos) {
         if (isInPlayBackState()) {
+            LogUtil.d(TAG, "seekTo: " + pos);
             mMediaPlayer.seekTo(pos);
             mSeekWhenPrepared = 0;
         } else {

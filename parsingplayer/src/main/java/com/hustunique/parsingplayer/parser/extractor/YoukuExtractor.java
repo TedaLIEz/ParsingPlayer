@@ -95,16 +95,16 @@ public class YoukuExtractor extends Extractor {
         mExtMap.put(FORMAT_HD2, "flv");
         mExtMap.put(FORMAT_HD3, "flv");
 
-        mHdMap.put(FORMAT_3GP, VideoInfo.HD_0);
-        mHdMap.put(FORMAT_3GPHD, VideoInfo.HD_1);
-        mHdMap.put(FORMAT_FLV, VideoInfo.HD_0);
-        mHdMap.put(FORMAT_FLVHD, VideoInfo.HD_0);
-        mHdMap.put(FORMAT_MP4, VideoInfo.HD_1);
-        mHdMap.put(FORMAT_MP4HD, VideoInfo.HD_1);
-        mHdMap.put(FORMAT_MP4HD2, VideoInfo.HD_1);
-        mHdMap.put(FORMAT_MP4HD3, VideoInfo.HD_1);
-        mHdMap.put(FORMAT_HD2, VideoInfo.HD_2);
-        mHdMap.put(FORMAT_HD3, VideoInfo.HD_3);
+        mHdMap.put(FORMAT_3GP, VideoInfo.HD_LOW);
+        mHdMap.put(FORMAT_3GPHD, VideoInfo.HD_MEDIUM);
+        mHdMap.put(FORMAT_FLV, VideoInfo.HD_LOW);
+        mHdMap.put(FORMAT_FLVHD, VideoInfo.HD_LOW);
+        mHdMap.put(FORMAT_MP4, VideoInfo.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD, VideoInfo.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD2, VideoInfo.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD3, VideoInfo.HD_MEDIUM);
+        mHdMap.put(FORMAT_HD2, VideoInfo.HD_STANDARD);
+        mHdMap.put(FORMAT_HD3, VideoInfo.HD_HIGH);
     }
 
 

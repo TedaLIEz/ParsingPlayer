@@ -35,25 +35,28 @@ import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_3;
  */
 
 public class ConcatSourceProvider extends VideoInfoSourceProvider {
-    private NetworkInfo mNetworkInfo;
+    private Context mContext;
     @Override
-    public String provideSource(VideoInfo videoInfo) {
-        return ProtocolHelper.concat(videoInfo.getSegs(getHdByNetwork()));
+    public String provideSource(@Quality int quality) {
+        quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
+        return ProtocolHelper.concat(mVideoInfo.getSegs(quality));
     }
 
-    public ConcatSourceProvider(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        mNetworkInfo = cm.getActiveNetworkInfo();
+    public ConcatSourceProvider(VideoInfo videoInfo, Context context) {
+        super(videoInfo);
+        mContext = context;
     }
 
     private @Quality int getHdByNetwork() {
-        switch (mNetworkInfo.getType()) {
+        ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:
             case ConnectivityManager.TYPE_WIMAX:
             case ConnectivityManager.TYPE_ETHERNET:
                 return HD_3;
             case ConnectivityManager.TYPE_MOBILE:
-                switch (mNetworkInfo.getSubtype()) {
+                switch (networkInfo.getSubtype()) {
                     case TelephonyManager.NETWORK_TYPE_LTE:
                     case TelephonyManager.NETWORK_TYPE_HSPAP:
                     case TelephonyManager.NETWORK_TYPE_EHRPD:

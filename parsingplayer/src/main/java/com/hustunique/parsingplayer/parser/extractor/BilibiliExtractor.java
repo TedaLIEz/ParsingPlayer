@@ -19,7 +19,6 @@ package com.hustunique.parsingplayer.parser.extractor;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -27,7 +26,6 @@ import com.google.gson.JsonObject;
 import com.hustunique.parsingplayer.Util;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;

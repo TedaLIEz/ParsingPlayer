@@ -21,6 +21,7 @@ import android.os.AsyncTask;
 
 import com.hustunique.parsingplayer.parser.VideoParser;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.ParsingVideoView;
 
 /**
@@ -29,10 +30,11 @@ import com.hustunique.parsingplayer.player.ParsingVideoView;
 
 public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
     private ParsingVideoView mVideoView;
+    private int mQuality;
 
-
-    public ParsingTask(ParsingVideoView videoView) {
-        this.mVideoView = videoView;
+    public ParsingTask(ParsingVideoView videoView, @Quality int quality) {
+        mVideoView = videoView;
+        mQuality = quality;
     }
 
     @Override
@@ -45,7 +47,7 @@ public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
     protected void onPostExecute(VideoInfo videoInfo) {
         super.onPostExecute(videoInfo);
         // videoView will start playing automatically when process prepared
-        mVideoView.setConcatVideos(videoInfo);
+        mVideoView.setConcatVideos(videoInfo, mQuality);
 
 
     }

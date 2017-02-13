@@ -44,8 +44,8 @@ import com.hustunique.parsingplayer.ParsingTask;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
-import com.hustunique.parsingplayer.parser.provider.ProtocolHelper;
 import com.hustunique.parsingplayer.parser.provider.Quality;
+import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.IOException;
@@ -105,8 +105,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
-    private VideoInfo mVideoInfo;
-
+    private VideoInfoSourceProvider mProvider;
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -135,15 +134,21 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         release(false);
         AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        mMediaPlayer = new ParsingPlayer(mContext);
-        mMediaPlayer.setOnPreparedListener(mPreparedListener);
-        mMediaPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
-        mMediaPlayer.setOnCompletionListener(mCompletionListener);
-        mMediaPlayer.setOnErrorListener(mErrorListener);
-        mMediaPlayer.setOnInfoListener(mInfoListener);
-        mMediaPlayer.setOnBufferingUpdateListener(mBufferingUpdateListener);
-        mMediaPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
-        mMediaPlayer.setOnTimedTextListener(mOnTimedTextListener);
+        mMediaPlayer = createPlayer();
+    }
+
+    // visible for override
+    protected IParsingPlayer createPlayer() {
+        IParsingPlayer iParsingPlayer = new ParsingPlayer(mContext);
+        iParsingPlayer.setOnPreparedListener(mPreparedListener);
+        iParsingPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
+        iParsingPlayer.setOnCompletionListener(mCompletionListener);
+        iParsingPlayer.setOnErrorListener(mErrorListener);
+        iParsingPlayer.setOnInfoListener(mInfoListener);
+        iParsingPlayer.setOnBufferingUpdateListener(mBufferingUpdateListener);
+        iParsingPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
+        iParsingPlayer.setOnTimedTextListener(mOnTimedTextListener);
+        return iParsingPlayer;
     }
 
 
@@ -160,7 +165,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private void initQualityView() {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mQualityView = inflater.inflate(R.layout.quality_choose_view, this, false);
+        mQualityView = inflater.inflate(R.layout.quality_choose_view, null);
         TextView tvHigh = (TextView) mQualityView.findViewById(R.id.tv_high);
         TextView tvMedium = (TextView) mQualityView.findViewById(R.id.tv_medium);
         TextView tvLow = (TextView) mQualityView.findViewById(R.id.tv_low);
@@ -272,8 +277,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         @Override
         public void onPrepared(IMediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
-
-
+            mTargetState = STATE_PLAYING;
             if (mOnPreparedListener != null) {
                 mOnPreparedListener.onPrepared(mp);
 
@@ -297,9 +301,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                             || mSurfaceHeight == mVideoHeight) {
                         if (mTargetState == STATE_PLAYING) {
                             start();
-                            if (mMediaController != null) {
-                                mMediaController.show();
-                            }
                         } else if (!isPlaying() && (seekToPosition != 0 || getCurrentPosition() > 0)) {
                             if (mMediaController != null) {
                                 mMediaController.show();
@@ -432,35 +433,63 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mCurrentState = STATE_PREPARING;
     }
 
-    public void setQuality(@Quality int quality) {
+    private void setQuality(@Quality int quality) {
         // TODO: 2/12/17 Set quality
-        assert mVideoInfo != null;
         // FIXME: 2/12/17 We need to recreate a instance of player to play another video
         // ref:https://github.com/Bilibili/ijkplayer/issues/400
-        initPlayer();
-        setConcatContent(ProtocolHelper.concat(mVideoInfo.getSegs(quality)));
+        // TODO: 2/13/17 SeekTo current playing position.
+        mSeekWhenPrepared = (int) mMediaPlayer.getCurrentPosition();
+        LogUtil.d(TAG, "current Pos: " + mSeekWhenPrepared);
+        mMediaPlayer = createPlayer();
+        mCurrentState = mTargetState = STATE_IDLE;
+        initRenders();
+        setConcatContent(mProvider.provideSource(quality));
         hideQualityView();
     }
 
+    /**
+     * set listener when loading is completed.
+     *
+     * @param onCompletionListener the listener,
+     *                             {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnCompletionListener#onCompletion(IMediaPlayer)}
+     *                             will be called when player loads the video
+     */
     public void setOnCompletionListener(@Nullable IMediaPlayer.OnCompletionListener onCompletionListener) {
         mOnCompletionListener = onCompletionListener;
     }
 
+    /**
+     * set listener when error occurs
+     *
+     * @param onErrorListener {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnErrorListener#onError(IMediaPlayer, int, int)}
+     *                        will be called when error occurs
+     */
     public void setOnErrorListener(@Nullable IMediaPlayer.OnErrorListener onErrorListener) {
         mOnErrorListener = onErrorListener;
     }
 
+    /**
+     * set listener for info
+     *
+     * @param onInfoListener the listener
+     */
     public void setOnInfoListener(@Nullable IMediaPlayer.OnInfoListener onInfoListener) {
         mOnInfoListener = onInfoListener;
     }
 
+    /**
+     * set listener when player prepares the data source
+     *
+     * @param onPreparedListener {@link tv.danmaku.ijk.media.player.IMediaPlayer.OnPreparedListener#onPrepared(IMediaPlayer)}
+     *                           will be called when player has done the preparation.
+     */
     public void setOnPreparedListener(@Nullable IMediaPlayer.OnPreparedListener onPreparedListener) {
         mOnPreparedListener = onPreparedListener;
     }
 
 
-
     private void setConcatContent(String content) {
+        // TODO: 2/14/17 create a meaningful temp file name
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
                 content, new LoadingCallback<String>() {
                     @Override
@@ -469,6 +498,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                         post(new Runnable() {
                             @Override
                             public void run() {
+                                LogUtil.d(TAG, "set concat temp file path: " + result);
                                 setVideoPath(result);
                             }
                         });
@@ -483,15 +513,31 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     // TODO: 2/5/17 Show sth if the io is running
-    public void setConcatVideos(@NonNull VideoInfo videoInfo) {
-        mVideoInfo = videoInfo;
-        setConcatContent(new ConcatSourceProvider(mContext).provideSource(videoInfo));
+
+    /**
+     * Set video source info for concat segments.
+     *
+     * @param videoInfo the video info
+     */
+    public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
+        mProvider = new ConcatSourceProvider(videoInfo, mContext);
+        setConcatContent(mProvider.provideSource(quality));
     }
 
+    /**
+     * Set video path
+     *
+     * @param path the video source path
+     */
     public void setVideoPath(String path) {
         setVideoURI(Uri.parse(path));
     }
 
+    /**
+     * Set video source uri
+     *
+     * @param uri the video source uri
+     */
     public void setVideoURI(Uri uri) {
         Map<String, String> headers = new HashMap<>();
         // TODO: 2/10/17 Not reasonable to set range headers for all uri
@@ -500,7 +546,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
-        mSeekWhenPrepared = 0;
         try {
             // Fixme different setting for different build version
             mMediaPlayer.setDataSource(mContext, uri, headers);
@@ -516,6 +561,11 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     }
 
+    /**
+     * Set controller for this video view, see {@link IMediaController}
+     *
+     * @param controller
+     */
     public void setMediaController(IMediaController controller) {
         if (mMediaController != null) {
             mMediaController.hide();
@@ -533,6 +583,12 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         }
     }
 
+    /**
+     * Release media player
+     *
+     * @param clearTargetState <tt>true</tt> if you want to abandon current state,
+     *                         <tt>false</tt> otherwise.
+     */
     public void release(boolean clearTargetState) {
         if (mMediaPlayer != null) {
             mMediaPlayer.reset();
@@ -556,6 +612,11 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         holder.bindToMediaPlayer(mp);
     }
 
+    /**
+     * Set view to render frame in video stream.
+     *
+     * @param renderView see {@link IRenderView} for details
+     */
     public void setRenderView(IRenderView renderView) {
         if (mRenderView != null) {
             if (mMediaPlayer != null) {
@@ -583,7 +644,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 Gravity.CENTER);
         renderUIView.setLayoutParams(lp);
         addView(renderUIView);
-//        LogUtil.d(TAG, "width: " + renderUIView.getMeasuredWidth() + " height: " + renderUIView.getMeasuredHeight());
         mRenderView.addRenderCallback(mSHCallback);
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }
@@ -772,7 +832,12 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     @Override
     public void play(String videoUrl) {
-        ParsingTask parsingTask = new ParsingTask(this);
+        play(videoUrl, VideoInfo.HD_UNSPECIFIED);
+    }
+
+    private void play(String videoUrl, @Quality int quality) {
+        // TODO: 2/14/17 play with specified quality
+        ParsingTask parsingTask = new ParsingTask(this, quality);
         parsingTask.execute(videoUrl);
     }
 
@@ -788,6 +853,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     @Override
     public void showQualityView() {
+        mQualityView.bringToFront();
         mQualityView.setVisibility(VISIBLE);
     }
 

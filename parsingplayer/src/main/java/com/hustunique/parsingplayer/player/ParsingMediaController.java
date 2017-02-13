@@ -114,10 +114,10 @@ public class ParsingMediaController implements IMediaController {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        show(0);
+                        show();
                         break;
                     case MotionEvent.ACTION_UP:
-                        show(sDefaultTimeOut);
+                        show();
                         break;
                     case MotionEvent.ACTION_CANCEL:
                         hide();
@@ -148,7 +148,7 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void onClick(View v) {
             doPauseResume();
-            show(0);
+            show();
         }
     };
 
@@ -186,6 +186,7 @@ public class ParsingMediaController implements IMediaController {
         if (mCurrentTime != null)
             mCurrentTime.setText(stringForTime(position));
 
+
         return position;
     }
 
@@ -207,8 +208,6 @@ public class ParsingMediaController implements IMediaController {
 
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
-            show(3600000);
-
             mDragging = true;
             mRoot.removeCallbacks(mShowProgress);
         }
@@ -216,13 +215,6 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             mDragging = false;
-            setProgress();
-            updatePausePlay();
-            show(sDefaultTimeOut);
-
-            // Ensure that progress is properly updated in the future,
-            // the call to show() does not guarantee this because it is a
-            // no-op if we are already showing.
             mRoot.post(mShowProgress);
         }
     };
@@ -281,6 +273,11 @@ public class ParsingMediaController implements IMediaController {
         }
     }
 
+    @Override
+    public void complete() {
+        mRoot.removeCallbacks(mShowProgress);
+        updatePausePlay();
+    }
 
 
     private View.OnLayoutChangeListener mOnLayoutListener = new View.OnLayoutChangeListener() {
@@ -298,7 +295,6 @@ public class ParsingMediaController implements IMediaController {
         view.removeOnLayoutChangeListener(mOnLayoutListener);
         mAnchor = view;
         mAnchor.addOnLayoutChangeListener(mOnLayoutListener);
-
     }
 
     @Override
@@ -335,31 +331,19 @@ public class ParsingMediaController implements IMediaController {
     }
 
     @Override
-    public void show(int timeout) {
+    public void show() {
         if (!mIsShowing && mAnchor != null) {
             mIsShowing = true;
-            setProgress();
+            mRoot.post(mShowProgress);
+            updatePausePlay();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
 
             showPopupWindowLayout();
         }
-        updatePausePlay();
-
-
-        // cause the progress bar to be updated even if mShowing
-        // was already true.  This happens, for example, if we're
-        // paused with the progress bar showing the user hits play.
-        mRoot.post(mShowProgress);
-
     }
 
-
-    @Override
-    public void show() {
-        show(sDefaultTimeOut);
-    }
 
     @Override
     public boolean isShowing() {

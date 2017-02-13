@@ -47,6 +47,7 @@ import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.util.Map;
@@ -333,7 +334,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             mCurrentState = STATE_PLAYBACK_COMPLETED;
             mTargetState = STATE_PLAYBACK_COMPLETED;
             if (mMediaController != null) {
-                mMediaController.hide();
+                mMediaController.complete();
             }
             if (mOnCompletionListener != null) {
                 mOnCompletionListener.onCompletion(mp);

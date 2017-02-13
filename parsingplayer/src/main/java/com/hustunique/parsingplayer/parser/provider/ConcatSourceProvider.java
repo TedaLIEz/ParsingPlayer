@@ -24,54 +24,57 @@ import android.telephony.TelephonyManager;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_0;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_1;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_2;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_3;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_STANDARD;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
 
 /**
  * Created by JianGuo on 2/10/17.
  * Implementation for concat protocol
  */
 
-public class ConcatSourceProvider implements VideoSourceProvider<VideoInfo> {
-    private NetworkInfo mNetworkInfo;
+public class ConcatSourceProvider extends VideoInfoSourceProvider {
+    private Context mContext;
     @Override
-    public String provideSource(VideoInfo videoInfo) {
-        return ProtocolHelper.concat(videoInfo.getSegs(getHdByNetwork()));
+    public String provideSource(@Quality int quality) {
+        quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
+        return ProtocolHelper.concat(mVideoInfo.getSegs(quality));
     }
 
-    public ConcatSourceProvider(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        mNetworkInfo = cm.getActiveNetworkInfo();
+    public ConcatSourceProvider(VideoInfo videoInfo, Context context) {
+        super(videoInfo);
+        mContext = context;
     }
 
     private @Quality int getHdByNetwork() {
-        switch (mNetworkInfo.getType()) {
+        ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:
             case ConnectivityManager.TYPE_WIMAX:
             case ConnectivityManager.TYPE_ETHERNET:
-                return HD_3;
+                return HD_HIGH;
             case ConnectivityManager.TYPE_MOBILE:
-                switch (mNetworkInfo.getSubtype()) {
+                switch (networkInfo.getSubtype()) {
                     case TelephonyManager.NETWORK_TYPE_LTE:
                     case TelephonyManager.NETWORK_TYPE_HSPAP:
                     case TelephonyManager.NETWORK_TYPE_EHRPD:
-                        return HD_2;
+                        return HD_STANDARD;
                     case TelephonyManager.NETWORK_TYPE_UMTS: // 3G
                     case TelephonyManager.NETWORK_TYPE_CDMA:
                     case TelephonyManager.NETWORK_TYPE_EVDO_0:
                     case TelephonyManager.NETWORK_TYPE_EVDO_A:
                     case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                        return HD_1;
+                        return HD_MEDIUM;
                     case TelephonyManager.NETWORK_TYPE_GPRS: // 2G
                     case TelephonyManager.NETWORK_TYPE_EDGE:
-                        return HD_0;
+                        return HD_LOW;
                     default:
-                        return HD_0;
+                        return HD_LOW;
                 }
                 default:
-                    return HD_0;
+                    return HD_LOW;
         }
     }
 }

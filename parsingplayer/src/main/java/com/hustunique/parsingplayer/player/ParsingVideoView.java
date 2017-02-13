@@ -485,10 +485,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     public void setVideoURI(Uri uri) {
-        Map<String,String> headers = new HashMap<>();
-        // TODO: 2/10/17 Not reasonable to set range headers for all uri
-        headers.put("Range"," ");
-        setVideoURI(uri, headers);
+        setVideoURI(uri, null);
     }
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {

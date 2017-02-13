@@ -84,7 +84,7 @@ public class ParsingPlayer implements IParsingPlayer {
         IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG ? IjkMediaPlayer.IJK_LOG_INFO : IjkMediaPlayer.IJK_LOG_DEFAULT);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "safe", config.safe ? 1 : 0);
-        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
+        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "protocol_whitelist", config.whiteList);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
                 "mediacodec", config.mediacodec ? 1 : 0);
@@ -345,7 +345,7 @@ public class ParsingPlayer implements IParsingPlayer {
         private boolean startOnPrepared = true;
 
 
-        private String whiteList = "ffconcat,file,http,https,crypto";
+        private String whiteList = "ffconcat,file,http,https,crypto,tcp";
         private boolean mediacodec = true;
         private boolean mediacodecAutoRotate = true;
         private boolean mediacodecHandleResolutionChange = true;

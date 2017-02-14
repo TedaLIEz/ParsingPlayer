@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ParsingPlayer</string>
+    <string name="hd_high">High</string>
+    <string name="hd_low">Low</string>
+    <string name="hd_medium">Medium</string>
+    <string name="hd_standard">Standard</string>
 </resources>

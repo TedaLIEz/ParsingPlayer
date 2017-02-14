@@ -32,16 +32,14 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.ParsingTask;
-import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
@@ -53,10 +51,6 @@ import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
-
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -88,7 +82,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private IMediaController mMediaController;
     private IRenderView mRenderView;
-    private View mQualityView;
+    private QualityView mQualityView;
     private int mCurrentState;
     private int mTargetState;
     private int mSeekWhenPrepared;
@@ -156,44 +150,23 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private void initView(Context context) {
         mContext = context;
-        initQualityView();
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
     }
 
     // TODO: 2/13/17 Create View by quality counted in VideoInfo
-    private void initQualityView() {
-        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mQualityView = inflater.inflate(R.layout.quality_choose_view, this, false);
-        TextView tvHigh = (TextView) mQualityView.findViewById(R.id.tv_high);
-        TextView tvMedium = (TextView) mQualityView.findViewById(R.id.tv_medium);
-        TextView tvLow = (TextView) mQualityView.findViewById(R.id.tv_low);
-        tvHigh.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setQuality(HD_HIGH);
-            }
-        });
-        tvMedium.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setQuality(HD_MEDIUM);
-            }
-        });
-        tvLow.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setQuality(HD_LOW);
-            }
-        });
-        FrameLayout.LayoutParams lp = new LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL | Gravity.END);
-        mQualityView.setVisibility(View.GONE);
+    private void createQualityView(@NonNull VideoInfo info) {
+        if (mQualityView != null) return;
+        mQualityView = new QualityView(mContext);
+        mQualityView.attachViewWithInfo(this, info);
+        FrameLayout.LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        lp.gravity = Gravity.END;
+        mQualityView.setVisibility(GONE);
         addView(mQualityView, lp);
     }
 
-    private void setQuality(@Quality int quality) {
+    void setQuality(@Quality int quality) {
         // We need to recreate a instance of player to play another video
         // ref: https://github.com/Bilibili/ijkplayer/issues/400
         // TODO: 2/13/17 seek to current playing position.
@@ -479,6 +452,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
      * @param videoInfo the video info
      */
     public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
+        createQualityView(videoInfo);
         mProvider = new ConcatSourceProvider(videoInfo, mContext);
         setConcatContent(mProvider.provideSource(quality));
     }
@@ -503,7 +477,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         try {
-            // Fixme different setting for different build version
             mMediaPlayer.setDataSource(mContext, uri, headers);
             openVideo();
             requestLayout();
@@ -685,8 +658,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (mQualityView.getVisibility() == VISIBLE) {
-                    mQualityView.setVisibility(GONE);
+                if (mQualityView.isShown()) {
+                    mQualityView.hide();
                 }
                 if (isInPlayBackState() && mMediaController != null) {
                     toggleMediaControlsVisibility();
@@ -784,6 +757,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     @Override
     public int getCurrentPosition() {
         if (isInPlayBackState()) {
+            // FIXME: 2/14/17 Different position when reaches end
             return (int) mMediaPlayer.getCurrentPosition();
         }
         return 0;
@@ -834,7 +808,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     private void play(String videoUrl, @Quality int quality) {
-        // TODO: 2/14/17 play with specified quality
         ParsingTask parsingTask = new ParsingTask(this, quality);
         parsingTask.execute(videoUrl);
     }
@@ -846,18 +819,17 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     @Override
     public void hideQualityView() {
-        mQualityView.setVisibility(GONE);
+        mQualityView.hide();
     }
 
     @Override
     public void showQualityView() {
-        mQualityView.bringToFront();
-        mQualityView.setVisibility(VISIBLE);
+        mQualityView.show();
     }
 
     @Override
     public boolean isQualityViewShown() {
-        return mQualityView.getVisibility() == View.VISIBLE;
+        return mQualityView.isShown();
     }
 
 

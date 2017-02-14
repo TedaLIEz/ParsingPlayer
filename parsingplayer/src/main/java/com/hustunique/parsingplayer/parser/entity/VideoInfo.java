@@ -23,6 +23,7 @@ import com.hustunique.parsingplayer.parser.provider.Quality;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -57,6 +58,11 @@ public class VideoInfo {
         this.segsMap = segsMap;
         this.title = title;
     }
+
+    public Set<Integer> getQualitySet() {
+        return segsMap.keySet();
+    }
+
 
     public String getTitle() {
         return title;

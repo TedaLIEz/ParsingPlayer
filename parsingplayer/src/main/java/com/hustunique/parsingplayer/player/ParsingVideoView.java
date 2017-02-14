@@ -35,7 +35,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
@@ -155,12 +154,11 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         requestFocus();
     }
 
-    // TODO: 2/13/17 Create View by quality counted in VideoInfo
     private void createQualityView(@NonNull VideoInfo info) {
         if (mQualityView != null) return;
         mQualityView = new QualityView(mContext);
         mQualityView.attachViewWithInfo(this, info);
-        FrameLayout.LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        FrameLayout.LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.END;
         mQualityView.setVisibility(GONE);
         addView(mQualityView, lp);

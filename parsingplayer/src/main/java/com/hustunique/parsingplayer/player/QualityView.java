@@ -17,6 +17,7 @@
 
 package com.hustunique.parsingplayer.player;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -32,7 +33,7 @@ import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 
 /**
  * Created by JianGuo on 2/14/17.
- *
+ * View for video quality chosen
  */
 
 public class QualityView extends LinearLayout {
@@ -60,6 +61,7 @@ public class QualityView extends LinearLayout {
     private void initView() {
         setOrientation(LinearLayout.VERTICAL);
         setGravity(Gravity.CENTER);
+
         setBackgroundColor(getResources().getColor(R.color.panel_background_dark));
     }
 
@@ -104,12 +106,54 @@ public class QualityView extends LinearLayout {
     }
 
     public void show() {
-        bringToFront();
-        setVisibility(VISIBLE);
+        LogUtil.d(TAG, "width: " + getMeasuredWidth());
+        animate().translationXBy(-getMeasuredWidth()).setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                bringToFront();
+                setVisibility(VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        }).start();
+
     }
 
     public void hide() {
-        setVisibility(GONE);
+        animate().translationXBy(getMeasuredWidth()).setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                setVisibility(GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        }).start();
+
     }
 
 }

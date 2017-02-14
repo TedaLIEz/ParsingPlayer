@@ -31,6 +31,7 @@ import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.Util;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
+import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.orhanobut.logger.Logger;
 
@@ -129,9 +130,9 @@ public class YoukuExtractor extends Extractor {
         LogUtil.i(TAG, "sid: " + mSid +" ,mToken: " + mToken + " ,oip: " + mOip);
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
-        Map<Integer, List<Seg>> segsMap = getSegMap(data);
-        Logger.d("hd length:"+segsMap.keySet().size());
-        return new VideoInfo(segsMap, title);
+        Map<Integer,Stream> streamMap = getSegMap(data);
+        Logger.d("hd length:"+streamMap.keySet().size());
+        return new VideoInfo(streamMap, title);
     }
 
     @VisibleForTesting
@@ -141,9 +142,10 @@ public class YoukuExtractor extends Extractor {
         return rst;
     }
 
-    private Map<Integer, List<Seg>> getSegMap(JsonObject data) throws UnsupportedEncodingException {
-        HashMap<Integer, List<Seg>> segsMap = new HashMap<>();
+    private Map<Integer, Stream> getSegMap(JsonObject data) throws UnsupportedEncodingException {
+        HashMap<Integer, Stream> streamMap = new HashMap<>();
         JsonArray streams = data.getAsJsonArray("stream");
+        int h = 0;
         for (JsonElement stream : streams) {
             if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
                 continue;
@@ -173,9 +175,10 @@ public class YoukuExtractor extends Extractor {
                 segList.add(s);
                 n++;
             }
-            segsMap.put(mHdMap.get(format), segList);
+            streamMap.put(h, new Stream(segList));
+            h++;
         }
-        return segsMap;
+        return streamMap;
     }
 
     // Check error if response return error data

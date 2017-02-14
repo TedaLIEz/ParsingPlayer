@@ -24,10 +24,19 @@ import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.hustunique.parsingplayer.parser.ExtractException;
+import com.hustunique.parsingplayer.parser.entity.Seg;
+import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,41 +80,53 @@ public abstract class Extractor {
     private VideoInfo extract(@NonNull Request request) {
         try {
             Response response = mClient.newCall(request).execute();
-            return createInfo(response);
+            VideoInfo videoInfo = createInfo(response);
+            return cutDownVideoInfo(videoInfo);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        throw new ExtractException("Can't extract video info");
     }
 
-    protected JsonObject parseResponse(String response){
+    private VideoInfo cutDownVideoInfo(VideoInfo videoInfo) {
+        Map<Integer, Stream> streamMap = videoInfo.getStreamMap();
+        if (streamMap.keySet().size() <= 4) return videoInfo;
+        Map<Integer, Stream> storedStreamMap = new HashMap<>();
+        Object[] keys = streamMap.keySet().toArray();
+        for (int i = 3; i >= 0; i--) {
+            storedStreamMap.put(i, streamMap.get(keys[keys.length - 4 + i]));
+        }
+        return new VideoInfo(storedStreamMap, videoInfo.getTitle());
+    }
+
+    protected JsonObject parseResponse(String response) {
         JsonParser parser = new JsonParser();
         return parser.parse(response).getAsJsonObject();
     }
 
-    protected String searchValue(String s, String regex){
+    protected String searchValue(String s, String regex) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(s);
         matcher.find();
         return matcher.group(0);
     }
 
-    protected String downloadData(String url) throws IOException{
+    protected String downloadData(String url) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
         return mClient.newCall(request).execute().body().string();
     }
 
-    protected String downloadData(String url,Map<String,String> headers,Map<String,String> postData) throws IOException {
+    protected String downloadData(String url, Map<String, String> headers, Map<String, String> postData) throws IOException {
         Request.Builder requestBuilder = new Request.Builder();
-        for (String headerKey:headers.keySet()){
-            requestBuilder.addHeader(headerKey,headers.get(headerKey));
+        for (String headerKey : headers.keySet()) {
+            requestBuilder.addHeader(headerKey, headers.get(headerKey));
         }
 
         FormBody.Builder bodyBuilder = new FormBody.Builder();
-        for (String bodyKey:postData.keySet()){
-            bodyBuilder.add(bodyKey,postData.get(bodyKey));
+        for (String bodyKey : postData.keySet()) {
+            bodyBuilder.add(bodyKey, postData.get(bodyKey));
         }
         RequestBody body = bodyBuilder.build();
         Request request = requestBuilder.url(url).post(body).build();
@@ -116,6 +137,7 @@ public abstract class Extractor {
 
     @Nullable
     abstract VideoInfo createInfo(@NonNull Response response) throws IOException;
+
     @NonNull
     abstract Request buildRequest(@NonNull String baseUrl);
 }

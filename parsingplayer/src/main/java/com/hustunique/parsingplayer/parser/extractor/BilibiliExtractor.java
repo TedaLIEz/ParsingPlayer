@@ -25,6 +25,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hustunique.parsingplayer.Util;
 import com.hustunique.parsingplayer.parser.entity.Seg;
+import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 
 import java.io.IOException;
@@ -90,8 +91,8 @@ public class BilibiliExtractor extends Extractor {
     @Override
     VideoInfo createInfo(@NonNull Response response) throws IOException {
         JsonObject data = parseResponse(response.body().string());
-        Map<Integer,List<Seg>> segsMap = getSegsMap(data);
-        return new VideoInfo(segsMap,mTitle);
+        Map<Integer,Stream> streamMap = getSegsMap(data);
+        return new VideoInfo(streamMap,mTitle);
     }
 
     @NonNull
@@ -107,8 +108,8 @@ public class BilibiliExtractor extends Extractor {
     }
 
     @NonNull
-    private Map<Integer,List<Seg>> getSegsMap(JsonObject data){
-        HashMap<Integer,List<Seg>> segsMap = new HashMap<>();
+    private Map<Integer,Stream> getSegsMap(JsonObject data){
+        HashMap<Integer,Stream> streamMap = new HashMap<>();
         List<Seg> segs;
         JsonArray qualityArray = data.getAsJsonArray("accept_quality");
         JsonObject dataTmp = null;
@@ -131,9 +132,9 @@ public class BilibiliExtractor extends Extractor {
                 Seg seg = new Seg(path,duration);
                 segs.add(seg);
             }
-            segsMap.put(quality.getAsInt(),segs);
+            streamMap.put(quality.getAsInt(),new Stream(segs));
         }
-        return segsMap;
+        return streamMap;
     }
 
 }

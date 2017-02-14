@@ -21,9 +21,7 @@ import android.support.annotation.NonNull;
 
 import com.hustunique.parsingplayer.parser.provider.Quality;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -39,39 +37,40 @@ public class VideoInfo {
 
 
     // the key is hd
-    private Map<Integer, List<Seg>> segsMap;
+    private Map<Integer, Stream> streamMap;
     private String title;
 
 
-    public List<Seg> getSegs(@Quality int hd) {
-        while (!segsMap.containsKey(hd)){
+    public Stream getStream(@Quality int hd) {
+        while (!streamMap.containsKey(hd)) {
             hd--;
             if (hd < 0)
                 throw new RuntimeException("No such hd in this url");
         }
-        return segsMap.get(hd);
+        return streamMap.get(hd);
     }
 
-    public VideoInfo(@NonNull Map<Integer, List<Seg>> segsMap, @NonNull String title) {
-        if (segsMap == null) throw new IllegalArgumentException("SegsMap can't be null");
+    public VideoInfo(@NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
+        if (streamMap == null) throw new IllegalArgumentException("SegsMap can't be null");
         if (title == null) throw new IllegalArgumentException("Title can't be null");
-        this.segsMap = segsMap;
+        this.streamMap = streamMap;
         this.title = title;
     }
 
-    public Set<Integer> getQualitySet() {
-        return segsMap.keySet();
-    }
 
 
     public String getTitle() {
         return title;
     }
 
+    public Map<Integer, Stream> getStreamMap() {
+        return streamMap;
+    }
+
     @Override
     public String toString() {
         return "VideoInfo{" +
-                "segsMap=" + segsMap +
+                "segsMap=" + streamMap +
                 ", title='" + title + '\'' +
                 '}';
     }
@@ -79,16 +78,16 @@ public class VideoInfo {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o instanceof VideoInfo){
+        if (o instanceof VideoInfo) {
             VideoInfo anotherInfo = (VideoInfo) o;
-            return anotherInfo.segsMap.equals(segsMap) && anotherInfo.title.equals(title);
+            return anotherInfo.streamMap.equals(streamMap) && anotherInfo.title.equals(title);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        int result = segsMap != null ? segsMap.hashCode() : 0;
+        int result = streamMap != null ? streamMap.hashCode() : 0;
         result = 31 * result + title.hashCode();
         return result;
     }

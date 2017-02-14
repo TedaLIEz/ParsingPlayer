@@ -68,7 +68,7 @@ public class QualityView extends LinearLayout {
 
     public void attachViewWithInfo(final ParsingVideoView view, VideoInfo videoInfo) {
         LogUtil.d(TAG, "hds size " + videoInfo.toString());
-        for (final int q : videoInfo.getQualitySet()) {
+        for (final int q : videoInfo.getStreamMap().keySet()) {
             TextView tv = new TextView(getContext());
             LinearLayout.LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
             lp.bottomMargin = 16;

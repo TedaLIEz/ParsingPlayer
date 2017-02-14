@@ -39,7 +39,7 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     @Override
     public String provideSource(@Quality int quality) {
         quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
-        return ProtocolHelper.concat(mVideoInfo.getSegs(quality));
+        return ProtocolHelper.concat(mVideoInfo.getStream(quality).getSegs());
     }
 
     public ConcatSourceProvider(VideoInfo videoInfo, Context context) {

@@ -26,6 +26,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
+import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.orhanobut.logger.Logger;
 
@@ -65,8 +66,8 @@ public class SoHuExtractor extends Extractor {
     VideoInfo createInfo(@NonNull Response response) throws IOException {
         JsonObject vidDataJson = parseResponse(response.body().string());
         checkError(vidDataJson);
-        Map<Integer, List<Seg>> segsMap = getSegsMap(vidDataJson);
-        return new VideoInfo(segsMap, mTitle);
+        Map<Integer,Stream> streamMap = getSegsMap(vidDataJson);
+        return new VideoInfo(streamMap, mTitle);
     }
 
 
@@ -130,11 +131,11 @@ public class SoHuExtractor extends Extractor {
             return String.format("http://hot.vrs.sohu.com/vrs_flash.action?vid=%s", id);
     }
 
-    private Map<Integer, List<Seg>> getSegsMap(JsonObject vidDataJson) {
+    private Map<Integer, Stream> getSegsMap(JsonObject vidDataJson) {
         int partCount = vidDataJson.getAsJsonObject("data").get("totalBlocks").getAsInt();
         JsonArray durationArray = vidDataJson.getAsJsonObject("data").getAsJsonArray("clipsDuration");
         String[] formatArray = new String[]{"nor", "high", "super", "ori"};
-        HashMap<Integer, List<Seg>> segsMap = new HashMap<>();
+        HashMap<Integer, Stream> segsMap = new HashMap<>();
         int hd = 0;
         for (String formatId : formatArray) {
             JsonElement formatIdVidElement = vidDataJson.getAsJsonObject("data").get(formatId + "Vid");
@@ -185,7 +186,7 @@ public class SoHuExtractor extends Extractor {
                         throw new ExtractException("Failed to get video URL");
                 }
             }
-            segsMap.put(hd, segList);
+            segsMap.put(hd, new Stream(segList));
             hd++;
         }
         return segsMap;

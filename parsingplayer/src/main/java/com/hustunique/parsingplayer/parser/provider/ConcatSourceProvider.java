@@ -50,6 +50,8 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     private @Quality int getHdByNetwork() {
         ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+//        if (networkInfo==null)
+            //TODO:show warning on TextRenderView
         switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:
             case ConnectivityManager.TYPE_WIMAX:

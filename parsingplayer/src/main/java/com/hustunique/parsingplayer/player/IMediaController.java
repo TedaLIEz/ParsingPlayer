@@ -27,6 +27,8 @@ import android.view.View;
 public interface IMediaController {
     void hide();
 
+    void complete();
+
     boolean isShowing();
 
     void setAnchorView(View view);
@@ -34,8 +36,6 @@ public interface IMediaController {
     void setEnabled(boolean enabled);
 
     void setMediaPlayer(IMediaPlayerControl player);
-
-    void show(int timeout);
 
     void show();
 

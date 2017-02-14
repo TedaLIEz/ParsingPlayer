@@ -306,7 +306,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             mCurrentState = STATE_PLAYBACK_COMPLETED;
             mTargetState = STATE_PLAYBACK_COMPLETED;
             if (mMediaController != null) {
-                mMediaController.hide();
+                mMediaController.complete();
             }
             if (mOnCompletionListener != null) {
                 mOnCompletionListener.onCompletion(mp);
@@ -507,7 +507,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private void attachMediaController() {
         if (mMediaPlayer != null && mMediaController != null) {
             mMediaController.setMediaPlayer(this);
-            mMediaController.setAnchorView(this);
+            mMediaController.setAnchorView((View) mRenderView);
             mMediaController.setEnabled(isInPlayBackState());
         }
     }

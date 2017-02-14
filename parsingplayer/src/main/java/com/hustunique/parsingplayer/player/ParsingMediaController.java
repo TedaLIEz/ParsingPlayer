@@ -21,6 +21,7 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -34,6 +35,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
+import com.orhanobut.logger.Logger;
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -57,7 +59,7 @@ public class ParsingMediaController implements IMediaController {
     private WindowManager mWindowManager;
     private WindowManager.LayoutParams mParams;
     private boolean mIsShowing = false;
-
+    private boolean mHasCompleted = false;
 
     ParsingMediaController(Context context, AttributeSet attrs) {
         mContext = context;
@@ -114,17 +116,17 @@ public class ParsingMediaController implements IMediaController {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        show(0);
+                        show();
                         break;
                     case MotionEvent.ACTION_UP:
-                        show(sDefaultTimeOut);
+                        show();
                         break;
                     case MotionEvent.ACTION_CANCEL:
                         hide();
                         break;
                     default:
                         break;
-                 }
+                }
                 return true;
             }
         });
@@ -148,7 +150,7 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void onClick(View v) {
             doPauseResume();
-            show(0);
+            show();
         }
     };
 
@@ -158,7 +160,7 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void run() {
             int pos = setProgress();
-            if (!mDragging && mPlayer.isPlaying()) {
+            if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
                 mRoot.postDelayed(mShowProgress, 1000 - (pos % 1000));
             }
         }
@@ -185,7 +187,8 @@ public class ParsingMediaController implements IMediaController {
             mEndTime.setText(stringForTime(duration));
         if (mCurrentTime != null)
             mCurrentTime.setText(stringForTime(position));
-
+        if (mHasCompleted)
+            mCurrentTime.setText(stringForTime(duration));
         return position;
     }
 
@@ -207,8 +210,6 @@ public class ParsingMediaController implements IMediaController {
 
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
-            show(3600000);
-
             mDragging = true;
             mRoot.removeCallbacks(mShowProgress);
         }
@@ -216,13 +217,6 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             mDragging = false;
-            setProgress();
-            updatePausePlay();
-            show(sDefaultTimeOut);
-
-            // Ensure that progress is properly updated in the future,
-            // the call to show() does not guarantee this because it is a
-            // no-op if we are already showing.
             mRoot.post(mShowProgress);
         }
     };
@@ -281,6 +275,12 @@ public class ParsingMediaController implements IMediaController {
         }
     }
 
+    @Override
+    public void complete() {
+        mHasCompleted = true;
+        mRoot.removeCallbacks(mShowProgress);
+        updatePausePlay();
+    }
 
 
     private View.OnLayoutChangeListener mOnLayoutListener = new View.OnLayoutChangeListener() {
@@ -298,7 +298,6 @@ public class ParsingMediaController implements IMediaController {
         view.removeOnLayoutChangeListener(mOnLayoutListener);
         mAnchor = view;
         mAnchor.addOnLayoutChangeListener(mOnLayoutListener);
-
     }
 
     @Override
@@ -326,7 +325,7 @@ public class ParsingMediaController implements IMediaController {
                 View.MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), View.MeasureSpec.AT_MOST));
         mParams.width = mAnchor.getWidth();
         mParams.height = mRoot.getMeasuredHeight();
-        int x = anchorPos[0] + (mAnchor.getWidth() - mParams.width) / 2;
+        int x = anchorPos[0];
         // TODO: 2/8/17 Weird position when setting videoView in WRAP_CONTENT
         int y = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
 
@@ -335,31 +334,20 @@ public class ParsingMediaController implements IMediaController {
     }
 
     @Override
-    public void show(int timeout) {
+    public void show() {
         if (!mIsShowing && mAnchor != null) {
             mIsShowing = true;
             setProgress();
+            mRoot.post(mShowProgress);
+            updatePausePlay();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
 
             showPopupWindowLayout();
         }
-        updatePausePlay();
-
-
-        // cause the progress bar to be updated even if mShowing
-        // was already true.  This happens, for example, if we're
-        // paused with the progress bar showing the user hits play.
-        mRoot.post(mShowProgress);
-
     }
 
-
-    @Override
-    public void show() {
-        show(sDefaultTimeOut);
-    }
 
     @Override
     public boolean isShowing() {

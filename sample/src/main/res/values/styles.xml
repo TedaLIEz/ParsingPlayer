@@ -8,4 +8,6 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MainActivityTheme" parent="Theme.AppCompat.Light.NoActionBar"/>
+
 </resources>

@@ -72,9 +72,6 @@ public final class ParsingFileManager {
         fileService.execute(task);
     }
 
-    public void read(String filename, LoadingCallback<String> callback) {
-        // TODO: 2/5/17 Implement read string
-    }
 
     public void cleanUp() {
         cleanupService.submit(cleanupCallable);

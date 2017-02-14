@@ -167,7 +167,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     void setQuality(@Quality int quality) {
         // We need to recreate a instance of player to play another video
         // ref: https://github.com/Bilibili/ijkplayer/issues/400
-        // TODO: 2/13/17 seek to current playing position.
         mSeekWhenPrepared = (int) mMediaPlayer.getCurrentPosition();
         LogUtil.d(TAG, "current Pos: " + mSeekWhenPrepared);
         configurePlayer();
@@ -755,7 +754,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     @Override
     public int getCurrentPosition() {
         if (isInPlayBackState()) {
-            // FIXME: 2/14/17 Different position when reaches end
             return (int) mMediaPlayer.getCurrentPosition();
         }
         return 0;

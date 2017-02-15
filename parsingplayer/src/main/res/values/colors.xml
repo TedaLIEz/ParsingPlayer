@@ -4,4 +4,5 @@
     <color name="panel_background_dark">#CC000000</color>
     <color name="panel_background_light">#55000000</color>
     <color name="panel_background_text">#88000000</color>
+    <color name="black_overlay">#66000000</color>
 </resources>

@@ -1,6 +1,6 @@
 /*
- *
  * Copyright (c) 2017 UniqueStudio
+ *
  *
  * This file is part of ParsingPlayer.
  *
@@ -15,14 +15,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer;
+package com.hustunique.parsingplayer.player;
 
 import android.os.AsyncTask;
 
 import com.hustunique.parsingplayer.parser.VideoParser;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.Quality;
-import com.hustunique.parsingplayer.player.ParsingVideoView;
 
 /**
  * Created by CoXier on 17-2-7.

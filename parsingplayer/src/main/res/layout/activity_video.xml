@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2017 UniqueStudio
+  ~
+  ~
+  ~ This file is part of ParsingPlayer.
+  ~
+  ~ ParsingPlayer is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU Lesser General Public
+  ~ License as published by the Free Software Foundation; either
+  ~ version 2.1 of the License, or (at your option) any later version.
+  ~
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with ParsingPlayer; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="@color/black_overlay"
+             android:fitsSystemWindows="true"
+             tools:context=".player.android.VideoActivity">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+        <com.hustunique.parsingplayer.player.ParsingVideoView
+            android:fitsSystemWindows="true"
+            android:id="@+id/fullscreen_content"
+            android:layout_width="match_parent"
+            android:layout_gravity="center"
+            android:layout_height="match_parent"/>
+
+
+
+
+</FrameLayout>

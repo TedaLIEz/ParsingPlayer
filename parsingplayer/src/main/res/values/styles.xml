@@ -7,10 +7,11 @@
     </style>
 
     <style name="MediaButton.Play">
-        <item name="android:src">@drawable/ic_play_arrow_white_24dp</item>
+        <item name="android:src">@drawable/ic_portrait_play</item>
     </style>
-    <style name="MediaButton.Quality">
-        <item name="android:src">@drawable/ic_video_library_white_24dp</item>
+
+    <style name="MediaButton.FUllscreen">
+        <item name="android:src">@drawable/ic_portrait_fullscreen</item>
     </style>
 
     <style name="MediaQuality">

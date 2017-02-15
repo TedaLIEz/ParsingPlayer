@@ -44,6 +44,7 @@ import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.util.Map;

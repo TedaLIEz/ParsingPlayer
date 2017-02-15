@@ -1,68 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:background="@color/panel_background_dark"
-              android:orientation="vertical"
-              android:layoutDirection="ltr">
-
-
-
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/panel_background_dark"
+    android:layoutDirection="ltr"
+    android:orientation="vertical">
     <LinearLayout
-        android:paddingTop="4dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="4dp">
 
+        <ImageButton
+            android:id="@+id/pause"
+            style="@style/MediaButton.Play" />
 
-        <TextView android:id="@+id/time_current"
-                  tools:text="00:00"
-                  android:textSize="14sp"
-                  android:textStyle="bold"
-                  android:paddingTop="4dp"
-                  android:paddingStart="4dp"
-                  android:layout_gravity="center_vertical"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:paddingEnd="4dip"
-                  android:textColor="@color/dim_foreground_dark" />
+        <TextView
+            android:id="@+id/time_current"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingEnd="4dip"
+            android:paddingStart="4dp"
+            android:paddingTop="4dp"
+            android:textColor="@color/dim_foreground_dark"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="00:00" />
 
         <SeekBar
             android:id="@+id/mediacontroller_progress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dip"
-            android:layout_weight="1"
             android:layout_height="32dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true" />
+            android:layout_weight="1" />
 
-        <TextView android:id="@+id/time"
-                  android:textSize="14sp"
-                  android:textStyle="bold"
-                  android:paddingTop="4dp"
-                  android:paddingEnd="4dp"
-                  tools:text="13:45"
-                  android:layout_gravity="center_vertical"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:paddingStart="4dp"
-                  android:textColor="@color/dim_foreground_dark" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:paddingEnd="4dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <ImageButton android:id="@+id/pause"
-                     style="@style/MediaButton.Play"/>
-        <View
-            android:layout_width="0dip"
-            android:layout_weight="1"
-            android:layout_height="match_parent"/>
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingEnd="4dp"
+            android:paddingStart="4dp"
+            android:paddingTop="4dp"
+            android:textColor="@color/dim_foreground_dark"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="13:45" />
         <ImageButton
-            android:id="@+id/quality"
-            style="@style/MediaButton.Quality"/>
+            android:id="@+id/fullscreen"
+            style="@style/MediaButton.FUllscreen"
+             />
     </LinearLayout>
 </LinearLayout>

@@ -46,12 +46,11 @@ import java.util.Locale;
  */
 public class ParsingMediaController implements IMediaController {
     private IMediaPlayerControl mPlayer;
-    private static final int sDefaultTimeOut = 5000;
     private static final String TAG = "ParsingMediaController";
     private View mRoot;
     private Context mContext;
     private View mAnchor;
-    private ImageButton mPauseButton, mQualityButton;
+    private ImageButton mPauseButton;
     private SeekBar mProgress;
     private TextView mCurrentTime, mEndTime;
     private StringBuilder mFormatBuilder;
@@ -97,10 +96,6 @@ public class ParsingMediaController implements IMediaController {
         if (mPauseButton != null) {
             mPauseButton.requestFocus();
             mPauseButton.setOnClickListener(mPauseListener);
-        }
-        mQualityButton = (ImageButton) mRoot.findViewById(R.id.quality);
-        if (mQualityButton != null) {
-            mQualityButton.setOnClickListener(mQualityListener);
         }
         mProgress = (SeekBar) mRoot.findViewById(R.id.mediacontroller_progress);
         if (mProgress != null) {
@@ -150,7 +145,6 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void onClick(View v) {
             doPauseResume();
-            show();
         }
     };
 
@@ -159,9 +153,10 @@ public class ParsingMediaController implements IMediaController {
     private final Runnable mShowProgress = new Runnable() {
         @Override
         public void run() {
-            int pos = setProgress();
+            setProgress();
+            updatePausePlay();
             if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
-                mRoot.postDelayed(mShowProgress, 1000 - (pos % 1000));
+                mRoot.post(mShowProgress);
             }
         }
     };
@@ -183,12 +178,13 @@ public class ParsingMediaController implements IMediaController {
             mProgress.setSecondaryProgress(percent * 10);
         }
 
-        if (mEndTime != null)
-            mEndTime.setText(stringForTime(duration));
-        if (mCurrentTime != null)
+        mEndTime.setText(stringForTime(duration));
+        if (!mHasCompleted)
             mCurrentTime.setText(stringForTime(position));
-        if (mHasCompleted)
+        else if (!mPlayer.isPlaying())
             mCurrentTime.setText(stringForTime(duration));
+        else
+            mHasCompleted = false;
         return position;
     }
 
@@ -202,10 +198,10 @@ public class ParsingMediaController implements IMediaController {
             }
 
             long duration = mPlayer.getDuration();
-            long newposition = (duration * progress) / 1000L;
-            mPlayer.seekTo((int) newposition);
+            long newPosition = (duration * progress) / 1000L;
+            mPlayer.seekTo((int) newPosition);
             if (mCurrentTime != null)
-                mCurrentTime.setText(stringForTime((int) newposition));
+                mCurrentTime.setText(stringForTime((int) newPosition));
         }
 
         @Override
@@ -243,16 +239,16 @@ public class ParsingMediaController implements IMediaController {
         } else {
             mPlayer.start();
         }
-        updatePausePlay();
+        mRoot.post(mShowProgress);
     }
 
     private void updatePausePlay() {
         if (mRoot == null || mPauseButton == null)
             return;
         if (mPlayer.isPlaying()) {
-            mPauseButton.setImageResource(R.drawable.ic_pause_white_24dp);
+            mPauseButton.setImageResource(R.drawable.ic_portrait_stop);
         } else {
-            mPauseButton.setImageResource(R.drawable.ic_play_arrow_white_24dp);
+            mPauseButton.setImageResource(R.drawable.ic_portrait_play);
         }
     }
 
@@ -279,6 +275,7 @@ public class ParsingMediaController implements IMediaController {
     public void complete() {
         mHasCompleted = true;
         mRoot.removeCallbacks(mShowProgress);
+        setProgress();
         updatePausePlay();
     }
 
@@ -337,13 +334,10 @@ public class ParsingMediaController implements IMediaController {
     public void show() {
         if (!mIsShowing && mAnchor != null) {
             mIsShowing = true;
-            setProgress();
             mRoot.post(mShowProgress);
-            updatePausePlay();
             if (mPauseButton != null) {
                 mPauseButton.requestFocus();
             }
-
             showPopupWindowLayout();
         }
     }

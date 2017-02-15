@@ -38,7 +38,6 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
-import com.hustunique.parsingplayer.ParsingTask;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
@@ -112,7 +111,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         super(context, attrs, defStyleAttr);
         initView(context);
         initGesture();
-        configurePlayer();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -120,7 +118,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
         initGesture();
-        configurePlayer();
     }
 
     private void configurePlayer() {
@@ -473,6 +470,12 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         setVideoURI(uri, null);
     }
 
+    public void setCurrentAspectRatio(int ratio) {
+        mCurrentAspectRatio = ratio;
+        if (mRenderView != null) {
+            mRenderView.setAspectRatio(mCurrentAspectRatio);
+        }
+    }
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         try {
             mMediaPlayer.setDataSource(mContext, uri, headers);
@@ -656,7 +659,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (mQualityView.isShown()) {
+                if (mQualityView != null && mQualityView.isShown()) {
                     mQualityView.hide();
                 }
                 if (isInPlayBackState() && mMediaController != null) {
@@ -664,7 +667,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 }
             }
         }
-        return true;
+        return false;
     }
 
 
@@ -805,6 +808,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     private void play(String videoUrl, @Quality int quality) {
+        configurePlayer();
         ParsingTask parsingTask = new ParsingTask(this, quality);
         parsingTask.execute(videoUrl);
     }
@@ -855,7 +859,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         SavedState ss = new SavedState(parcelable);
         ss.currentState = mCurrentState;
         ss.targetState = mTargetState;
-        ss.currentPos = (int) mMediaPlayer.getCurrentPosition();
+        ss.currentPos = mMediaPlayer == null ? 0 : (int) mMediaPlayer.getCurrentPosition();
         ss.currentBufferPercentage = mCurrentBufferPercentage;
         LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
         return ss;
@@ -915,13 +919,13 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
-        if (visibility == GONE && mMediaPlayer.isPlaying()) {
+        if (visibility == GONE && mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
             if (mMediaController != null) {
                 mMediaController.hide();
             }
         }
-        if (visibility == VISIBLE && !mMediaPlayer.isPlaying()) {
+        if (visibility == VISIBLE && mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
             mMediaPlayer.start();
             if (mMediaController != null) {
                 mMediaController.show();

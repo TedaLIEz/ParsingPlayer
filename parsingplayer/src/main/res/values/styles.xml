@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="MediaButton">
         <item name="android:background">@null</item>
         <item name="android:layout_width">32dp</item>
@@ -10,8 +11,9 @@
         <item name="android:src">@drawable/ic_portrait_play</item>
     </style>
 
-    <style name="MediaButton.FUllscreen">
+    <style name="MediaButton.Fullscreen">
         <item name="android:src">@drawable/ic_portrait_fullscreen</item>
+
     </style>
 
     <style name="MediaQuality">
@@ -27,4 +29,15 @@
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/dim_foreground_dark</item>
     </style>
+
+
+
+    <style name="FullscreenTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:windowBackground">@null</item>
+        <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
+        <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
+    </style>
+
+
 </resources>

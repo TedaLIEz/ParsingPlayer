@@ -1,0 +1,23 @@
+<!--
+  ~ Copyright (c) 2017 UniqueStudio
+  ~
+  ~
+  ~ This file is part of ParsingPlayer.
+  ~
+  ~ ParsingPlayer is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU Lesser General Public
+  ~ License as published by the Free Software Foundation; either
+  ~ version 2.1 of the License, or (at your option) any later version.
+  ~
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with ParsingPlayer; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  -->
+
+<resources>
+    <!-- Example customization of dimensions originally defined in res/values/dimens.xml
+         (such as screen margins) for screens with more than 820dp of available width. This
+         would include 7" and 10" devices in landscape (~960dp and ~1280dp respectively). -->
+    <dimen name="activity_horizontal_margin">64dp</dimen>
+</resources>

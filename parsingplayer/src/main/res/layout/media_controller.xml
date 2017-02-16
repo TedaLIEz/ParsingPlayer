@@ -6,6 +6,7 @@
     android:background="@color/panel_background_dark"
     android:layoutDirection="ltr"
     android:orientation="vertical">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -48,9 +49,9 @@
             android:textSize="14sp"
             android:textStyle="bold"
             tools:text="13:45" />
+
         <ImageButton
             android:id="@+id/fullscreen"
-            style="@style/MediaButton.FUllscreen"
-             />
+            style="@style/MediaButton.Fullscreen" />
     </LinearLayout>
 </LinearLayout>

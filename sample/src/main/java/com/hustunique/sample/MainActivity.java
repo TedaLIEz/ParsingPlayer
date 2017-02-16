@@ -20,4 +20,10 @@ public class MainActivity extends AppCompatActivity {
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
         mVideoView.play(YoukuExtractor.TEST_URL);
     }
+
+    @Override
+    protected void onDestroy() {
+        mVideoView.release(true);
+        super.onDestroy();
+    }
 }

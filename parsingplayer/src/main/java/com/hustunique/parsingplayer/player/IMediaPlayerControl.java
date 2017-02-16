@@ -46,8 +46,4 @@ public interface IMediaPlayerControl {
      * @return The audio session, or 0 if there was an error.
      */
     int     getAudioSessionId();
-
-    void hideQualityView();
-    void showQualityView();
-    boolean isQualityViewShown();
 }

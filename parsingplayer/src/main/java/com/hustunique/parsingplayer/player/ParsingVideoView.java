@@ -32,12 +32,15 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
+import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
@@ -56,7 +59,7 @@ import tv.danmaku.ijk.media.player.IjkTimedText;
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
 
-public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl {
+public class ParsingVideoView extends RelativeLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
     private IParsingPlayer mMediaPlayer;
     private int mVideoWidth;
@@ -79,9 +82,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private static final int STATE_PAUSED = 4;
     private static final int STATE_PLAYBACK_COMPLETED = 5;
 
-    private IMediaController mMediaController;
-    private IRenderView mRenderView;
-    private QualityView mQualityView;
+    private ControllerView mControllerView;
+    private TextureRenderView mRenderView;
     private int mCurrentState;
     private int mTargetState;
     private int mSeekWhenPrepared;
@@ -147,20 +149,14 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     private void initView(Context context) {
         mContext = context;
+        LayoutInflater.from(context).inflate(R.layout.parsing_video_view,this);
+        mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
+        mControllerView = (ControllerView) findViewById(R.id.controller_view);
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
     }
 
-    private void createQualityView(@NonNull VideoInfo info) {
-        if (mQualityView != null) return;
-        mQualityView = new QualityView(mContext);
-        mQualityView.attachViewWithInfo(this, info);
-        FrameLayout.LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        lp.gravity = Gravity.END;
-        mQualityView.setVisibility(GONE);
-        addView(mQualityView, lp);
-    }
 
     void setQuality(@Quality int quality) {
         // We need to recreate a instance of player to play another video
@@ -169,7 +165,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         LogUtil.d(TAG, "current Pos: " + mSeekWhenPrepared);
         configurePlayer();
         setConcatContent(mProvider.provideSource(quality));
-        hideQualityView();
     }
 
     private void configureRenderView() {
@@ -259,11 +254,10 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             mTargetState = STATE_PLAYING;
             if (mOnPreparedListener != null) {
                 mOnPreparedListener.onPrepared(mp);
-
             }
-            setMediaController(new ParsingMediaController(mContext));
-            if (mMediaController != null) {
-                mMediaController.setEnabled(true);
+            setMediaController();
+            if (mControllerView != null) {
+                mControllerView.setEnabled(true);
             }
             mVideoWidth = mp.getVideoWidth();
             mVideoHeight = mp.getVideoHeight();
@@ -281,8 +275,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                         if (mTargetState == STATE_PLAYING) {
                             start();
                         } else if (!isPlaying() && (seekToPosition != 0 || getCurrentPosition() > 0)) {
-                            if (mMediaController != null) {
-                                mMediaController.show();
+                            if (mControllerView != null) {
+                                mControllerView.show();
                             }
                         }
                     }
@@ -300,8 +294,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         public void onCompletion(IMediaPlayer mp) {
             mCurrentState = STATE_PLAYBACK_COMPLETED;
             mTargetState = STATE_PLAYBACK_COMPLETED;
-            if (mMediaController != null) {
-                mMediaController.complete();
+            if (mControllerView != null) {
+                mControllerView.complete();
             }
             if (mOnCompletionListener != null) {
                 mOnCompletionListener.onCompletion(mp);
@@ -368,8 +362,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             LogUtil.e(TAG, "Error: " + framework_err + "," + impl_err);
             mCurrentState = STATE_ERROR;
             mTargetState = STATE_ERROR;
-            if (mMediaController != null) {
-                mMediaController.hide();
+            if (mControllerView != null) {
+                mControllerView.hide();
             }
 
                     /* If an error handler has been supplied, use it and finish. */
@@ -417,6 +411,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     private void setConcatContent(String content) {
         LogUtil.i(TAG, "set temp file content: \n" + content);
         // TODO: 2/14/17 create a meaningful temp file name
+        configurePlayer();
         mMediaPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
                 content, new LoadingCallback<String>() {
                     @Override
@@ -447,7 +442,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
      * @param videoInfo the video info
      */
     public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
-        createQualityView(videoInfo);
         mProvider = new ConcatSourceProvider(videoInfo, mContext);
         setConcatContent(mProvider.provideSource(quality));
     }
@@ -491,25 +485,18 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
     }
 
-    /**
-     * Set controller for this video view, see {@link IMediaController}
-     *
-     * @param controller {@link IMediaController} for controlling video playing
-     */
-    public void setMediaController(IMediaController controller) {
-        if (mMediaController != null) {
-            mMediaController.hide();
+    public void setMediaController() {
+        if (mControllerView != null) {
+            mControllerView.hide();
         }
-        mMediaController = controller;
         attachMediaController();
     }
 
 
     private void attachMediaController() {
-        if (mMediaPlayer != null && mMediaController != null) {
-            mMediaController.setMediaPlayer(this);
-            mMediaController.setAnchorView((View) mRenderView);
-            mMediaController.setEnabled(isInPlayBackState());
+        if (mMediaPlayer != null && mControllerView != null) {
+            mControllerView.setMediaPlayer(this);
+            mControllerView.setEnabled(isInPlayBackState());
         }
     }
 
@@ -557,10 +544,8 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
             mRenderView = null;
             removeView(renderUIView);
         }
-        if (renderView == null)
-            return;
 
-        mRenderView = renderView;
+        mRenderView = (TextureRenderView) renderView;
         renderView.setAspectRatioMode(mCurrentAspectRatio);
         if (mVideoWidth > 0 && mVideoHeight > 0)
             renderView.setVideoSize(mVideoWidth, mVideoHeight);
@@ -588,28 +573,28 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 keyCode != KeyEvent.KEYCODE_MENU &&
                 keyCode != KeyEvent.KEYCODE_CALL &&
                 keyCode != KeyEvent.KEYCODE_ENDCALL;
-        if (isInPlayBackState() && isKeyCodeSupported && mMediaController != null) {
+        if (isInPlayBackState() && isKeyCodeSupported && mControllerView != null) {
             if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK ||
                     keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                 if (mMediaPlayer.isPlaying()) {
                     pause();
-                    mMediaController.show();
+                    mControllerView.show();
                 } else {
                     start();
-                    mMediaController.hide();
+                    mControllerView.hide();
                 }
                 return true;
             } else if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY) {
                 if (!mMediaPlayer.isPlaying()) {
                     start();
-                    mMediaController.hide();
+                    mControllerView.hide();
                 }
                 return true;
             } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
                     keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
                 if (mMediaPlayer.isPlaying()) {
                     pause();
-                    mMediaController.show();
+                    mControllerView.show();
                 }
                 return true;
             } else {
@@ -659,10 +644,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (mQualityView != null && mQualityView.isShown()) {
-                    mQualityView.hide();
-                }
-                if (isInPlayBackState() && mMediaController != null) {
+                if (isInPlayBackState() && mControllerView != null) {
                     toggleMediaControlsVisibility();
                 }
             }
@@ -672,10 +654,10 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
 
 
     private void toggleMediaControlsVisibility() {
-        if (mMediaController.isShowing()) {
-            mMediaController.hide();
+        if (mControllerView.isShowing()) {
+            mControllerView.hide();
         } else {
-            mMediaController.show();
+            mControllerView.show();
         }
     }
 
@@ -808,7 +790,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     }
 
     private void play(String videoUrl, @Quality int quality) {
-        configurePlayer();
         ParsingTask parsingTask = new ParsingTask(this, quality);
         parsingTask.execute(videoUrl);
     }
@@ -818,20 +799,6 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         return 0;
     }
 
-    @Override
-    public void hideQualityView() {
-        mQualityView.hide();
-    }
-
-    @Override
-    public void showQualityView() {
-        mQualityView.show();
-    }
-
-    @Override
-    public boolean isQualityViewShown() {
-        return mQualityView.isShown();
-    }
 
 
     @Override
@@ -921,14 +888,14 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
         super.onWindowVisibilityChanged(visibility);
         if (visibility == GONE && mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
-            if (mMediaController != null) {
-                mMediaController.hide();
+            if (mControllerView != null) {
+                mControllerView.hide();
             }
         }
         if (visibility == VISIBLE && mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
             mMediaPlayer.start();
-            if (mMediaController != null) {
-                mMediaController.show();
+            if (mControllerView != null) {
+                mControllerView.show();
 
             }
         }

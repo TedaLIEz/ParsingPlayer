@@ -18,19 +18,14 @@
 package com.hustunique.parsingplayer.player;
 
 import android.content.Context;
-import android.graphics.PixelFormat;
-import android.os.IBinder;
+import android.support.annotation.UiThread;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewParent;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -44,102 +39,48 @@ import java.util.Locale;
  * Created by JianGuo on 1/20/17.
  * Custom media controller view for video view.
  */
-public class ParsingMediaController implements IMediaController {
+public class ControllerView extends LinearLayout implements IMediaController {
     private IMediaPlayerControl mPlayer;
-    private static final String TAG = "ParsingMediaController";
-    private View mRoot;
-    private Context mContext;
-    private View mAnchor;
+    private static final String TAG = "ControllerView";
     private ImageButton mPauseButton;
+    private ImageButton mFullscreenButton;
     private SeekBar mProgress;
     private TextView mCurrentTime, mEndTime;
     private StringBuilder mFormatBuilder;
     private Formatter mFormatter;
-    private WindowManager mWindowManager;
-    private WindowManager.LayoutParams mParams;
     private boolean mIsShowing = false;
     private boolean mHasCompleted = false;
 
-    ParsingMediaController(Context context, AttributeSet attrs) {
-        mContext = context;
-        mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-        mRoot = initControllerView();
-        initPopupWindow();
+    public ControllerView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        LayoutInflater.from(context).inflate(R.layout.media_controller, this);
+        initView();
+        setVisibility(GONE);
     }
 
-    ParsingMediaController(Context context) {
+    public ControllerView(Context context) {
         this(context, null);
     }
 
 
-    private void initPopupWindow() {
-        mParams = createLayoutParams(mRoot.getWindowToken());
-    }
-
-    private WindowManager.LayoutParams createLayoutParams(IBinder windowToken) {
-        final WindowManager.LayoutParams p = new WindowManager.LayoutParams();
-        p.token = windowToken;
-        p.format = PixelFormat.TRANSLUCENT;
-        p.gravity = Gravity.START | Gravity.TOP;
-        p.packageName = mContext.getPackageName();
-        p.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-        return p;
-    }
-
     // for override in inheritance
-    protected View initControllerView() {
-        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mRoot = inflater.inflate(R.layout.media_controller, new FrameLayout(mContext), false);
-        mPauseButton = (ImageButton) mRoot.findViewById(R.id.pause);
+    protected void initView() {
+        mPauseButton = (ImageButton) findViewById(R.id.pause);
         if (mPauseButton != null) {
             mPauseButton.requestFocus();
             mPauseButton.setOnClickListener(mPauseListener);
         }
-        mProgress = (SeekBar) mRoot.findViewById(R.id.mediacontroller_progress);
+        mProgress = (SeekBar) findViewById(R.id.mediacontroller_progress);
         if (mProgress != null) {
             mProgress.setOnSeekBarChangeListener(mSeekListener);
             mProgress.setMax(1000);
         }
-        mEndTime = (TextView) mRoot.findViewById(R.id.time);
-        mCurrentTime = (TextView) mRoot.findViewById(R.id.time_current);
+        mEndTime = (TextView) findViewById(R.id.time);
+        mCurrentTime = (TextView) findViewById(R.id.time_current);
         mFormatBuilder = new StringBuilder();
         mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
-        mRoot.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        show();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        show();
-                        break;
-                    case MotionEvent.ACTION_CANCEL:
-                        hide();
-                        break;
-                    default:
-                        break;
-                }
-                return true;
-            }
-        });
-        return mRoot;
     }
 
-
-    private final View.OnClickListener mQualityListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (mPlayer != null && isShowing()) {
-                if (mPlayer.isQualityViewShown())
-                    mPlayer.hideQualityView();
-                else
-                    mPlayer.showQualityView();
-            }
-        }
-    };
 
     private final View.OnClickListener mPauseListener = new View.OnClickListener() {
         @Override
@@ -156,7 +97,7 @@ public class ParsingMediaController implements IMediaController {
             setProgress();
             updatePausePlay();
             if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
-                mRoot.post(mShowProgress);
+                post(mShowProgress);
             }
         }
     };
@@ -207,13 +148,13 @@ public class ParsingMediaController implements IMediaController {
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
             mDragging = true;
-            mRoot.removeCallbacks(mShowProgress);
+            removeCallbacks(mShowProgress);
         }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             mDragging = false;
-            mRoot.post(mShowProgress);
+            post(mShowProgress);
         }
     };
 
@@ -239,12 +180,10 @@ public class ParsingMediaController implements IMediaController {
         } else {
             mPlayer.start();
         }
-        mRoot.post(mShowProgress);
+        post(mShowProgress);
     }
 
     private void updatePausePlay() {
-        if (mRoot == null || mPauseButton == null)
-            return;
         if (mPlayer.isPlaying()) {
             mPauseButton.setImageResource(R.drawable.ic_portrait_stop);
         } else {
@@ -255,52 +194,21 @@ public class ParsingMediaController implements IMediaController {
 
     @Override
     public void hide() {
-        if (mAnchor == null)
-            return;
-
         if (mIsShowing) {
-            if (mRoot.getParent() != null) {
-                mWindowManager.removeViewImmediate(mRoot);
-                ViewParent contentParent = mRoot.getParent();
-                if (contentParent instanceof ViewGroup) {
-                    ((ViewGroup) contentParent).removeView(mRoot);
-                }
-            }
             mIsShowing = false;
-            mRoot.removeCallbacks(mShowProgress);
+            removeCallbacks(mShowProgress);
+            setVisibility(GONE);
         }
     }
 
     @Override
     public void complete() {
         mHasCompleted = true;
-        mRoot.removeCallbacks(mShowProgress);
+        removeCallbacks(mShowProgress);
         setProgress();
         updatePausePlay();
     }
 
-
-    private View.OnLayoutChangeListener mOnLayoutListener = new View.OnLayoutChangeListener() {
-        @Override
-        public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-            updateAnchorViewLayout();
-            if (isShowing()) {
-                mWindowManager.updateViewLayout(mRoot, mParams);
-            }
-        }
-    };
-
-    @Override
-    public void setAnchorView(View view) {
-        view.removeOnLayoutChangeListener(mOnLayoutListener);
-        mAnchor = view;
-        mAnchor.addOnLayoutChangeListener(mOnLayoutListener);
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        mRoot.setEnabled(enabled);
-    }
 
     @Override
     public void setMediaPlayer(IMediaPlayerControl player) {
@@ -309,36 +217,13 @@ public class ParsingMediaController implements IMediaController {
     }
 
 
-    private void showPopupWindowLayout() {
-        updateAnchorViewLayout();
-        mWindowManager.addView(mRoot, mParams);
-    }
-
-    private void updateAnchorViewLayout() {
-        assert mAnchor != null;
-        int[] anchorPos = new int[2];
-        mAnchor.getLocationOnScreen(anchorPos);
-        mRoot.measure(View.MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), View.MeasureSpec.AT_MOST),
-                View.MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), View.MeasureSpec.AT_MOST));
-        mParams.width = mAnchor.getWidth();
-        mParams.height = mRoot.getMeasuredHeight();
-        int x = anchorPos[0];
-        // TODO: 2/8/17 Weird position when setting videoView in WRAP_CONTENT
-        int y = anchorPos[1] + mAnchor.getHeight() - mRoot.getMeasuredHeight();
-
-        mParams.x = x;
-        mParams.y = y;
-    }
-
     @Override
     public void show() {
-        if (!mIsShowing && mAnchor != null) {
+        if (!mIsShowing) {
+            setVisibility(VISIBLE);
             mIsShowing = true;
-            mRoot.post(mShowProgress);
-            if (mPauseButton != null) {
-                mPauseButton.requestFocus();
-            }
-            showPopupWindowLayout();
+            post(mShowProgress);
+            mPauseButton.requestFocus();
         }
     }
 

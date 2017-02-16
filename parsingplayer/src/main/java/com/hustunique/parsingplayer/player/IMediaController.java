@@ -31,8 +31,6 @@ public interface IMediaController {
 
     boolean isShowing();
 
-    void setAnchorView(View view);
-
     void setEnabled(boolean enabled);
 
     void setMediaPlayer(IMediaPlayerControl player);

@@ -30,13 +30,10 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
@@ -46,7 +43,6 @@ import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.util.Map;
@@ -168,15 +164,20 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     }
 
     private void configureRenderView() {
-        TextureRenderView renderView = new TextureRenderView(mContext);
         if (mMediaPlayer != null) {
-            renderView.getSurfaceHolder().bindToMediaPlayer(mMediaPlayer);
-            renderView.setVideoSize(mMediaPlayer.getVideoWidth(), mMediaPlayer.getVideoHeight());
-            renderView.setVideoSampleAspectRatio(mMediaPlayer.getVideoSarNum(),
+            mRenderView.getSurfaceHolder().bindToMediaPlayer(mMediaPlayer);
+            mRenderView.setVideoSize(mMediaPlayer.getVideoWidth(), mMediaPlayer.getVideoHeight());
+            mRenderView.setVideoSampleAspectRatio(mMediaPlayer.getVideoSarNum(),
                     mMediaPlayer.getVideoSarDen());
-            renderView.setAspectRatioMode(mCurrentAspectRatio);
+            mRenderView.setAspectRatioMode(mCurrentAspectRatio);
         }
-        setRenderView(renderView);
+        mRenderView.setAspectRatioMode(mCurrentAspectRatio);
+        if (mVideoWidth > 0 && mVideoHeight > 0)
+            mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
+        if (mVideoSarNum > 0 && mVideoSarDen > 0)
+            mRenderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
+        mRenderView.addRenderCallback(mSHCallback);
+        mRenderView.setVideoRotation(mVideoRotationDegree);
     }
 
     private IRenderView.ISurfaceHolder mSurfaceHolder;
@@ -534,15 +535,14 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
      *
      * @param renderView see {@link IRenderView} for details
      */
+    @Deprecated
     public void setRenderView(IRenderView renderView) {
         if (mRenderView != null) {
             if (mMediaPlayer != null) {
                 mMediaPlayer.setDisplay(null);
             }
-            View renderUIView = mRenderView.getView();
             mRenderView.removeRenderCallback(mSHCallback);
             mRenderView = null;
-            removeView(renderUIView);
         }
 
         mRenderView = (TextureRenderView) renderView;
@@ -551,14 +551,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
             renderView.setVideoSize(mVideoWidth, mVideoHeight);
         if (mVideoSarNum > 0 && mVideoSarDen > 0)
             renderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
-
-        View renderUIView = mRenderView.getView();
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT,
-                Gravity.CENTER);
-        renderUIView.setLayoutParams(lp);
-        addView(renderUIView);
         mRenderView.addRenderCallback(mSHCallback);
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }

@@ -32,7 +32,6 @@ import android.view.WindowManager;
 
 import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.player.IRenderView;
 import com.hustunique.parsingplayer.player.ParsingVideoView;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -113,6 +112,7 @@ public class VideoActivity extends AppCompatActivity {
 
 
     @Override
+    //// FIXME: 2/16/17 VideoView turns black when back key pressed
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -124,7 +124,6 @@ public class VideoActivity extends AppCompatActivity {
         LogUtil.d(TAG, "url to play: " + url);
         mVisible = true;
         mVideoView = (ParsingVideoView) findViewById(R.id.fullscreen_content);
-        mVideoView.setCurrentAspectRatio(IRenderView.AR_MATCH_PARENT);
         mVideoView.setOnErrorListener(new IMediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(IMediaPlayer iMediaPlayer, int i, int i1) {

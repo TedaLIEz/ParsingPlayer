@@ -18,19 +18,15 @@
 package com.hustunique.parsingplayer.player;
 
 import android.content.Context;
-import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
-import com.orhanobut.logger.Logger;
 
 import java.util.Formatter;
 import java.util.Locale;

@@ -43,7 +43,6 @@ import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.util.Map;
@@ -446,7 +445,13 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
      *
      * @param videoInfo the video info
      */
-    public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
+    public void setConcatVideos(@Nullable VideoInfo videoInfo, @Quality int quality) {
+        if (videoInfo == null) {
+            // we need to handle parsing error here.
+            if (mOnErrorListener != null) mOnErrorListener.onError(mMediaPlayer,
+                    IParsingPlayer.PARSING_ERROR, IParsingPlayer.INVALID_VIDEO_INFO);
+            return;
+        }
         createQualityView(videoInfo);
         mProvider = new ConcatSourceProvider(videoInfo, mContext);
         setConcatContent(mProvider.provideSource(quality));
@@ -656,6 +661,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
     @Override
     // TODO: 1/23/17 Implement moving feature
     public boolean onTouchEvent(MotionEvent event) {
+
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -667,7 +673,7 @@ public class ParsingVideoView extends FrameLayout implements IMediaPlayerControl
                 }
             }
         }
-        return false;
+        return super.onTouchEvent(event);
     }
 
 

@@ -4,4 +4,5 @@
     <string name="hd_low">Low</string>
     <string name="hd_medium">Medium</string>
     <string name="hd_standard">Standard</string>
+    <string name="VideoView_error_button">OK</string>
 </resources>

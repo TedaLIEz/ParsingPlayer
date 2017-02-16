@@ -50,7 +50,7 @@
             tools:text="13:45" />
         <ImageButton
             android:id="@+id/fullscreen"
-            style="@style/MediaButton.FUllscreen"
+            style="@style/MediaButton.Fullscreen"
              />
     </LinearLayout>
 </LinearLayout>

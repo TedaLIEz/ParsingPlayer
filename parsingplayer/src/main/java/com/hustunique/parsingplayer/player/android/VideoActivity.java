@@ -19,11 +19,13 @@ package com.hustunique.parsingplayer.player.android;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
@@ -32,6 +34,8 @@ import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.IRenderView;
 import com.hustunique.parsingplayer.player.ParsingVideoView;
+
+import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 import static com.hustunique.parsingplayer.player.android.ParsingIntegrator.URL;
 
@@ -65,15 +69,11 @@ public class VideoActivity extends AppCompatActivity {
         @Override
         public void run() {
             // Delayed removal of status and navigation bar
-
-            // Note that some of these constants are new as of API 16 (Jelly Bean)
-            // and API 19 (KitKat). It is safe to use them, as they are inlined
-            // at compile-time and do nothing on earlier devices.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                enterImmersiveMode();
-            } else {
-                enterImmersiveModeBelowKitKat();
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//                enterImmersiveMode();
+//            } else {
+//                enterImmersiveModeBelowKitKat();
+//            }
         }
     };
 
@@ -121,16 +121,30 @@ public class VideoActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String url = intent.getStringExtra(URL);
         if (url == null || url.isEmpty()) throw new IllegalStateException("URL must given!");
-        LogUtil.d(TAG, "url: " + url);
+        LogUtil.d(TAG, "url to play: " + url);
         mVisible = true;
         mVideoView = (ParsingVideoView) findViewById(R.id.fullscreen_content);
         mVideoView.setCurrentAspectRatio(IRenderView.AR_MATCH_PARENT);
+        mVideoView.setOnErrorListener(new IMediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(IMediaPlayer iMediaPlayer, int i, int i1) {
+                new AlertDialog.Builder(VideoActivity.this)
+                        .setMessage("Error code: " + i + ", " + i1)
+                        .setPositiveButton(R.string.VideoView_error_button,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                        finish();
+                                    }
+                                })
+                        .setCancelable(false)
+                        .show();
+                return true;
+            }
+        });
         mVideoView.play(url);
         mVideoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // FIXME: 2/15/17 Click event won't work
-                LogUtil.d(TAG, "click on view");
                 toggle();
             }
         });
@@ -166,18 +180,18 @@ public class VideoActivity extends AppCompatActivity {
 
     @SuppressLint("InlinedApi")
     private void show() {
-        // TODO: 2/15/17 find solution when below sdk 16
-        mVideoView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        mVisible = true;
-
-        mHideHandler.removeCallbacks(mHidePart2Runnable);
-        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
-        if (AUTO_HIDE) {
-            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-        }
+//        // TODO: 2/15/17 find solution when below sdk 16
+//        mVideoView.setSystemUiVisibility(
+//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+//        mVisible = true;
+//
+//        mHideHandler.removeCallbacks(mHidePart2Runnable);
+//        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
+//        if (AUTO_HIDE) {
+//            delayedHide(AUTO_HIDE_DELAY_MILLIS);
+//        }
     }
 
     /**

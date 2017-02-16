@@ -41,6 +41,8 @@ public interface IParsingPlayer extends IMediaPlayer {
     @interface OptionCategory {
     }
 
+    int PARSING_ERROR = -10002;
+    int INVALID_VIDEO_INFO = -1;
     void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback);
     void setOption(@OptionCategory int category, String name, String value);
     void setOption(@OptionCategory int category, String name, long value);

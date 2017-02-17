@@ -42,6 +42,7 @@ import static com.hustunique.parsingplayer.player.android.ParsingIntegrator.URL;
  * Created by JianGuo on 2/15/17.
  * Activity supporting playing video in fullscreen
  */
+@Deprecated
 public class VideoActivity extends AppCompatActivity {
     private static final String TAG = "VideoActivity";
     /**

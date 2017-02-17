@@ -465,12 +465,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         setVideoURI(uri, null);
     }
 
-    public void setCurrentAspectRatio(int ratio) {
-        mCurrentAspectRatio = ratio;
-        if (mRenderView != null) {
-            mRenderView.setAspectRatio(mCurrentAspectRatio);
-        }
-    }
+
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         try {
             mMediaPlayer.setDataSource(mContext, uri, headers);

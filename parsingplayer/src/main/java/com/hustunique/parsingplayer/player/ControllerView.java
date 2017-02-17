@@ -36,7 +36,7 @@ import java.util.Locale;
  * Created by JianGuo on 1/20/17.
  * Custom media controller view for video view.
  */
-public class ControllerView extends LinearLayout implements IMediaController {
+public class ControllerView extends LinearLayout {
     private IMediaPlayerControl mPlayer;
     private static final String TAG = "ControllerView";
     private ImageButton mPauseButton;
@@ -189,7 +189,6 @@ public class ControllerView extends LinearLayout implements IMediaController {
     }
 
 
-    @Override
     public void hide() {
         if (mIsShowing) {
             mIsShowing = false;
@@ -198,7 +197,6 @@ public class ControllerView extends LinearLayout implements IMediaController {
         }
     }
 
-    @Override
     public void complete() {
         mHasCompleted = true;
         removeCallbacks(mShowProgress);
@@ -207,14 +205,12 @@ public class ControllerView extends LinearLayout implements IMediaController {
     }
 
 
-    @Override
     public void setMediaPlayer(IMediaPlayerControl player) {
         mPlayer = player;
         updatePausePlay();
     }
 
 
-    @Override
     public void show() {
         if (!mIsShowing) {
             setVisibility(VISIBLE);
@@ -225,7 +221,6 @@ public class ControllerView extends LinearLayout implements IMediaController {
     }
 
 
-    @Override
     public boolean isShowing() {
         return mIsShowing;
     }

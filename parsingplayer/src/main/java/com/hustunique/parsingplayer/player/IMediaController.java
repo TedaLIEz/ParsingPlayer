@@ -17,13 +17,11 @@
 
 package com.hustunique.parsingplayer.player;
 
-import android.view.View;
-
 /**
  * Created by JianGuo on 1/20/17.
  * Interface for a mediacontroller panel
  */
-
+@Deprecated
 public interface IMediaController {
     void hide();
 

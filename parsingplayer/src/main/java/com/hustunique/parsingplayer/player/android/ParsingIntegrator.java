@@ -24,7 +24,7 @@ import android.content.Intent;
  * Created by JianGuo on 2/15/17.
  * Integrator for playing video in fullscreen
  */
-
+@Deprecated
 public class ParsingIntegrator {
     private static final String TAG = "ParsingIntegrator";
     private Activity mActivity;

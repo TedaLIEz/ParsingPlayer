@@ -17,6 +17,7 @@
 
 package com.hustunique.parsingplayer.player;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -25,6 +26,7 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -34,6 +36,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
@@ -57,6 +60,8 @@ import tv.danmaku.ijk.media.player.IjkTimedText;
 
 public class ParsingVideoView extends RelativeLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
+    private static final float MUSIC_SLIDE_GAP = 2f;
+    private static final float VOLUME_SLOP = 2f;
     private IParsingPlayer mMediaPlayer;
     private int mVideoWidth;
     private int mVideoHeight;
@@ -96,6 +101,9 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
     private VideoInfoSourceProvider mProvider;
+    private AudioManager mAudioManager;
+    private float mScreenHeight;
+    private float mScreenWidth;
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -122,8 +130,8 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         mCurrentState = mTargetState = STATE_IDLE;
         mVideoHeight = mVideoWidth = 0;
         release(false);
-        AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        mAudioManager = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         mMediaPlayer = createPlayer();
         configureRenderView();
     }
@@ -145,9 +153,11 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
     private void initView(Context context) {
         mContext = context;
-        LayoutInflater.from(context).inflate(R.layout.parsing_video_view,this);
+        LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
         mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
         mControllerView = (ControllerView) findViewById(R.id.controller_view);
+        mScreenHeight = mContext.getResources().getDisplayMetrics().heightPixels;
+        mScreenWidth = mContext.getResources().getDisplayMetrics().widthPixels;
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
@@ -163,7 +173,8 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         setConcatContent(mProvider.provideSource(quality));
     }
 
-    private void configureRenderView() {
+    // visible for override
+    protected void configureRenderView() {
         if (mMediaPlayer != null) {
             mRenderView.getSurfaceHolder().bindToMediaPlayer(mMediaPlayer);
             mRenderView.setVideoSize(mMediaPlayer.getVideoWidth(), mMediaPlayer.getVideoHeight());
@@ -436,7 +447,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     }
 
 
-
     /**
      * Set video source info for concat segments.
      *
@@ -625,18 +635,96 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         mScaleGestureDetector = new ScaleGestureDetector(mContext, mScaleListener);
     }
 
+
+
+    private float mLastTouchX;
+    private float mLastTouchY;
+    private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
+    private int mGestureDownVolume;
+    private int mGestureDownBrightness;
+    private boolean mChangeVolume;
+    private boolean mChangeBrightness;
     @Override
     // TODO: 1/23/17 Implement moving feature
     public boolean onTouchEvent(MotionEvent event) {
         mScaleGestureDetector.onTouchEvent(event);
         if (!onScale) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (isInPlayBackState() && mControllerView != null) {
-                    toggleMediaControlsVisibility();
+            final int action = event.getActionMasked();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN: {
+
+                    mActivePointerId = event.getPointerId(0);
+                    mLastTouchX = event.getX(mActivePointerId);
+                    mLastTouchY = event.getY(mActivePointerId);
+                    mChangeBrightness = mChangeVolume = false;
+                    // FIXME: 2/17/17 event conflicts here
+                    if (isInPlayBackState() && mControllerView != null) {
+                        toggleMediaControlsVisibility();
+                    }
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE: {
+                    final int pointerIndex = event.findPointerIndex(mActivePointerId);
+                    final float x = event.getX(pointerIndex);
+                    final float y = event.getY(pointerIndex);
+                    final float dx = x - mLastTouchX;
+                    final float dy = y - mLastTouchY;
+                    if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+                        mGestureDownVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                        mChangeVolume = true;
+                    }
+                    if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+                        mChangeBrightness = true;
+                        try {
+                            mGestureDownBrightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+                        } catch (Settings.SettingNotFoundException e) {
+                            LogUtil.wtf(TAG, e);
+                        }
+                    }
+                    if (mChangeBrightness) {
+                        updateBrightness(dy);
+                    }
+                    if (mChangeVolume) {
+                        updateVolume(dy);
+                    }
+                    break;
                 }
             }
+
         }
-        return false;
+        return true;
+    }
+
+    // FIXME: 2/17/17 Buggy when scroll up the first time
+    private void updateBrightness(float dy) {
+        float delta = Math.abs(dy);
+        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+        dy = -dy;
+        int deltaV = (int) (255 * dy * 3 / mScreenHeight);
+        WindowManager.LayoutParams lp = ((Activity) mContext).getWindow().getAttributes();
+        if ((mGestureDownBrightness + deltaV) / 255 >= 1) {
+            lp.screenBrightness = 1;
+        } else if ((mGestureDownBrightness + deltaV) / 255 <= 0) {
+            lp.screenBrightness = 0.01f;
+        } else {
+            lp.screenBrightness = (mGestureDownBrightness + deltaV) / 255;
+        }
+
+        ((Activity) mContext).getWindow().setAttributes(lp);
+        int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / mScreenHeight);
+        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
+    }
+
+
+    private void updateVolume(float dy) {
+        float delta = Math.abs(dy);
+        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+        dy = -dy;
+        int maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int deltaV = (int) (maxVolume * dy * 3 / (mScreenHeight / 2));
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
+        float volumePercentage = mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / (mScreenHeight * 2);
+        LogUtil.d(TAG, "update volume: " + volumePercentage);
     }
 
 
@@ -785,7 +873,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     public int getAudioSessionId() {
         return 0;
     }
-
 
 
     @Override

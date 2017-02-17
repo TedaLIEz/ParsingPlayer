@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
+        mVideoView.setRootLayoutId(R.layout.activity_main);
         mVideoView.play(YoukuExtractor.TEST_URL);
     }
 

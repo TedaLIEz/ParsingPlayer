@@ -21,6 +21,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -62,17 +63,14 @@ public class ControllerView extends LinearLayout implements IMediaController {
     // for override in inheritance
     protected void initView() {
         mPauseButton = (ImageButton) findViewById(R.id.pause);
-        if (mPauseButton != null) {
-            mPauseButton.requestFocus();
-            mPauseButton.setOnClickListener(mPauseListener);
-        }
         mProgress = (SeekBar) findViewById(R.id.mediacontroller_progress);
-        if (mProgress != null) {
-            mProgress.setOnSeekBarChangeListener(mSeekListener);
-            mProgress.setMax(1000);
-        }
         mEndTime = (TextView) findViewById(R.id.time);
         mCurrentTime = (TextView) findViewById(R.id.time_current);
+        mFullscreenButton = (ImageButton) findViewById(R.id.fullscreen);
+        mPauseButton.requestFocus();
+        mPauseButton.setOnClickListener(mPauseListener);
+        mProgress.setOnSeekBarChangeListener(mSeekListener);
+        mProgress.setMax(1000);
         mFormatBuilder = new StringBuilder();
         mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
     }
@@ -98,6 +96,9 @@ public class ControllerView extends LinearLayout implements IMediaController {
         }
     };
 
+    public void setFullscreenListner(View.OnClickListener listner){
+        mFullscreenButton.setOnClickListener(listner);
+    }
 
     private int setProgress() {
         if (mPlayer == null || mDragging) {

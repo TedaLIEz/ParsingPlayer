@@ -17,7 +17,9 @@
 
 package com.hustunique.parsingplayer.player;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -34,6 +36,9 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
@@ -78,6 +83,8 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     private static final int STATE_PAUSED = 4;
     private static final int STATE_PLAYBACK_COMPLETED = 5;
 
+    private ViewGroup mDecorView;
+
     private ControllerView mControllerView;
     private TextureRenderView mRenderView;
     private int mCurrentState;
@@ -92,6 +99,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     private int mVideoSarDen;
     private int mVideoRotationDegree;
 
+    private boolean mIsFullscreen = false;
     private boolean mCanPause = true;
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
@@ -145,12 +153,15 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
     private void initView(Context context) {
         mContext = context;
-        LayoutInflater.from(context).inflate(R.layout.parsing_video_view,this);
+        LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
         mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
         mControllerView = (ControllerView) findViewById(R.id.controller_view);
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
+        mDecorView = (ViewGroup) ((Activity) getContext()).getWindow().getDecorView();
+        mDecorView.setOnSystemUiVisibilityChangeListener(mSysUiChangeListener);
+        mControllerView.setFullscreenListner(mFullscreenListener);
     }
 
 
@@ -179,6 +190,30 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         mRenderView.addRenderCallback(mSHCallback);
         mRenderView.setVideoRotation(mVideoRotationDegree);
     }
+
+    private View.OnClickListener mFullscreenListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mIsFullscreen)
+                showTiny();
+            else
+                showFullscreen();
+        }
+    };
+
+    private View.OnSystemUiVisibilityChangeListener mSysUiChangeListener = new OnSystemUiVisibilityChangeListener() {
+        @Override
+        public void onSystemUiVisibilityChange(int visibility) {
+            if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0 && mIsFullscreen) {
+                postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        hideSystemUI();
+                    }
+                }, 1000);
+            }
+        }
+    };
 
     private IRenderView.ISurfaceHolder mSurfaceHolder;
     private IRenderView.IRenderCallback mSHCallback = new IRenderView.IRenderCallback() {
@@ -436,7 +471,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     }
 
 
-
     /**
      * Set video source info for concat segments.
      *
@@ -471,6 +505,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
             mRenderView.setAspectRatio(mCurrentAspectRatio);
         }
     }
+
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         try {
             mMediaPlayer.setDataSource(mContext, uri, headers);
@@ -792,7 +827,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     }
 
 
-
     @Override
     // FIXME: 1/23/17 Can't maintain View status after configuration changes, as we can't maintain mediaplayer here
     protected void onRestoreInstanceState(Parcelable state) {
@@ -810,6 +844,50 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
         seekTo(currPos);
 
+    }
+
+    private void hideSystemUI() {
+        // Set the IMMERSIVE flag.
+        // Set the content to appear under the system bars so that the content
+        // doesn't resize when the system bars hide and show.
+        mDecorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+    }
+
+    //  It does this by removing all the flags
+    // except for the ones that make the content appear under the system bars.
+    private void showSystemUI() {
+        mDecorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    }
+
+    private void showTiny() {
+        mIsFullscreen = false;
+        showSystemUI();
+        requestLayout();
+        ((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        ViewGroup vp = (ViewGroup) mDecorView.findViewById(Window.ID_ANDROID_CONTENT);
+        View view = LayoutInflater.from(getContext()).inflate(rootId, null);
+        vp.addView(view);
+    }
+
+    private void showFullscreen() {
+        mIsFullscreen = true;
+        hideSystemUI();
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        setLayoutParams(params);
+        ((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        ((ViewGroup) getParent()).removeView(this);
+        ViewGroup vp = (ViewGroup) mDecorView.findViewById(Window.ID_ANDROID_CONTENT);
+        vp.removeAllViews();
+        vp.addView(this);
     }
 
     @Override
@@ -891,5 +969,11 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
             }
         }
+    }
+
+    private int rootId;
+
+    public void setRootLayoutId(int id) {
+        this.rootId = id;
     }
 }

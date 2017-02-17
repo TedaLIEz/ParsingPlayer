@@ -10,6 +10,8 @@
 
     <com.hustunique.parsingplayer.player.ControllerView
         android:id="@+id/controller_view"
+        android:layout_alignLeft="@id/texture_view"
+        android:layout_alignRight="@id/texture_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/texture_view" />

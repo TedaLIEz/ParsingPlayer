@@ -142,7 +142,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
     // visible for override
     protected IParsingPlayer createPlayer() {
-        IParsingPlayer iParsingPlayer = new ParsingPlayer(mContext);
+        IParsingPlayer iParsingPlayer = ParsingPlayer.getInstance(mContext);
         iParsingPlayer.setOnPreparedListener(mPreparedListener);
         iParsingPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
         iParsingPlayer.setOnCompletionListener(mCompletionListener);

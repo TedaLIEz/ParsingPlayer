@@ -18,18 +18,25 @@
 package com.hustunique.parsingplayer.player;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.media.AudioManager;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.TextureView;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+
+import com.hustunique.parsingplayer.LogUtil;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -124,6 +131,105 @@ public class TextureRenderView extends TextureView implements IRenderView {
         mMeasureHelper.doMeasure(widthMeasureSpec, heightMeasureSpec);
         setMeasuredDimension(mMeasureHelper.getMeasuredWidth(), mMeasureHelper.getMeasuredHeight());
     }
+
+    private float mLastTouchX;
+    private float mLastTouchY;
+    private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
+    private int mGestureDownVolume;
+    private int mGestureDownBrightness;
+    private boolean mChangeVolume;
+    private boolean mChangeBrightness;
+    private static final float MUSIC_SLIDE_GAP = 2f;
+    private static final float VOLUME_SLOP = 2f;
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        final int action = event.getActionMasked();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN: {
+                mGestureDownVolume = getCurrentVolume();
+                mGestureDownBrightness = getCurrentBrightness();
+
+                mActivePointerId = event.getPointerId(0);
+                mLastTouchX = event.getX(mActivePointerId);
+                mLastTouchY = event.getY(mActivePointerId);
+                mChangeBrightness = mChangeVolume = false;
+                break;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                final int pointerIndex = event.findPointerIndex(mActivePointerId);
+                final float x = event.getX(pointerIndex);
+                final float y = event.getY(pointerIndex);
+                final float dx = x - mLastTouchX;
+                final float dy = y - mLastTouchY;
+                if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+
+                    mChangeVolume = true;
+                }
+                if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+                    mChangeBrightness = true;
+
+                }
+                if (mChangeBrightness) {
+                    updateBrightness(dy);
+                }
+                if (mChangeVolume) {
+                    updateVolume(dy);
+                }
+                break;
+            }
+        }
+        return false;
+    }
+
+    private int getCurrentBrightness() {
+        int brightness = 0;
+        try {
+            brightness = Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+        } catch (Settings.SettingNotFoundException e) {
+            LogUtil.wtf(TAG, e);
+        }
+        return brightness;
+    }
+
+    private int getCurrentVolume() {
+        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        return am.getStreamVolume(AudioManager.STREAM_MUSIC);
+    }
+
+    // FIXME: 2/17/17 Buggy when scroll up the first time
+    private void updateBrightness(float dy) {
+        float delta = Math.abs(dy);
+        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+        dy = -dy;
+        int deltaV = (int) (255 * dy * 3 / getHeight());
+        WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
+        if ((mGestureDownBrightness + deltaV) / 255 >= 1) {
+            lp.screenBrightness = 1;
+        } else if ((mGestureDownBrightness + deltaV) / 255 <= 0) {
+            lp.screenBrightness = 0.01f;
+        } else {
+            lp.screenBrightness = (mGestureDownBrightness + deltaV) / 255;
+        }
+
+        ((Activity) getContext()).getWindow().setAttributes(lp);
+        int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / getHeight());
+        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
+    }
+
+
+    private void updateVolume(float dy) {
+        float delta = Math.abs(dy);
+        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+        dy = -dy;
+        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int deltaV = (int) (maxVolume * dy * 3 / (getHeight()));
+        am.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
+        float volumePercentage = mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / (getHeight());
+        LogUtil.d(TAG, "update volume: " + volumePercentage);
+    }
+
 
     //--------------------
     // TextureViewHolder

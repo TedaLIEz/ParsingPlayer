@@ -27,7 +27,6 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -40,7 +39,6 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
@@ -671,13 +669,13 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
 
 
-    private float mLastTouchX;
-    private float mLastTouchY;
-    private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
-    private int mGestureDownVolume;
-    private int mGestureDownBrightness;
-    private boolean mChangeVolume;
-    private boolean mChangeBrightness;
+//    private float mLastTouchX;
+//    private float mLastTouchY;
+//    private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
+//    private int mGestureDownVolume;
+//    private int mGestureDownBrightness;
+//    private boolean mChangeVolume;
+//    private boolean mChangeBrightness;
     @Override
     // TODO: 1/23/17 Implement moving feature
     public boolean onTouchEvent(MotionEvent event) {
@@ -687,79 +685,79 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
 
-                    mActivePointerId = event.getPointerId(0);
-                    mLastTouchX = event.getX(mActivePointerId);
-                    mLastTouchY = event.getY(mActivePointerId);
-                    mChangeBrightness = mChangeVolume = false;
+//                    mActivePointerId = event.getPointerId(0);
+//                    mLastTouchX = event.getX(mActivePointerId);
+//                    mLastTouchY = event.getY(mActivePointerId);
+//                    mChangeBrightness = mChangeVolume = false;
                     // FIXME: 2/17/17 event conflicts here
                     if (isInPlayBackState() && mControllerView != null) {
                         toggleMediaControlsVisibility();
                     }
                     break;
                 }
-                case MotionEvent.ACTION_MOVE: {
-                    final int pointerIndex = event.findPointerIndex(mActivePointerId);
-                    final float x = event.getX(pointerIndex);
-                    final float y = event.getY(pointerIndex);
-                    final float dx = x - mLastTouchX;
-                    final float dy = y - mLastTouchY;
-                    if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
-                        mGestureDownVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-                        mChangeVolume = true;
-                    }
-                    if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
-                        mChangeBrightness = true;
-                        try {
-                            mGestureDownBrightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-                        } catch (Settings.SettingNotFoundException e) {
-                            LogUtil.wtf(TAG, e);
-                        }
-                    }
-                    if (mChangeBrightness) {
-                        updateBrightness(dy);
-                    }
-                    if (mChangeVolume) {
-                        updateVolume(dy);
-                    }
-                    break;
-                }
+//                case MotionEvent.ACTION_MOVE: {
+//                    final int pointerIndex = event.findPointerIndex(mActivePointerId);
+//                    final float x = event.getX(pointerIndex);
+//                    final float y = event.getY(pointerIndex);
+//                    final float dx = x - mLastTouchX;
+//                    final float dy = y - mLastTouchY;
+//                    if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+//                        mGestureDownVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+//                        mChangeVolume = true;
+//                    }
+//                    if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+//                        mChangeBrightness = true;
+//                        try {
+//                            mGestureDownBrightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+//                        } catch (Settings.SettingNotFoundException e) {
+//                            LogUtil.wtf(TAG, e);
+//                        }
+//                    }
+//                    if (mChangeBrightness) {
+//                        updateBrightness(dy);
+//                    }
+//                    if (mChangeVolume) {
+//                        updateVolume(dy);
+//                    }
+//                    break;
+//                }
             }
 
         }
         return true;
     }
 
-    // FIXME: 2/17/17 Buggy when scroll up the first time
-    private void updateBrightness(float dy) {
-        float delta = Math.abs(dy);
-        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
-        dy = -dy;
-        int deltaV = (int) (255 * dy * 3 / mScreenHeight);
-        WindowManager.LayoutParams lp = ((Activity) mContext).getWindow().getAttributes();
-        if ((mGestureDownBrightness + deltaV) / 255 >= 1) {
-            lp.screenBrightness = 1;
-        } else if ((mGestureDownBrightness + deltaV) / 255 <= 0) {
-            lp.screenBrightness = 0.01f;
-        } else {
-            lp.screenBrightness = (mGestureDownBrightness + deltaV) / 255;
-        }
-
-        ((Activity) mContext).getWindow().setAttributes(lp);
-        int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / mScreenHeight);
-        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
-    }
-
-
-    private void updateVolume(float dy) {
-        float delta = Math.abs(dy);
-        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
-        dy = -dy;
-        int maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        int deltaV = (int) (maxVolume * dy * 3 / (mScreenHeight / 2));
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
-        float volumePercentage = mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / (mScreenHeight * 2);
-        LogUtil.d(TAG, "update volume: " + volumePercentage);
-    }
+//    // FIXME: 2/17/17 Buggy when scroll up the first time
+//    private void updateBrightness(float dy) {
+//        float delta = Math.abs(dy);
+//        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+//        dy = -dy;
+//        int deltaV = (int) (255 * dy * 3 / mScreenHeight);
+//        WindowManager.LayoutParams lp = ((Activity) mContext).getWindow().getAttributes();
+//        if ((mGestureDownBrightness + deltaV) / 255 >= 1) {
+//            lp.screenBrightness = 1;
+//        } else if ((mGestureDownBrightness + deltaV) / 255 <= 0) {
+//            lp.screenBrightness = 0.01f;
+//        } else {
+//            lp.screenBrightness = (mGestureDownBrightness + deltaV) / 255;
+//        }
+//
+//        ((Activity) mContext).getWindow().setAttributes(lp);
+//        int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / mScreenHeight);
+//        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
+//    }
+//
+//
+//    private void updateVolume(float dy) {
+//        float delta = Math.abs(dy);
+//        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+//        dy = -dy;
+//        int maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+//        int deltaV = (int) (maxVolume * dy * 3 / (mScreenHeight / 2));
+//        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
+//        float volumePercentage = mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / (mScreenHeight * 2);
+//        LogUtil.d(TAG, "update volume: " + volumePercentage);
+//    }
 
 
     private void toggleMediaControlsVisibility() {

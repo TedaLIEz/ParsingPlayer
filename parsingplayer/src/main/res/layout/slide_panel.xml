@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_centerInParent="true"
+    android:layout_width="35dp"
+    android:layout_height="145dp"
+    android:background="@color/panel_slide_background"
+    android:orientation="vertical">
+
+    <com.hustunique.parsingplayer.player.VerticalProgressBar
+        android:id="@+id/vertical_progressbar"
+        android:layout_width="7dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="7dp"
+        android:src="@drawable/ic_volume_2"
+        tools:src="@drawable/ic_volume_2" />
+</LinearLayout>

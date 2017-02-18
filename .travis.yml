@@ -1,0 +1,44 @@
+
+language: android
+
+jdk:
+  - oraclejdk8
+env:
+  - TEST=android ANDROID_TARGET=android-21 ANDROID_ABI=armeabi-v7a ADB_INSTALL_TIMEOUT=10
+
+sudo: required
+
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-24.0.2
+    - android-24
+    - android-23
+    - build-tools-23.0.2
+    - extra-android-support
+    - extra-android-m2repository
+    # Specify at least one system image,
+    # if you need to run emulator(s) during your tests
+    - sys-img-armeabi-v7a-android-21
+
+
+
+licenses:
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-preview-license-52d11cd2'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
+before_install:
+    - sudo apt-get update
+
+
+script:
+     - if [ ${TEST} == "android" ]; then
+       echo no | android create avd --force --name test --target $ANDROID_TARGET --abi $ANDROID_ABI;
+       emulator -avd test -no-skin -no-audio -no-window &
+       android-wait-for-emulator;
+       sleep 10;
+       adb shell input keyevent 82;
+       fi

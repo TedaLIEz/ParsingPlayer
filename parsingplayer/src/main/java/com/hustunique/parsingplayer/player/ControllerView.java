@@ -21,7 +21,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -96,8 +95,8 @@ public class ControllerView extends LinearLayout {
         }
     };
 
-    public void setFullscreenListner(View.OnClickListener listner){
-        mFullscreenButton.setOnClickListener(listner);
+    public void setFullscreenListener(View.OnClickListener listener){
+        mFullscreenButton.setOnClickListener(listener);
     }
 
     private int setProgress() {
@@ -180,6 +179,7 @@ public class ControllerView extends LinearLayout {
         post(mShowProgress);
     }
 
+    // FIXME: 2/18/17 NullPointerException when return to tiny mode
     private void updatePausePlay() {
         if (mPlayer.isPlaying()) {
             mPauseButton.setImageResource(R.drawable.ic_portrait_stop);

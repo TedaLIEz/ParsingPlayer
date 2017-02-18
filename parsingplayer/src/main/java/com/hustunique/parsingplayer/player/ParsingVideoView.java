@@ -20,6 +20,7 @@ package com.hustunique.parsingplayer.player;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -34,10 +35,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.LogUtil;
@@ -61,6 +63,8 @@ import tv.danmaku.ijk.media.player.IjkTimedText;
 
 public class ParsingVideoView extends RelativeLayout implements IMediaPlayerControl {
     private static final String TAG = "ParsingVideoView";
+    private float mSlop;
+    private static final float SET_PROGRESS_VERTICAL_SLIP = 10f;
     private IParsingPlayer mMediaPlayer;
     private int mVideoWidth;
     private int mVideoHeight;
@@ -116,6 +120,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         super(context, attrs, defStyleAttr);
         initView(context);
         initGesture();
+        LogUtil.w(TAG, "createView");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -159,7 +164,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         mRenderView.setOnClickListener(mRenderViewClickListener);
         mDecorView = (ViewGroup) ((Activity) getContext()).getWindow().getDecorView();
         mDecorView.setOnSystemUiVisibilityChangeListener(mSysUiChangeListener);
-        mControllerView.setFullscreenListner(mFullscreenListener);
+        mControllerView.setFullscreenListener(mFullscreenListener);
     }
 
 
@@ -288,6 +293,47 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
                 }
             };
 
+    private float mDownX, mDownY;
+    private boolean mChangePos = false;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        switch (ev.getActionMasked())  {
+            case MotionEvent.ACTION_DOWN:
+                mDownX = ev.getX();
+                mDownY = ev.getY();
+                mChangePos = false;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                final float dx = ev.getX() - mDownX;
+                final float dy = ev.getY() - mDownY;
+                float absDx = Math.abs(dx);
+                float absDy = Math.abs(dy);
+                if (checkValidSlide(absDx, absDy)) {
+                    mChangePos = true;
+                    updatePosition(dx, getCurrentPosition());
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                if (mChangePos) {
+                    seekTo(mSeekWhenPrepared);
+                }
+                break;
+        }
+        return this.mChangePos || super.dispatchTouchEvent(ev);
+    }
+
+    private boolean checkValidSlide(float absDx, float absDy) {
+        ViewConfiguration viewConfiguration = ViewConfiguration.get(mContext);
+        mSlop = viewConfiguration.getScaledEdgeSlop();
+        return Float.compare(absDx, mSlop) > 0 && Float.compare(absDy, SET_PROGRESS_VERTICAL_SLIP) < 0;
+    }
+
+    private void updatePosition(float dx, int currentPos) {
+        int totalTimeDuration = getDuration();
+        mSeekWhenPrepared = Math.min((int) ((currentPos + dx * totalTimeDuration) / getWidth()), totalTimeDuration);
+        
+    }
 
     private IMediaPlayer.OnPreparedListener mPreparedListener = new IMediaPlayer.OnPreparedListener() {
         @Override
@@ -563,7 +609,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
     /**
      * Set view to render frame in video stream.
-     *
+     * Deprecated because we deprecate the {@link IRenderView}
      * @param renderView see {@link IRenderView} for details
      */
     @Deprecated
@@ -850,27 +896,17 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
-    // FIXME: 2/17/17 Can't click playing button when return to small size
     private void showTiny() {
-        mIsFullscreen = false;
-        showSystemUI();
-        requestLayout();
         ((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        ViewGroup vp = (ViewGroup) mDecorView.findViewById(Window.ID_ANDROID_CONTENT);
-        View view = LayoutInflater.from(getContext()).inflate(rootId, null);
-        vp.addView(view);
     }
 
+
+    private ViewGroup.LayoutParams lp;
     private void showFullscreen() {
-        mIsFullscreen = true;
-        hideSystemUI();
-        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        setLayoutParams(params);
+        lp = getLayoutParams();
         ((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        ((ViewGroup) getParent()).removeView(this);
-        ViewGroup vp = (ViewGroup) mDecorView.findViewById(Window.ID_ANDROID_CONTENT);
-        vp.removeAllViews();
-        vp.addView(this);
+        // this will create a new instance of ParsingVideoView
+//        ViewGroup vp = (ViewGroup) mDecorView.findViewById(Window.ID_ANDROID_CONTENT);
     }
 
     @Override
@@ -885,6 +921,21 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         return ss;
     }
 
+
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            mIsFullscreen = true;
+            hideSystemUI();
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+            setLayoutParams(params);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            mIsFullscreen = false;
+            showSystemUI();
+            setLayoutParams(lp);
+        }
+        super.onConfigurationChanged(newConfig);
+    }
 
     class SavedState extends BaseSavedState {
         int currentState;

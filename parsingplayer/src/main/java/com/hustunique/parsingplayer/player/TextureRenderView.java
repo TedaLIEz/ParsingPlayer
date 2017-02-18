@@ -52,6 +52,7 @@ import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class TextureRenderView extends TextureView implements IRenderView, View.OnClickListener {
     private static final String TAG = "TextureRenderView";
+    private static final float MINIMUM_BRIGHTNESS = 0.04f;
     private MeasureHelper mMeasureHelper;
 
     public TextureRenderView(Context context) {
@@ -152,13 +153,14 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
             case MotionEvent.ACTION_DOWN: {
                 mGestureDownVolume = getCurrentVolume();
                 mGestureDownBrightness = getCurrentBrightness();
-
+                final int pointerIndex = event.getActionIndex();
+                mLastTouchX = event.getX(pointerIndex);
+                mLastTouchY = event.getY(pointerIndex);
                 mActivePointerId = event.getPointerId(0);
-                mLastTouchX = event.getX(mActivePointerId);
-                mLastTouchY = event.getY(mActivePointerId);
                 mChangeBrightness = mChangeVolume = false;
             }
             case MotionEvent.ACTION_MOVE: {
+                LogUtil.d(TAG, "currentVolume" + mGestureDownVolume);
                 final int pointerIndex = event.findPointerIndex(mActivePointerId);
                 final float x = event.getX(pointerIndex);
                 final float y = event.getY(pointerIndex);
@@ -179,15 +181,21 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
                 }
                 break;
             }
-            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                mActivePointerId = MotionEvent.INVALID_POINTER_ID;
+                break;
+            case MotionEvent.ACTION_UP: {
+                mActivePointerId = MotionEvent.INVALID_POINTER_ID;
                 Logger.d("up");
                 Logger.d(mChangeBrightness);
                 Logger.d(mChangeVolume);
-                if (!mChangeBrightness && !mChangeVolume)
+                if (!mChangeBrightness && !mChangeVolume) {
                     performClick();
+                }
                 break;
+            }
         }
-        return true;
+        return !mChangeBrightness || !mChangeVolume;
     }
 
     private int getCurrentBrightness() {
@@ -205,22 +213,14 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
         return am.getStreamVolume(AudioManager.STREAM_MUSIC);
     }
 
-    // FIXME: 2/17/17 Buggy when scroll up the first time
     private void updateBrightness(float dy) {
         dy = -dy;
-        int deltaV = (int) (255 * dy * 3 / getHeight());
+        float deltaV = 255 * dy * 3 / getHeight();
         WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
-        if ((mGestureDownBrightness + deltaV) / 255 >= 1) {
-            lp.screenBrightness = 1;
-        } else if ((mGestureDownBrightness + deltaV) / 255 <= 0) {
-            lp.screenBrightness = 0.01f;
-        } else {
-            lp.screenBrightness = (mGestureDownBrightness + deltaV) / 255;
-        }
-
+        lp.screenBrightness = Math.min(Math.max(MINIMUM_BRIGHTNESS, (mGestureDownBrightness + deltaV) / 255), 1);
         ((Activity) getContext()).getWindow().setAttributes(lp);
         int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / getHeight());
-        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
+//        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
     }
 
 
@@ -232,7 +232,7 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
         int deltaV = (int) (maxVolume * dy * 3 / (getHeight()));
         am.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
         float volumePercentage = mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / (getHeight());
-        LogUtil.d(TAG, "update volume: " + volumePercentage);
+//        LogUtil.d(TAG, "update volume: " + volumePercentage);
     }
 
 

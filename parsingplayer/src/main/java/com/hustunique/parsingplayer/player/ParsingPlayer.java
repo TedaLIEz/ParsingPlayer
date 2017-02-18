@@ -20,6 +20,8 @@ package com.hustunique.parsingplayer.player;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -42,21 +44,37 @@ import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 
 /**
  * Created by JianGuo on 2/2/17.
- * Wrapper class for {@link IjkMediaPlayer}, add support for concat protocol file
+ * Wrapper class for {@link IjkMediaPlayer} in singleton, add support for concat protocol file
  */
 
 public class ParsingPlayer implements IParsingPlayer {
     private static final String CACHE_DIR = "pPlayer";
     private static final String TAG = "ParsingPlayer";
-    private IjkMediaPlayer mMediaPlayer;
-    private Context mContext;
+    private final IjkMediaPlayer mMediaPlayer;
     private final ParsingFileManager mManager;
-    public ParsingPlayer(Context context) {
-        this(context, new Config());
+
+    private static ParsingPlayer mSingleton;
+
+
+
+    public static ParsingPlayer getInstance(Context context) {
+        return getInstance(context, new Config());
     }
 
-    public ParsingPlayer(Context context, Config config) {
-        mContext = context;
+    public static ParsingPlayer getInstance(@NonNull Context context, @Nullable Config config) {
+        if (context == null) throw new IllegalArgumentException("context == null");
+        if (mSingleton == null) {
+            synchronized (ParsingPlayer.class) {
+                if (mSingleton == null) {
+                    mSingleton = new ParsingPlayer(context, config);
+                }
+            }
+        }
+        return mSingleton;
+    }
+
+
+    private ParsingPlayer(Context context, Config config) {
         mMediaPlayer = createPlayer(config);
         mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(context, CACHE_DIR));
     }

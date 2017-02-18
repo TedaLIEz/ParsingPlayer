@@ -32,11 +32,13 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.TextureView;
+import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.hustunique.parsingplayer.LogUtil;
+import com.orhanobut.logger.Logger;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -47,7 +49,7 @@ import tv.danmaku.ijk.media.player.ISurfaceTextureHolder;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class TextureRenderView extends TextureView implements IRenderView {
+public class TextureRenderView extends TextureView implements IRenderView, View.OnClickListener {
     private static final String TAG = "TextureRenderView";
     private MeasureHelper mMeasureHelper;
 
@@ -144,7 +146,8 @@ public class TextureRenderView extends TextureView implements IRenderView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        final int action = event.getActionMasked();
+        int action = event.getActionMasked();
+        Logger.d(action);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
                 mGestureDownVolume = getCurrentVolume();
@@ -154,7 +157,6 @@ public class TextureRenderView extends TextureView implements IRenderView {
                 mLastTouchX = event.getX(mActivePointerId);
                 mLastTouchY = event.getY(mActivePointerId);
                 mChangeBrightness = mChangeVolume = false;
-                break;
             }
             case MotionEvent.ACTION_MOVE: {
                 final int pointerIndex = event.findPointerIndex(mActivePointerId);
@@ -179,7 +181,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
                 break;
             }
         }
-        return false;
+        return super.onTouchEvent(event);
     }
 
     private int getCurrentBrightness() {
@@ -237,6 +239,11 @@ public class TextureRenderView extends TextureView implements IRenderView {
 
     public IRenderView.ISurfaceHolder getSurfaceHolder() {
         return new InternalSurfaceHolder(this, mSurfaceCallback.mSurfaceTexture, mSurfaceCallback);
+    }
+
+    @Override
+    public void onClick(View v) {
+        Logger.d("click");
     }
 
     private static final class InternalSurfaceHolder implements IRenderView.ISurfaceHolder {

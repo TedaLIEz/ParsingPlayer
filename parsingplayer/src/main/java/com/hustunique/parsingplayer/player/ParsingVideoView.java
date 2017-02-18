@@ -34,7 +34,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
@@ -154,8 +153,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         iParsingPlayer.setOnTimedTextListener(mOnTimedTextListener);
         return iParsingPlayer;
     }
-
-
     private void initView(Context context) {
         mContext = context;
         LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
@@ -166,6 +163,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();
+        mRenderView.setOnClickListener(mRenderViewClickListener);
         mDecorView = (ViewGroup) ((Activity) getContext()).getWindow().getDecorView();
         mDecorView.setOnSystemUiVisibilityChangeListener(mSysUiChangeListener);
         mControllerView.setFullscreenListner(mFullscreenListener);
@@ -206,6 +204,13 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
                 showTiny();
             else
                 showFullscreen();
+        }
+    };
+
+    private View.OnClickListener mRenderViewClickListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            toggleMediaControlsVisibility();
         }
     };
 
@@ -300,9 +305,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
                 mOnPreparedListener.onPrepared(mp);
             }
             setMediaController();
-            if (mControllerView != null) {
-                mControllerView.setEnabled(true);
-            }
             mVideoWidth = mp.getVideoWidth();
             mVideoHeight = mp.getVideoHeight();
             int seekToPosition = mSeekWhenPrepared;
@@ -534,7 +536,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     private void attachMediaController() {
         if (mMediaPlayer != null && mControllerView != null) {
             mControllerView.setMediaPlayer(this);
-            mControllerView.setEnabled(isInPlayBackState());
         }
     }
 
@@ -668,64 +669,31 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     }
 
 
-
-//    private float mLastTouchX;
+    //    private float mLastTouchX;
 //    private float mLastTouchY;
 //    private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
 //    private int mGestureDownVolume;
 //    private int mGestureDownBrightness;
 //    private boolean mChangeVolume;
 //    private boolean mChangeBrightness;
-    @Override
+//    @Override
     // TODO: 1/23/17 Implement moving feature
-    public boolean onTouchEvent(MotionEvent event) {
-        mScaleGestureDetector.onTouchEvent(event);
-        if (!onScale) {
-            final int action = event.getActionMasked();
-            switch (action) {
-                case MotionEvent.ACTION_DOWN: {
-
-//                    mActivePointerId = event.getPointerId(0);
-//                    mLastTouchX = event.getX(mActivePointerId);
-//                    mLastTouchY = event.getY(mActivePointerId);
-//                    mChangeBrightness = mChangeVolume = false;
-                    // FIXME: 2/17/17 event conflicts here
-                    if (isInPlayBackState() && mControllerView != null) {
-                        toggleMediaControlsVisibility();
-                    }
-                    break;
-                }
-//                case MotionEvent.ACTION_MOVE: {
-//                    final int pointerIndex = event.findPointerIndex(mActivePointerId);
-//                    final float x = event.getX(pointerIndex);
-//                    final float y = event.getY(pointerIndex);
-//                    final float dx = x - mLastTouchX;
-//                    final float dy = y - mLastTouchY;
-//                    if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
-//                        mGestureDownVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-//                        mChangeVolume = true;
-//                    }
-//                    if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
-//                        mChangeBrightness = true;
-//                        try {
-//                            mGestureDownBrightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-//                        } catch (Settings.SettingNotFoundException e) {
-//                            LogUtil.wtf(TAG, e);
-//                        }
-//                    }
-//                    if (mChangeBrightness) {
-//                        updateBrightness(dy);
-//                    }
-//                    if (mChangeVolume) {
-//                        updateVolume(dy);
+//    public boolean onTouchEvent(MotionEvent event) {
+//        mScaleGestureDetector.onTouchEvent(event);
+//        if (!onScale) {
+//            final int action = event.getActionMasked();
+//            switch (action) {
+//                case MotionEvent.ACTION_DOWN: {
+//                    if (isInPlayBackState() && mControllerView != null) {
+//                        toggleMediaControlsVisibility();
 //                    }
 //                    break;
 //                }
-            }
+//            }
+//        }
+//        return super.onTouchEvent(event);
+//    }
 
-        }
-        return true;
-    }
 
 //    // FIXME: 2/17/17 Buggy when scroll up the first time
 //    private void updateBrightness(float dy) {

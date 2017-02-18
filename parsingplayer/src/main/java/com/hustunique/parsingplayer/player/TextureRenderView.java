@@ -48,6 +48,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHolder;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 
+// TODO: 2/18/17 Implement scale feature
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class TextureRenderView extends TextureView implements IRenderView, View.OnClickListener {
     private static final String TAG = "TextureRenderView";

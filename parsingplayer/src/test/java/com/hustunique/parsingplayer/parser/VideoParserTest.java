@@ -1,13 +1,22 @@
 package com.hustunique.parsingplayer.parser;
 
+import android.os.Build;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Created by JianGuo on 1/17/17.
  * Unit test for {@link VideoParser}
  */
+@RunWith(RobolectricTestRunner.class)
+@Config(sdk = {Build.VERSION_CODES.LOLLIPOP}, manifest = "src/main/AndroidManifest.xml")
 public class VideoParserTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -15,29 +24,20 @@ public class VideoParserTest {
     @Test
     public void parseNullStringThrowException() {
         VideoParser videoParser = VideoParser.getInstance();
-        thrown.expect(IllegalArgumentException.class);
+        thrown.expect(ExtractException.class);
         videoParser.createExtractor(null);
     }
 
     @Test
-    public void parseUnsupportedURLThrowException() {
+    public void parseUnsupportedURLReturnNull() {
         VideoParser videoParser = VideoParser.getInstance();
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("This url is not valid or unsupported yet");
-        videoParser.parse(TestConstant.UNSUPPORTED_URL_1);
+        assertEquals(null, videoParser.parse(TestConstant.UNSUPPORTED_URL_1));
     }
 
     @Test
-    public void parseInvalidURLThrowException() {
+    public void parseInvalidURLReturnNull() {
         VideoParser videoParser = VideoParser.getInstance();
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("This url is not valid or unsupported yet");
-        videoParser.parse("");
+        assertEquals(null, videoParser.parse(""));
     }
 
-    @Test
-    public void parseValidURL() {
-        VideoParser videoParser = VideoParser.getInstance();
-        videoParser.parse(TestConstant.YOUKU_URL_1);
-    }
 }

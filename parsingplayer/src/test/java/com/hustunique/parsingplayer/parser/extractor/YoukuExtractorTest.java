@@ -58,12 +58,6 @@ public class YoukuExtractorTest {
         assertEquals("http://play.youku.com/play/get.json?vid=XMjQ3MzE1NDA3Ng&ct=12", baseUrl);
     }
 
-    @Test
-    public void constructBasicUrlWithNullURLWillThrowException() {
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        mExpectedException.expect(IllegalArgumentException.class);
-        youkuExtractor.constructBasicUrl(null);
-    }
 
     @Test
     public void checkErrorInCreateInfo() throws IOException {

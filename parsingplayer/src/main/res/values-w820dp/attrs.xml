@@ -26,4 +26,8 @@
         <attr name="metaButtonBarButtonStyle" format="reference"/>
     </declare-styleable>
 
+    <declare-styleable name="VerticalProgressBarTheme">
+        <attr name="max" format="integer"/>
+    </declare-styleable>
+
 </resources>

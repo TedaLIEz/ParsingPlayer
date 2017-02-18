@@ -147,7 +147,6 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getActionMasked();
-        Logger.d(action);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
                 mGestureDownVolume = getCurrentVolume();
@@ -162,15 +161,14 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
                 final int pointerIndex = event.findPointerIndex(mActivePointerId);
                 final float x = event.getX(pointerIndex);
                 final float y = event.getY(pointerIndex);
-                final float dx = x - mLastTouchX;
+                final float dx = Math.abs(x - mLastTouchX);
                 final float dy = y - mLastTouchY;
-                if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
-
+                float delta = Math.abs(dy);
+                if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0 && Float.compare(delta, VOLUME_SLOP) > 0) {
                     mChangeVolume = true;
                 }
-                if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0) {
+                if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0 && Float.compare(delta, VOLUME_SLOP) > 0) {
                     mChangeBrightness = true;
-
                 }
                 if (mChangeBrightness) {
                     updateBrightness(dy);
@@ -180,8 +178,15 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
                 }
                 break;
             }
+            case MotionEvent.ACTION_UP:
+                Logger.d("up");
+                Logger.d(mChangeBrightness);
+                Logger.d(mChangeVolume);
+                if (!mChangeBrightness && !mChangeVolume)
+                    performClick();
+                break;
         }
-        return super.onTouchEvent(event);
+        return true;
     }
 
     private int getCurrentBrightness() {
@@ -201,8 +206,6 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
 
     // FIXME: 2/17/17 Buggy when scroll up the first time
     private void updateBrightness(float dy) {
-        float delta = Math.abs(dy);
-        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
         dy = -dy;
         int deltaV = (int) (255 * dy * 3 / getHeight());
         WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
@@ -221,8 +224,7 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
 
 
     private void updateVolume(float dy) {
-        float delta = Math.abs(dy);
-        if (Float.compare(delta, VOLUME_SLOP) < 0) return;
+
         dy = -dy;
         AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);

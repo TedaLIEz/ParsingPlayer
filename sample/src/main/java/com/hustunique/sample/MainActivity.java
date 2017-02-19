@@ -5,7 +5,7 @@ package com.hustunique.sample;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.hustunique.parsingplayer.player.ParsingVideoView;
+import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
 public class MainActivity extends AppCompatActivity {
     private ParsingVideoView mVideoView;

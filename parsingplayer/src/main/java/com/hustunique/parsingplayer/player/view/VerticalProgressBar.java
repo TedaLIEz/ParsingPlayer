@@ -1,4 +1,4 @@
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.view;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -6,12 +6,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
-import com.hustunique.parsingplayer.LogUtil;
 import com.hustunique.parsingplayer.R;
-import com.orhanobut.logger.Logger;
 
 /**
  * Created by CoXier on 17-2-18.

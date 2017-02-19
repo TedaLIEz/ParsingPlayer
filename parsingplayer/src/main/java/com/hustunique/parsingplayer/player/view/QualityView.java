@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.view;
 
 import android.animation.Animator;
 import android.content.Context;
@@ -27,7 +27,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.hustunique.parsingplayer.LogUtil;
+import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 

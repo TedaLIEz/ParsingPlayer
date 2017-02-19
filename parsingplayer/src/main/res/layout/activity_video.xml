@@ -27,7 +27,7 @@
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
-        <com.hustunique.parsingplayer.player.ParsingVideoView
+        <com.hustunique.parsingplayer.player.view.ParsingVideoView
             android:fitsSystemWindows="true"
             android:id="@+id/fullscreen_content"
             android:layout_width="match_parent"

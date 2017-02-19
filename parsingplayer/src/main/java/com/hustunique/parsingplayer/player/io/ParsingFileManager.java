@@ -19,7 +19,7 @@ package com.hustunique.parsingplayer.player.io;
 
 import android.util.Log;
 
-import com.hustunique.parsingplayer.Util;
+import com.hustunique.parsingplayer.util.Util;
 
 import java.io.File;
 import java.io.FileNotFoundException;

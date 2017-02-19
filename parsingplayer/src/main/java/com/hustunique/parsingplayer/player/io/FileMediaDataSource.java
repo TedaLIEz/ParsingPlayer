@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +23,7 @@ import java.io.RandomAccessFile;
 
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 
+@Deprecated
 public class FileMediaDataSource implements IMediaDataSource {
     private RandomAccessFile mFile;
     private long mFileSize;

@@ -17,7 +17,7 @@
 
 package com.hustunique.parsingplayer.player.io;
 
-import com.hustunique.parsingplayer.Util;
+import com.hustunique.parsingplayer.util.Util;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

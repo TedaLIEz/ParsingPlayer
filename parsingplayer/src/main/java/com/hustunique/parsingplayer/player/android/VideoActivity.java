@@ -30,9 +30,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.hustunique.parsingplayer.LogUtil;
+import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.player.ParsingVideoView;
+import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 

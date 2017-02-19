@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.media;
 
 import android.content.Context;
 import android.net.Uri;
@@ -27,7 +27,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import com.hustunique.parsingplayer.BuildConfig;
-import com.hustunique.parsingplayer.Util;
+import com.hustunique.parsingplayer.util.Util;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 import com.hustunique.parsingplayer.player.io.ParsingFileManager;
 
@@ -53,33 +53,15 @@ public class ParsingPlayer implements IParsingPlayer {
     private final IjkMediaPlayer mMediaPlayer;
     private final ParsingFileManager mManager;
 
-    private static ParsingPlayer mSingleton;
 
-
-
-    public static ParsingPlayer getInstance(Context context) {
-        return getInstance(context, new Config());
+    public ParsingPlayer(Context context) {
+        this(context, new Config());
     }
 
-    public static ParsingPlayer getInstance(@NonNull Context context, @Nullable Config config) {
-        if (context == null) throw new IllegalArgumentException("context == null");
-        if (mSingleton == null) {
-            synchronized (ParsingPlayer.class) {
-                if (mSingleton == null) {
-                    mSingleton = new ParsingPlayer(context, config);
-                }
-            }
-        }
-        return mSingleton;
-    }
-
-
-    private ParsingPlayer(Context context, Config config) {
+    public ParsingPlayer(Context context, Config config) {
         mMediaPlayer = createPlayer(config);
         mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(context, CACHE_DIR));
     }
-
-
 
 
     public void setOption(@OptionCategory int category, String name, String value) {

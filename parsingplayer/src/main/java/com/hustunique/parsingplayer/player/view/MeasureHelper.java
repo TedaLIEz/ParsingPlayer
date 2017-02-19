@@ -15,9 +15,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.view;
 
 import android.view.View;
+
+import com.hustunique.parsingplayer.player.view.IRenderView;
 
 import java.lang.ref.WeakReference;
 

@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.view;
 
 import android.app.Activity;
 import android.content.Context;
@@ -33,21 +33,23 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
-import com.hustunique.parsingplayer.LogUtil;
+import com.hustunique.parsingplayer.player.media.ParsingMedia;
+import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
+import com.hustunique.parsingplayer.player.media.IParsingPlayer;
+import com.hustunique.parsingplayer.player.media.ParsingPlayer;
+import com.hustunique.parsingplayer.player.media.ParsingTask;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 
 import java.io.IOException;
@@ -76,6 +78,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     private IMediaPlayer.OnInfoListener mOnInfoListener;
 
     private Context mContext;
+    private ParsingMedia mMedia;
 
     // all possible internal states
     private static final int STATE_ERROR = -1;
@@ -119,7 +122,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView(context);
-        initGesture();
         LogUtil.w(TAG, "createView");
     }
 
@@ -127,7 +129,18 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
-        initGesture();
+    }
+
+    private void initView(Context context) {
+        mContext = context;
+        LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
+        mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
+        mControllerView = (ControllerView) findViewById(R.id.controller_view);
+        mMedia = ParsingMedia.getInstance();
+        mRenderView.setOnClickListener(mRenderViewClickListener);
+        mControllerView.setFullscreenListener(mFullscreenListener);
+        mDecorView = (ViewGroup) ((Activity) getContext()).getWindow().getDecorView();
+        mDecorView.setOnSystemUiVisibilityChangeListener(mSysUiChangeListener);
     }
 
     private void configurePlayer() {
@@ -142,7 +155,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
     // visible for override
     protected IParsingPlayer createPlayer() {
-        IParsingPlayer iParsingPlayer = ParsingPlayer.getInstance(mContext);
+        IParsingPlayer iParsingPlayer = new ParsingPlayer(mContext);
         iParsingPlayer.setOnPreparedListener(mPreparedListener);
         iParsingPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
         iParsingPlayer.setOnCompletionListener(mCompletionListener);
@@ -150,23 +163,24 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         iParsingPlayer.setOnInfoListener(mInfoListener);
         iParsingPlayer.setOnBufferingUpdateListener(mBufferingUpdateListener);
         iParsingPlayer.setOnSeekCompleteListener(mSeekCompleteListener);
-        iParsingPlayer.setOnTimedTextListener(mOnTimedTextListener);
         return iParsingPlayer;
     }
-    private void initView(Context context) {
-        mContext = context;
-        LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
-        mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
-        mControllerView = (ControllerView) findViewById(R.id.controller_view);
-        setFocusable(true);
-        setFocusableInTouchMode(true);
-        requestFocus();
-        mRenderView.setOnClickListener(mRenderViewClickListener);
-        mDecorView = (ViewGroup) ((Activity) getContext()).getWindow().getDecorView();
-        mDecorView.setOnSystemUiVisibilityChangeListener(mSysUiChangeListener);
-        mControllerView.setFullscreenListener(mFullscreenListener);
-    }
 
+    // visible for override
+    protected void configureRenderView() {
+        mRenderView.getSurfaceHolder().bindToMediaPlayer(mMediaPlayer);
+        mRenderView.setVideoSize(mMediaPlayer.getVideoWidth(), mMediaPlayer.getVideoHeight());
+        mRenderView.setVideoSampleAspectRatio(mMediaPlayer.getVideoSarNum(),
+                mMediaPlayer.getVideoSarDen());
+        mRenderView.setAspectRatioMode(mCurrentAspectRatio);
+        mRenderView.setAspectRatioMode(mCurrentAspectRatio);
+        if (mVideoWidth > 0 && mVideoHeight > 0)
+            mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
+        if (mVideoSarNum > 0 && mVideoSarDen > 0)
+            mRenderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
+        mRenderView.addRenderCallback(mSHCallback);
+//        mRenderView.setVideoRotation(mVideoRotationDegree);
+    }
 
     void setQuality(@Quality int quality) {
         // We need to recreate a instance of player to play another video
@@ -177,23 +191,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         setConcatContent(mProvider.provideSource(quality));
     }
 
-    // visible for override
-    protected void configureRenderView() {
-        if (mMediaPlayer != null) {
-            mRenderView.getSurfaceHolder().bindToMediaPlayer(mMediaPlayer);
-            mRenderView.setVideoSize(mMediaPlayer.getVideoWidth(), mMediaPlayer.getVideoHeight());
-            mRenderView.setVideoSampleAspectRatio(mMediaPlayer.getVideoSarNum(),
-                    mMediaPlayer.getVideoSarDen());
-            mRenderView.setAspectRatioMode(mCurrentAspectRatio);
-        }
-        mRenderView.setAspectRatioMode(mCurrentAspectRatio);
-        if (mVideoWidth > 0 && mVideoHeight > 0)
-            mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
-        if (mVideoSarNum > 0 && mVideoSarDen > 0)
-            mRenderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
-        mRenderView.addRenderCallback(mSHCallback);
-        mRenderView.setVideoRotation(mVideoRotationDegree);
-    }
 
     private View.OnClickListener mFullscreenListener = new OnClickListener() {
         @Override
@@ -298,7 +295,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        switch (ev.getActionMasked())  {
+        switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 mDownX = ev.getX();
                 mDownY = ev.getY();
@@ -475,12 +472,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         }
     };
 
-    private IMediaPlayer.OnTimedTextListener mOnTimedTextListener = new IMediaPlayer.OnTimedTextListener() {
-        @Override
-        public void onTimedText(IMediaPlayer mp, IjkTimedText text) {
-            // TODO: 1/21/17 Show subtitle if necessary  
-        }
-    };
 
     private void openVideo() {
         mCurrentBufferPercentage = 0;
@@ -491,6 +482,16 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         mCurrentState = STATE_PREPARING;
     }
 
+
+    /**
+     * Set video source info for concat segments.
+     *
+     * @param videoInfo the video info
+     */
+    public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
+        mProvider = new ConcatSourceProvider(videoInfo, mContext);
+        setConcatContent(mProvider.provideSource(quality));
+    }
 
     // TODO: 2/5/17 Show sth if the io is running
     private void setConcatContent(String content) {
@@ -505,7 +506,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
                         post(new Runnable() {
                             @Override
                             public void run() {
-
                                 setVideoPath(result);
                             }
                         });
@@ -517,17 +517,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
                         Log.wtf(TAG, e);
                     }
                 });
-    }
-
-
-    /**
-     * Set video source info for concat segments.
-     *
-     * @param videoInfo the video info
-     */
-    public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
-        mProvider = new ConcatSourceProvider(videoInfo, mContext);
-        setConcatContent(mProvider.provideSource(quality));
     }
 
     /**
@@ -553,8 +542,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
         try {
             mMediaPlayer.setDataSource(mContext, uri, headers);
             openVideo();
-            requestLayout();
-            invalidate();
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);
             mCurrentState = STATE_ERROR;
@@ -565,18 +552,9 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     }
 
     public void setMediaController() {
-        if (mControllerView != null) {
-            mControllerView.hide();
-        }
-        attachMediaController();
+        mControllerView.setMediaPlayer(this);
     }
 
-
-    private void attachMediaController() {
-        if (mMediaPlayer != null && mControllerView != null) {
-            mControllerView.setMediaPlayer(this);
-        }
-    }
 
     /**
      * Release media player
@@ -610,6 +588,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
     /**
      * Set view to render frame in video stream.
      * Deprecated because we deprecate the {@link IRenderView}
+     *
      * @param renderView see {@link IRenderView} for details
      */
     @Deprecated
@@ -630,81 +609,6 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
             renderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
         mRenderView.addRenderCallback(mSHCallback);
         mRenderView.setVideoRotation(mVideoRotationDegree);
-    }
-
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        boolean isKeyCodeSupported = keyCode != KeyEvent.KEYCODE_BACK &&
-                keyCode != KeyEvent.KEYCODE_VOLUME_UP &&
-                keyCode != KeyEvent.KEYCODE_VOLUME_DOWN &&
-                keyCode != KeyEvent.KEYCODE_VOLUME_MUTE &&
-                keyCode != KeyEvent.KEYCODE_MENU &&
-                keyCode != KeyEvent.KEYCODE_CALL &&
-                keyCode != KeyEvent.KEYCODE_ENDCALL;
-        if (isInPlayBackState() && isKeyCodeSupported && mControllerView != null) {
-            if (keyCode == KeyEvent.KEYCODE_HEADSETHOOK ||
-                    keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
-                if (mMediaPlayer.isPlaying()) {
-                    pause();
-                    mControllerView.show();
-                } else {
-                    start();
-                    mControllerView.hide();
-                }
-                return true;
-            } else if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY) {
-                if (!mMediaPlayer.isPlaying()) {
-                    start();
-                    mControllerView.hide();
-                }
-                return true;
-            } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
-                    keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
-                if (mMediaPlayer.isPlaying()) {
-                    pause();
-                    mControllerView.show();
-                }
-                return true;
-            } else {
-                toggleMediaControlsVisibility();
-            }
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
-    private ScaleGestureDetector mScaleGestureDetector;
-    private boolean onScale = false;
-    private android.view.ScaleGestureDetector.OnScaleGestureListener mScaleListener = new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-        @Override
-        public boolean onScaleBegin(ScaleGestureDetector detector) {
-            onScale = true;
-            return super.onScaleBegin(detector);
-        }
-
-        @Override
-        public boolean onScale(ScaleGestureDetector detector) {
-            float scaleFactorDiff = detector.getScaleFactor();
-            if (detector.isInProgress()) {
-                handleScale(scaleFactorDiff);
-            }
-            return Float.compare(scaleFactorDiff, 1.0f) != 0;
-        }
-
-        @Override
-        public void onScaleEnd(ScaleGestureDetector detector) {
-            super.onScaleEnd(detector);
-            onScale = false;
-        }
-    };
-
-    private void handleScale(float scaleFactorDiff) {
-        if (mRenderView != null)
-            mRenderView.setAspectRatio(scaleFactorDiff);
-    }
-
-    private void initGesture() {
-        mScaleGestureDetector = new ScaleGestureDetector(mContext, mScaleListener);
     }
 
 
@@ -902,6 +806,7 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
 
     private ViewGroup.LayoutParams lp;
+
     private void showFullscreen() {
         lp = getLayoutParams();
         ((Activity) getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -1003,11 +908,5 @@ public class ParsingVideoView extends RelativeLayout implements IMediaPlayerCont
 
             }
         }
-    }
-
-    private int rootId;
-
-    public void setRootLayoutId(int id) {
-        this.rootId = id;
     }
 }

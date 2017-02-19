@@ -7,7 +7,7 @@
     android:background="@color/panel_slide_background"
     android:orientation="vertical">
 
-    <com.hustunique.parsingplayer.player.VerticalProgressBar
+    <com.hustunique.parsingplayer.player.view.VerticalProgressBar
         android:id="@+id/vertical_progressbar"
         android:layout_width="7dp"
         android:layout_height="100dp"

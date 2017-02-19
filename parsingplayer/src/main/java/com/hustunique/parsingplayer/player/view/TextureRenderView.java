@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.player;
+package com.hustunique.parsingplayer.player.view;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -32,12 +32,11 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.TextureView;
-import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.hustunique.parsingplayer.LogUtil;
+import com.hustunique.parsingplayer.util.LogUtil;
 import com.orhanobut.logger.Logger;
 
 import java.lang.ref.WeakReference;
@@ -48,9 +47,8 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHolder;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 
-// TODO: 2/18/17 Implement scale feature
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class TextureRenderView extends TextureView implements IRenderView, View.OnClickListener {
+public class TextureRenderView extends TextureView implements IRenderView {
     private static final String TAG = "TextureRenderView";
     private static final float MINIMUM_BRIGHTNESS = 0.04f;
     private MeasureHelper mMeasureHelper;
@@ -223,16 +221,12 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
 //        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
     }
 
-
     private void updateVolume(float dy) {
-
         dy = -dy;
         AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         int deltaV = (int) (maxVolume * dy * 3 / (getHeight()));
         am.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
-        float volumePercentage = mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / (getHeight());
-//        LogUtil.d(TAG, "update volume: " + volumePercentage);
     }
 
 
@@ -244,10 +238,6 @@ public class TextureRenderView extends TextureView implements IRenderView, View.
         return new InternalSurfaceHolder(this, mSurfaceCallback.mSurfaceTexture, mSurfaceCallback);
     }
 
-    @Override
-    public void onClick(View v) {
-        Logger.d("click");
-    }
 
     private static final class InternalSurfaceHolder implements IRenderView.ISurfaceHolder {
         private TextureRenderView mTextureView;

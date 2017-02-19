@@ -22,8 +22,8 @@ package com.hustunique.parsingplayer.player.media;
  * Listener for state in {@link ParsingMediaManager}
  */
 
-public interface StateListener {
+public interface MediaStateChangeListener {
     void onPrepared();
     void onError(String msg);
-    void onCompleted();
+    void onPlayCompleted();
 }

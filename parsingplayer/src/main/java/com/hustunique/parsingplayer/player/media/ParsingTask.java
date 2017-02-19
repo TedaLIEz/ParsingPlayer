@@ -30,10 +30,10 @@ import java.lang.ref.WeakReference;
  */
 
 public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
-    private WeakReference<ParsingPlayerManager> mMedia;
+    private WeakReference<ParsingPlayerProxy> mMedia;
     private int mQuality;
 
-    public ParsingTask(ParsingPlayerManager playerManager, @Quality int quality) {
+    public ParsingTask(ParsingPlayerProxy playerManager, @Quality int quality) {
         mMedia = new WeakReference<>(playerManager);
         mQuality = quality;
     }

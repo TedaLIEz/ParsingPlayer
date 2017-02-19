@@ -5,6 +5,7 @@ package com.hustunique.sample;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +24,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        ParsingMediaManager.getInstance(this).onResume();
     }
 
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ParsingMediaManager.getInstance(this).onPause();
+    }
 }

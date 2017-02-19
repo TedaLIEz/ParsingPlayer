@@ -179,7 +179,6 @@ public class ControllerView extends LinearLayout {
         post(mShowProgress);
     }
 
-    // FIXME: 2/18/17 NullPointerException when return to tiny mode
     private void updatePausePlay() {
         if (mPlayer.isPlaying()) {
             mPauseButton.setImageResource(R.drawable.ic_portrait_stop);

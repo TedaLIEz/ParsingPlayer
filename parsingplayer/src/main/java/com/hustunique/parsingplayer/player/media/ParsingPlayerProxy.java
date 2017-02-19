@@ -24,6 +24,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.SurfaceHolder;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
@@ -41,14 +42,15 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 /**
  * Created by JianGuo on 2/19/17.
- * Manager managing {@link IParsingPlayer} lifecycle
+ * Proxy class for {@link IParsingPlayer} instance, we bind one uri to one instance of
+ * {@link IParsingPlayer} in a hashMap
  */
 
-public class ParsingPlayerManager implements IMediaPlayer.OnPreparedListener,
+class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         IMediaPlayer.OnVideoSizeChangedListener, IMediaPlayer.OnCompletionListener,
         IMediaPlayer.OnErrorListener, IMediaPlayer.OnInfoListener, IMediaPlayer.OnSeekCompleteListener,
         IMediaPlayer.OnBufferingUpdateListener, IMediaPlayerControl {
-    private static final String TAG = "ParsingPlayerManager";
+    private static final String TAG = "ParsingPlayerProxy";
     private final Context mContext;
     private int mCurrentState;
     private int mTargetState;
@@ -73,10 +75,10 @@ public class ParsingPlayerManager implements IMediaPlayer.OnPreparedListener,
     private int mVideoSarNum, mVideoSarDen;
     private int mSeekWhenPrepared;
 
-    public ParsingPlayerManager(Context context) {
+    ParsingPlayerProxy(Context context, OnStateListener listener) {
+        mOnVideoPreparedListener = listener;
         mContext = context;
         mPlayerMap = new HashMap<>();
-
     }
 
 
@@ -97,7 +99,35 @@ public class ParsingPlayerManager implements IMediaPlayer.OnPreparedListener,
 
 
     private OnStateListener mOnVideoPreparedListener;
-    public interface OnStateListener {
+
+    IMediaPlayer getCurrentPlayer() {
+        return mCurrentPlayer;
+    }
+
+    /**
+     * Release current used player
+     * @param clearTargetState <tt>true</tt> if you want to clear next state of ParsingPlayerProxy,
+     *                         <tt>false</tt> otherwise
+     */
+    void releaseCurrentPlayer(boolean clearTargetState) {
+        if (mCurrentPlayer != null) {
+            mCurrentPlayer.reset();
+            mCurrentPlayer.release();
+            mCurrentPlayer = null;
+            mCurrentState = STATE_IDLE;
+            if (clearTargetState) {
+                mTargetState = STATE_IDLE;
+            }
+            AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            am.abandonAudioFocus(null);
+        }
+    }
+
+    void setCurrentDisplay(SurfaceHolder holder) {
+        mCurrentPlayer.setDisplay(holder);
+    }
+
+    interface OnStateListener {
         void onPrepared(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen);
         void onVideoSizeChanged(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen);
         void onCompleted();
@@ -105,7 +135,7 @@ public class ParsingPlayerManager implements IMediaPlayer.OnPreparedListener,
         void onInfo();
     }
 
-    public void setStateListener(@Nullable OnStateListener onVideoPreparedListener) {
+    void setStateListener(@Nullable OnStateListener onVideoPreparedListener) {
         mOnVideoPreparedListener = onVideoPreparedListener;
     }
 
@@ -220,6 +250,9 @@ public class ParsingPlayerManager implements IMediaPlayer.OnPreparedListener,
 
     @Override
     public void start() {
+        if (mSeekWhenPrepared != 0) {
+            seekTo(mSeekWhenPrepared);
+        }
         if (isInPlayBackState()) {
             mCurrentPlayer.start();
             mCurrentState = STATE_PLAYING;
@@ -346,7 +379,7 @@ public class ParsingPlayerManager implements IMediaPlayer.OnPreparedListener,
         mCurrentPlayer.prepareAsync();
     }
 
-    private boolean isInPlayBackState() {
+    boolean isInPlayBackState() {
         return mCurrentState !=STATE_ERROR
                 && mCurrentState != STATE_IDLE
                 && mCurrentState != STATE_PREPARING;

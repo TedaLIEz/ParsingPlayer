@@ -33,7 +33,7 @@ import android.widget.RelativeLayout;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
-import com.hustunique.parsingplayer.player.media.StateListener;
+import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 /**
@@ -41,7 +41,7 @@ import com.hustunique.parsingplayer.util.LogUtil;
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
 
-public class ParsingVideoView extends RelativeLayout implements StateListener {
+public class ParsingVideoView extends RelativeLayout implements MediaStateChangeListener {
     private static final String TAG = "ParsingVideoView";
     private float mSlop;
     private static final float SET_PROGRESS_VERTICAL_SLIP = 10f;
@@ -84,7 +84,7 @@ public class ParsingVideoView extends RelativeLayout implements StateListener {
         mMedia = ParsingMediaManager.getInstance(mContext);
         mMedia.configureRenderView(renderView);
         mControllerView.setMediaPlayer(mMedia);
-        mMedia.setStateListener(this);
+        mMedia.setStateChangeListener(this);
         mControllerView.setRestoreListener(mRestoreListener);
         renderView.setOnClickListener(mRenderViewClickListener);
     }
@@ -179,8 +179,6 @@ public class ParsingVideoView extends RelativeLayout implements StateListener {
         mCurrentBufferPercentage = ss.currentBufferPercentage;
         int currPos = ss.currentPos;
 
-//        seekTo(currPos);
-
     }
 
 
@@ -195,7 +193,7 @@ public class ParsingVideoView extends RelativeLayout implements StateListener {
         SavedState ss = new SavedState(parcelable);
         ss.currentState = mCurrentState;
         ss.targetState = mTargetState;
-        ss.currentPos = mMedia == null ? 0 : (int) mMedia.getCurrentPosition();
+        ss.currentPos = mMedia == null ? 0 : mMedia.getCurrentPosition();
         ss.currentBufferPercentage = mCurrentBufferPercentage;
         LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
         return ss;
@@ -218,7 +216,7 @@ public class ParsingVideoView extends RelativeLayout implements StateListener {
     }
 
     @Override
-    public void onCompleted() {
+    public void onPlayCompleted() {
         mControllerView.complete();
     }
 
@@ -272,5 +270,11 @@ public class ParsingVideoView extends RelativeLayout implements StateListener {
         }
     }
 
-
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (mControllerView != null && visibility == GONE) {
+            mControllerView.hide();
+        }
+    }
 }

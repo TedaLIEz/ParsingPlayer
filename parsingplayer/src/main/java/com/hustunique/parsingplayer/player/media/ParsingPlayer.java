@@ -20,16 +20,14 @@ package com.hustunique.parsingplayer.player.media;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import com.hustunique.parsingplayer.BuildConfig;
-import com.hustunique.parsingplayer.util.Util;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 import com.hustunique.parsingplayer.player.io.ParsingFileManager;
+import com.hustunique.parsingplayer.util.Util;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -86,8 +84,8 @@ public class ParsingPlayer implements IParsingPlayer {
                 "safe", config.safe ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "protocol_whitelist", config.whiteList);
-        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
-                "mediacodec", config.mediacodec ? 1 : 0);
+//        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
+//                "mediacodec", config.mediacodec ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
                 "mediacodec-auto-rotate", config.mediacodecAutoRotate ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,

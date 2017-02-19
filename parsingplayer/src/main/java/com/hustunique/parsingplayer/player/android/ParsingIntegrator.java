@@ -17,7 +17,7 @@
 
 package com.hustunique.parsingplayer.player.android;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 
 /**
@@ -27,17 +27,17 @@ import android.content.Intent;
 @Deprecated
 public class ParsingIntegrator {
     private static final String TAG = "ParsingIntegrator";
-    private Activity mActivity;
+    private Context mContext;
     static final String URL = "url";
 
-    public void parsingToPlay(String url) {
-        Intent intent = new Intent(mActivity, VideoActivity.class);
-        intent.putExtra(URL, url);
-        mActivity.startActivity(intent);
+    public void parsingToPlay() {
+        Intent intent = new Intent(mContext, VideoActivity.class);
+//        intent.putExtra(URL, url);
+        mContext.startActivity(intent);
     }
 
-    public ParsingIntegrator(Activity activity) {
-        mActivity = activity;
+    public ParsingIntegrator(Context context) {
+        mContext = context;
     }
 
 

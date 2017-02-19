@@ -36,11 +36,6 @@ public interface IMediaPlayerControl {
 
     int getBufferPercentage();
 
-    boolean canPause();
-
-    boolean canSeekBackward();
-
-    boolean canSeekForward();
 
     /**
      * As ParsingPlayer animated to parse video url and play real video address,

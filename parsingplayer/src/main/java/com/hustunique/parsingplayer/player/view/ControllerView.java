@@ -95,7 +95,7 @@ public class ControllerView extends LinearLayout {
         }
     };
 
-    public void setFullscreenListener(View.OnClickListener listener){
+    public void setRestoreListener(View.OnClickListener listener){
         mFullscreenButton.setOnClickListener(listener);
     }
 

@@ -19,24 +19,16 @@ package com.hustunique.parsingplayer.player.android;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
-
-import tv.danmaku.ijk.media.player.IMediaPlayer;
-
-import static com.hustunique.parsingplayer.player.android.ParsingIntegrator.URL;
 
 /**
  * Created by JianGuo on 2/15/17.
@@ -119,33 +111,12 @@ public class VideoActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_video);
-        Intent intent = getIntent();
-        String url = intent.getStringExtra(URL);
-        if (url == null || url.isEmpty()) throw new IllegalStateException("URL must given!");
-        LogUtil.d(TAG, "url to play: " + url);
         mVisible = true;
         mVideoView = (ParsingVideoView) findViewById(R.id.fullscreen_content);
-        mVideoView.setOnErrorListener(new IMediaPlayer.OnErrorListener() {
+        mVideoView.setRestoreListener(new View.OnClickListener() {
             @Override
-            public boolean onError(IMediaPlayer iMediaPlayer, int i, int i1) {
-                new AlertDialog.Builder(VideoActivity.this)
-                        .setMessage("Error code: " + i + ", " + i1)
-                        .setPositiveButton(R.string.VideoView_error_button,
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        finish();
-                                    }
-                                })
-                        .setCancelable(false)
-                        .show();
-                return true;
-            }
-        });
-        mVideoView.play(url);
-        mVideoView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggle();
+            public void onClick(View v) {
+                finish();
             }
         });
 

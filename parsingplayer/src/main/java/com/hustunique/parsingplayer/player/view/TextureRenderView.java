@@ -37,7 +37,6 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.hustunique.parsingplayer.util.LogUtil;
-import com.orhanobut.logger.Logger;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -77,6 +76,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
         mSurfaceCallback = new SurfaceCallback(this);
         setSurfaceTextureListener(mSurfaceCallback);
     }
+
 
 
     @Override
@@ -184,9 +184,6 @@ public class TextureRenderView extends TextureView implements IRenderView {
                 break;
             case MotionEvent.ACTION_UP: {
                 mActivePointerId = MotionEvent.INVALID_POINTER_ID;
-                Logger.d("up");
-                Logger.d(mChangeBrightness);
-                Logger.d(mChangeVolume);
                 if (!mChangeBrightness && !mChangeVolume) {
                     performClick();
                 }

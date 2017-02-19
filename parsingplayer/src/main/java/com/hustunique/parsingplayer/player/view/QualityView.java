@@ -85,7 +85,7 @@ public class QualityView extends LinearLayout {
             tv.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    view.setQuality(q);
+//                    view.setQuality(q);
                 }
             });
             addView(tv);

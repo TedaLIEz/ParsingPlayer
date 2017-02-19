@@ -9,7 +9,6 @@ import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
 public class MainActivity extends AppCompatActivity {
     private ParsingVideoView mVideoView;
-
     private static final String TAG = "MainActivity";
 
     @Override
@@ -18,6 +17,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
         mVideoView.play("http://v.youku.com/v_show/id_XMTI2OTAyNzMzNg==.html");
+    }
+
+    // turn black when resume to this activity
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
 }

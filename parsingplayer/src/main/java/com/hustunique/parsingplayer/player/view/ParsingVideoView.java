@@ -60,6 +60,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     private boolean mFullscreen;
     private boolean mTargetFullscreen = false;
+    private boolean mTargetTinyscreen = false;
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -141,6 +142,9 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         }
     };
 
+    public void setTargetTiny(){
+        mTargetTinyscreen = true;
+    }
 
     private float mDownX, mDownY;
     private boolean mChangePos = false;
@@ -214,6 +218,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
             mTargetFullscreen = false;
             return;
         }
+        if (mTargetTinyscreen)
+            return;
         mMedia.pause();
     }
 

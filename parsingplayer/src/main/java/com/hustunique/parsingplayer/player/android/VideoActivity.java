@@ -63,6 +63,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         mVideoView.setRestoreListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mVideoView.setTargetTiny();
                 finish();
             }
         });
@@ -70,9 +71,16 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
 
     // This snippet hides the system bars.
     private void hideSystemUI() {
-        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                View.SYSTEM_UI_FLAG_IMMERSIVE);
+//        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
+//                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+//                View.SYSTEM_UI_FLAG_IMMERSIVE);
+        mDecorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     @Override
@@ -99,11 +107,4 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         super.onPause();
         mVideoView.onPause();
     }
-
-
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        mVideoView.onDestroy();
-//    }
 }

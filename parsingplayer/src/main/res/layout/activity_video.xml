@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2017 UniqueStudio
   ~
   ~
@@ -17,24 +16,20 @@
   -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:background="@color/black_overlay"
-             android:fitsSystemWindows="true"
-             tools:context=".player.android.VideoActivity">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black_overlay"
+    tools:context=".player.android.VideoActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
-        <com.hustunique.parsingplayer.player.view.ParsingVideoView
-            android:fitsSystemWindows="true"
-            android:id="@+id/fullscreen_content"
-            android:layout_width="match_parent"
-            android:layout_gravity="center"
-            android:layout_height="match_parent"/>
-
-
-
+    <com.hustunique.parsingplayer.player.view.ParsingVideoView xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/fullscreen_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        app:fullscreen="true" />
 
 </FrameLayout>

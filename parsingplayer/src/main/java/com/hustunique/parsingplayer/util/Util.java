@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
+import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -236,5 +238,27 @@ public final class Util {
     @Px
     public static int getScreenHeight(@NonNull Context context) {
         return context.getApplicationContext().getResources().getDisplayMetrics().heightPixels;
+    }
+
+    /**
+     * Convert ms time to string
+     * @param timeMs time in ms
+     * @return string formatted
+     */
+    public static String stringForTime(int timeMs) {
+        StringBuilder formatBuilder = new StringBuilder();
+        Formatter formatter = new Formatter(formatBuilder, Locale.getDefault());
+        int totalSeconds = timeMs / 1000;
+
+        int seconds = totalSeconds % 60;
+        int minutes = (totalSeconds / 60) % 60;
+        int hours = totalSeconds / 3600;
+
+        formatBuilder.setLength(0);
+        if (hours > 0) {
+            return formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString();
+        } else {
+            return formatter.format("%02d:%02d", minutes, seconds).toString();
+        }
     }
 }

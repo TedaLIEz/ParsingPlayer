@@ -18,4 +18,5 @@
 
 <resources>
     <string name="VideoView_error_button">OK</string>
+    <string name="seekTime" formatted="false">%s / %s</string>
 </resources>

@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
-import com.hustunique.parsingplayer.util.LogUtil;
 
 public class MainActivity extends AppCompatActivity {
     private ParsingVideoView mVideoView;
@@ -17,8 +16,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        mVideoView.play("http://v.youku.com/v_show/id_XMTI2OTAyNzMzNg==.html");
-        LogUtil.i("ParsingVideoView", "onCreate, width " + mVideoView.getWidth() + ", height " + mVideoView.getHeight());
+        mVideoView.play("http://v.youku.com/v_show/id_XNDI3NDE2NDIw.html");
     }
 
     // turn black when resume to this activity

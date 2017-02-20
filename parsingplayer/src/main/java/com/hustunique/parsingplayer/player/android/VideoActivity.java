@@ -76,28 +76,21 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
 
     // This snippet hides the system bars.
     private void hideSystemUI() {
-        // Set the IMMERSIVE flag.
-        // Set the content to appear under the system bars so that the content
-        // doesn't resize when the system bars hide and show.
-        mDecorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     @Override
     public void onSystemUiVisibilityChange(int visibility) {
-        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0){
+        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
             Handler handler = new Handler(getMainLooper());
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     hideSystemUI();
                 }
-            },AUTO_HIDE_DELAY_MILLIS);
+            }, AUTO_HIDE_DELAY_MILLIS);
         }
     }
 }

@@ -27,9 +27,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
-
-import java.util.Formatter;
-import java.util.Locale;
+import com.hustunique.parsingplayer.util.Util;
 
 /**
  * Created by JianGuo on 1/20/17.
@@ -42,8 +40,6 @@ public class ControllerView extends LinearLayout {
     private ImageButton mFullscreenButton;
     private SeekBar mProgress;
     private TextView mCurrentTime, mEndTime;
-    private StringBuilder mFormatBuilder;
-    private Formatter mFormatter;
     private boolean mIsShowing = false;
     private boolean mHasCompleted = false;
 
@@ -70,8 +66,6 @@ public class ControllerView extends LinearLayout {
         mPauseButton.setOnClickListener(mPauseListener);
         mProgress.setOnSeekBarChangeListener(mSeekListener);
         mProgress.setMax(1000);
-        mFormatBuilder = new StringBuilder();
-        mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
     }
 
 
@@ -89,6 +83,7 @@ public class ControllerView extends LinearLayout {
         public void run() {
             int progress = setProgress();
             updatePausePlay();
+            // fixme: 2/20/17 ImageButton will update icon a short time later
             if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
                 postDelayed(mShowProgress, 1000 - progress % 1000);
             }
@@ -115,11 +110,11 @@ public class ControllerView extends LinearLayout {
             mProgress.setSecondaryProgress(percent * 10);
         }
 
-        mEndTime.setText(stringForTime(duration));
+        mEndTime.setText(Util.stringForTime(duration));
         if (!mHasCompleted)
-            mCurrentTime.setText(stringForTime(position));
+            mCurrentTime.setText(Util.stringForTime(position));
         else if (!mPlayer.isPlaying())
-            mCurrentTime.setText(stringForTime(duration));
+            mCurrentTime.setText(Util.stringForTime(duration));
         else
             mHasCompleted = false;
         return position;
@@ -138,7 +133,7 @@ public class ControllerView extends LinearLayout {
             long newPosition = (duration * progress) / 1000L;
             mPlayer.seekTo((int) newPosition);
             if (mCurrentTime != null)
-                mCurrentTime.setText(stringForTime((int) newPosition));
+                mCurrentTime.setText(Util.stringForTime((int) newPosition));
         }
 
         @Override
@@ -153,22 +148,6 @@ public class ControllerView extends LinearLayout {
             post(mShowProgress);
         }
     };
-
-    private String stringForTime(int timeMs) {
-        int totalSeconds = timeMs / 1000;
-
-        int seconds = totalSeconds % 60;
-        int minutes = (totalSeconds / 60) % 60;
-        int hours = totalSeconds / 3600;
-
-        mFormatBuilder.setLength(0);
-        if (hours > 0) {
-            return mFormatter.format("%d:%02d:%02d", hours, minutes, seconds).toString();
-        } else {
-            return mFormatter.format("%02d:%02d", minutes, seconds).toString();
-        }
-    }
-
 
     private void doPauseResume() {
         if (mPlayer.isPlaying()) {

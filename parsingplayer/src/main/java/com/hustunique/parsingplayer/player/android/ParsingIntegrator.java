@@ -27,11 +27,9 @@ import android.content.Intent;
 public class ParsingIntegrator {
     private static final String TAG = "ParsingIntegrator";
     private Context mContext;
-    static final String URL = "url";
 
     public void parsingToPlay() {
         Intent intent = new Intent(mContext, VideoActivity.class);
-//        intent.putExtra(URL, url);
         mContext.startActivity(intent);
     }
 

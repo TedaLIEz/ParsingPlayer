@@ -29,9 +29,10 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 /**
  * Created by JianGuo on 2/2/17.
+ * Interface extending {@link IMediaPlayer}
  */
 
-public interface IParsingPlayer extends IMediaPlayer {
+interface IParsingPlayer extends IMediaPlayer {
     /**
      * This will restrict the annotated param into  integers defined in the {@link IntDef} range
      */

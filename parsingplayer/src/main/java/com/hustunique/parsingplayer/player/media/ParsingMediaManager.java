@@ -23,9 +23,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private int mCurrentAspectRatio = IRenderView.AR_ASPECT_FIT_PARENT;
 
     private static final int DEFAULT_PLAY_MODE = 1;
-    private static final int FULLSCREEN_PLAY_MODE = 1 << 2;
+    public static final int FULLSCREEN_PLAY_MODE = 1 << 2;
     private int flag = DEFAULT_PLAY_MODE;
-    private TextureRenderView mRenderView;
+    private TextureRenderView mRenderView, mPrevRenderView;
 
     private static ParsingMediaManager mManager;
     private ParsingPlayerProxy mPlayerManager;
@@ -50,6 +50,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     }
 
+    public TextureRenderView getRenderView() {
+        return mRenderView;
+    }
 
     private IRenderView.ISurfaceHolder mSurfaceHolder;
     private int mSurfaceWidth, mSurfaceHeight;
@@ -89,9 +92,21 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
             }
 
             mSurfaceHolder = null;
-            release();
+            releaseRenderView();
         }
     };
+
+    private void releaseRenderView() {
+        if (mRenderView == null) return;
+        mPrevRenderView = mRenderView;
+        if (mPlayerManager != null) {
+            mPlayerManager.setCurrentDisplay(null);
+        }
+        // Clear display
+        mRenderView.removeRenderCallback(mSHCallback);
+        mRenderView = null;
+
+    }
 
     private void bindSurfaceHolder(IMediaPlayer mp, IRenderView.ISurfaceHolder holder) {
         if (mp == null) return;
@@ -102,26 +117,12 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         holder.bindToMediaPlayer(mp);
     }
 
-    private void release() {
-        if (mPlayerManager != null) {
-            // this will not stop the playing
-            mPlayerManager.setCurrentDisplay(null);
-        }
-    }
-
 
     public void configureRenderView(TextureRenderView renderView) {
-        if (mRenderView == renderView) return;
-        if (mRenderView != null) {
-            if (mPlayerManager != null) {
-                mPlayerManager.setCurrentDisplay(null);
-            }
-            // Clear display
-            mRenderView.removeRenderCallback(mSHCallback);
-            mRenderView = null;
-        }
+        if (renderView == null) return;
+        releaseRenderView();
         mRenderView = renderView;
-        mRenderView.getSurfaceHolder().bindToMediaPlayer(mPlayerManager.getCurrentPlayer());
+
         mRenderView.setAspectRatioMode(mCurrentAspectRatio);
         mRenderView.addRenderCallback(mSHCallback);
     }
@@ -222,13 +223,27 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     }
 
+    private void configureRenderView() {
+        if (flag == FULLSCREEN_PLAY_MODE) {
+            configureRenderView(mPrevRenderView);
+        } else {
+            configureRenderView(mRenderView);
+        }
+    }
 
     public void onResume() {
-        start();
+        configureRenderView(mPrevRenderView);
     }
 
     public void onPause() {
         pause();
     }
 
+
+
+    public void setPlayMode(int flag) {
+        if (flag == FULLSCREEN_PLAY_MODE) {
+            mPrevRenderView = mRenderView;
+        }
+    }
 }

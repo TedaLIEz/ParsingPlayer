@@ -18,10 +18,7 @@
 package com.hustunique.parsingplayer.player.view;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.os.Build;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -32,9 +29,8 @@ import android.widget.RelativeLayout;
 
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
-import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
-import com.hustunique.parsingplayer.util.LogUtil;
+import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -164,22 +160,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
 
-    @Override
-    // FIXME: 1/23/17 Can't maintain View status after configuration changes, as we can't maintain mediaplayer here
-    protected void onRestoreInstanceState(Parcelable state) {
-        if (!(state instanceof SavedState)) {
-            super.onRestoreInstanceState(state);
-            return;
-        }
-        SavedState ss = (SavedState) state;
-        super.onRestoreInstanceState(ss.getSuperState());
-        LogUtil.d(TAG, "onRestoreInstanceState " + ss.toString());
-        mCurrentState = ss.currentState;
-        mTargetState = ss.targetState;
-        mCurrentBufferPercentage = ss.currentBufferPercentage;
-        int currPos = ss.currentPos;
-
-    }
 
 
     private void showFullscreen() {
@@ -187,23 +167,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         parsingIntegrator.parsingToPlay();
     }
 
-    @Override
-    protected Parcelable onSaveInstanceState() {
-        Parcelable parcelable = super.onSaveInstanceState();
-        SavedState ss = new SavedState(parcelable);
-        ss.currentState = mCurrentState;
-        ss.targetState = mTargetState;
-        ss.currentPos = mMedia == null ? 0 : mMedia.getCurrentPosition();
-        ss.currentBufferPercentage = mCurrentBufferPercentage;
-        LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
-        return ss;
-    }
 
 
-    @Override
-    protected void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
 
     @Override
     public void onPrepared() {
@@ -220,55 +185,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mControllerView.complete();
     }
 
-    class SavedState extends BaseSavedState {
-        int currentState;
-        int targetState;
-        int currentBufferPercentage;
-        int currentPos;
-        private ClassLoader mClassLoader;
-
-        public SavedState(Parcel in) {
-            super(in);
-            mClassLoader = mContext.getClassLoader();
-            currentState = in.readInt();
-            targetState = in.readInt();
-            currentPos = in.readInt();
-            currentBufferPercentage = in.readInt();
-        }
-
-
-        @RequiresApi(api = Build.VERSION_CODES.N)
-        public SavedState(Parcel source, ClassLoader loader) {
-            super(source, loader);
-            if (loader == null) {
-                loader = getClass().getClassLoader();
-            }
-            mClassLoader = loader;
-        }
-
-        public SavedState(Parcelable superState) {
-            super(superState);
-        }
-
-        @Override
-        public void writeToParcel(Parcel out, int flags) {
-            super.writeToParcel(out, flags);
-            out.writeInt(currentState);
-            out.writeInt(targetState);
-            out.writeInt(currentPos);
-            out.writeInt(currentBufferPercentage);
-        }
-
-        @Override
-        public String toString() {
-            return "SavedState{" +
-                    "currentState=" + currentState +
-                    ", targetState=" + targetState +
-                    ", currentBufferPercentage=" + currentBufferPercentage +
-                    ", currentPos=" + currentPos +
-                    '}';
-        }
-    }
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {

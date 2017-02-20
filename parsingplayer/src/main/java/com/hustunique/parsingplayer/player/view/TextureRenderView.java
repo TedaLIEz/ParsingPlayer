@@ -75,6 +75,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
         mMeasureHelper = new MeasureHelper(this);
         mSurfaceCallback = new SurfaceCallback(this);
         setSurfaceTextureListener(mSurfaceCallback);
+
     }
 
 
@@ -90,6 +91,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
         super.onDetachedFromWindow();
         mSurfaceCallback.didDetachFromWindow();
     }
+
 
     //--------------------
     // Layout & Measure
@@ -128,6 +130,8 @@ public class TextureRenderView extends TextureView implements IRenderView {
         requestLayout();
     }
 
+
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         mMeasureHelper.doMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -158,7 +162,6 @@ public class TextureRenderView extends TextureView implements IRenderView {
                 mChangeBrightness = mChangeVolume = false;
             }
             case MotionEvent.ACTION_MOVE: {
-                LogUtil.d(TAG, "currentVolume" + mGestureDownVolume);
                 final int pointerIndex = event.findPointerIndex(mActivePointerId);
                 final float x = event.getX(pointerIndex);
                 final float y = event.getY(pointerIndex);
@@ -251,6 +254,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
 
         @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
         public void bindToMediaPlayer(IMediaPlayer mp) {
+            LogUtil.d(TAG, "bind mediaPlayer");
             if (mp == null)
                 return;
 
@@ -294,6 +298,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
         public Surface openSurface() {
             if (mSurfaceTexture == null)
                 return null;
+            LogUtil.d(TAG, "Open new Surface");
             return new Surface(mSurfaceTexture);
         }
     }
@@ -328,7 +333,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
         private Map<IRenderCallback, Object> mRenderCallbackMap = new ConcurrentHashMap<IRenderCallback, Object>();
 
         SurfaceCallback(@NonNull TextureRenderView renderView) {
-            mWeakRenderView = new WeakReference<TextureRenderView>(renderView);
+            mWeakRenderView = new WeakReference<>(renderView);
         }
 
         void setOwnSurfaceTexture(boolean ownSurfaceTexture) {
@@ -364,6 +369,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
             mHeight = 0;
 
             ISurfaceHolder surfaceHolder = new InternalSurfaceHolder(mWeakRenderView.get(), surface, this);
+            LogUtil.w(TAG, "callback size " + mRenderCallbackMap.size());
             for (IRenderCallback renderCallback : mRenderCallbackMap.keySet()) {
                 renderCallback.onSurfaceCreated(surfaceHolder, 0, 0);
             }
@@ -450,6 +456,7 @@ public class TextureRenderView extends TextureView implements IRenderView {
 
         void didDetachFromWindow() {
             Log.d(TAG, "didDetachFromWindow()");
+//            mSurfaceTexture.release();
             mDidDetachFromWindow = true;
         }
     }

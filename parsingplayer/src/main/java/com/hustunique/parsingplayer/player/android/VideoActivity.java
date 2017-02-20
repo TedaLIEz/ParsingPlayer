@@ -34,7 +34,6 @@ import com.hustunique.parsingplayer.player.view.ParsingVideoView;
  * Created by JianGuo on 2/15/17.
  * Activity supporting playing video in fullscreen
  */
-@Deprecated
 public class VideoActivity extends AppCompatActivity {
     private static final String TAG = "VideoActivity";
     /**
@@ -120,6 +119,23 @@ public class VideoActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+//        ParsingMediaManager.getInstance(this).onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+//        ParsingMediaManager.getInstance(this).onDestroy();
     }
 
     @Override

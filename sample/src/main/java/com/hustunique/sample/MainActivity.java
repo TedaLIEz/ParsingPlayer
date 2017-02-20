@@ -31,6 +31,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        ParsingMediaManager.getInstance(this).onPause();
+//        ParsingMediaManager.getInstance(this).onPause();
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+//        ParsingMediaManager.getInstance(this).onStop();
     }
 }

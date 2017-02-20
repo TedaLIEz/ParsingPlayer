@@ -138,6 +138,21 @@ public class TextureRenderView extends TextureView implements IRenderView {
         setMeasuredDimension(mMeasureHelper.getMeasuredWidth(), mMeasureHelper.getMeasuredHeight());
     }
 
+
+    public interface OnVideoChangeListener {
+        void onVolumeDialogShow(int volumePercent);
+        void onVolumeDialogDismiss();
+
+        void onBrightnessShow(int brightness);
+        void onBrightnessDismiss();
+    }
+
+    private OnVideoChangeListener mOnVideoChangeListener;
+
+    public void setOnVideoChangeListener(@Nullable OnVideoChangeListener onVideoChangeListener) {
+        mOnVideoChangeListener = onVideoChangeListener;
+    }
+
     private float mLastTouchX;
     private float mLastTouchY;
     private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
@@ -184,8 +199,12 @@ public class TextureRenderView extends TextureView implements IRenderView {
             }
             case MotionEvent.ACTION_CANCEL:
                 mActivePointerId = MotionEvent.INVALID_POINTER_ID;
+                dismissVolumeDialog();
+                dismissBrightnessDialog();
                 break;
             case MotionEvent.ACTION_UP: {
+                dismissVolumeDialog();
+                dismissBrightnessDialog();
                 mActivePointerId = MotionEvent.INVALID_POINTER_ID;
                 if (!mChangeBrightness && !mChangeVolume) {
                     performClick();
@@ -194,6 +213,18 @@ public class TextureRenderView extends TextureView implements IRenderView {
             }
         }
         return !mChangeBrightness || !mChangeVolume;
+    }
+
+    private void dismissBrightnessDialog() {
+        if (mOnVideoChangeListener != null) {
+            mOnVideoChangeListener.onBrightnessDismiss();
+        }
+    }
+
+    private void dismissVolumeDialog() {
+        if (mOnVideoChangeListener != null) {
+            mOnVideoChangeListener.onVolumeDialogDismiss();
+        }
     }
 
     private int getCurrentBrightness() {
@@ -218,7 +249,13 @@ public class TextureRenderView extends TextureView implements IRenderView {
         lp.screenBrightness = Math.min(Math.max(MINIMUM_BRIGHTNESS, (mGestureDownBrightness + deltaV) / 255), 1);
         ((Activity) getContext()).getWindow().setAttributes(lp);
         int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / getHeight());
-//        LogUtil.d(TAG, "set brightness: " + brightnessPercent);
+        showBrightnessDialog(brightnessPercent);
+    }
+
+    private void showBrightnessDialog(int brightnessPercent) {
+        if (mOnVideoChangeListener != null) {
+            mOnVideoChangeListener.onBrightnessShow(brightnessPercent);
+        }
     }
 
     private void updateVolume(float dy) {
@@ -227,6 +264,14 @@ public class TextureRenderView extends TextureView implements IRenderView {
         int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         int deltaV = (int) (maxVolume * dy * 3 / (getHeight()));
         am.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
+        int volumePercent = (int) (mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / getHeight());
+        showVolumeDialog(-dy, volumePercent);
+    }
+
+    private void showVolumeDialog(float dy, int volumePercent) {
+        if (mOnVideoChangeListener != null) {
+            mOnVideoChangeListener.onVolumeDialogShow(volumePercent);
+        }
     }
 
 

@@ -28,7 +28,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
@@ -54,8 +56,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private int mSeekWhenPrepared;
     private TextureRenderView mRenderView;
     private ProgressSlideView mVolumeProgress, mBrightProgress;
-
-
+    private ProgressBar mProgressBar;
+    private TextView mTextView;
     private String mUrl;
 
     private boolean mFullscreen;
@@ -72,18 +74,18 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initView(context,attrs);
+        initView(context, attrs);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        initView(context,attrs);
+        initView(context, attrs);
     }
 
-    private void initView(Context context,AttributeSet attrs) {
+    private void initView(Context context, AttributeSet attrs) {
         mContext = context;
-        getFullscreen(context,attrs);
+        getFullscreen(context, attrs);
         LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
         mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
         mControllerView = (ControllerView) findViewById(R.id.controller_view);
@@ -94,6 +96,26 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mControllerView.setRestoreListener(mRestoreListener);
         mRenderView.setOnClickListener(mRenderViewClickListener);
         initInfoProgressBar(context);
+        initControlPanel(context);
+        initSeekTextView(context);
+    }
+
+    private void initSeekTextView(Context context) {
+        mTextView = new TextView(context);
+        LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
+        addView(mTextView, lp);
+        mTextView.setTextColor(getResources().getColor(android.R.color.white));
+        mTextView.setTextSize(14);
+        mTextView.setVisibility(GONE);
+    }
+
+    private void initControlPanel(Context context) {
+        mProgressBar = new ProgressBar(context);
+        LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.CENTER_IN_PARENT);
+        addView(mProgressBar, lp);
+        mProgressBar.setVisibility(GONE);
     }
 
     private void initInfoProgressBar(Context context) {
@@ -114,12 +136,12 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mRenderView.setOnVideoChangeListener(this);
     }
 
-    private void getFullscreen(Context context,AttributeSet attrs) {
+    private void getFullscreen(Context context, AttributeSet attrs) {
         TypedArray a = null;
         try {
-            a = context.obtainStyledAttributes(attrs,R.styleable.ParsingVideoViewTheme);
-            mFullscreen = a.getBoolean(R.styleable.ParsingVideoViewTheme_fullscreen,false);
-        }finally {
+            a = context.obtainStyledAttributes(attrs, R.styleable.ParsingVideoViewTheme);
+            mFullscreen = a.getBoolean(R.styleable.ParsingVideoViewTheme_fullscreen, false);
+        } finally {
             a.recycle();
         }
     }
@@ -168,12 +190,22 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                dismissProgressBar();
+                dismissSeekTextView();
                 if (mChangePos) {
                     mMedia.seekTo(mSeekWhenPrepared);
                 }
                 break;
         }
         return this.mChangePos || super.dispatchTouchEvent(ev);
+    }
+
+    private void dismissSeekTextView() {
+        if (mTextView != null) mTextView.setVisibility(GONE);
+    }
+
+    private void dismissProgressBar() {
+        if (mProgressBar != null) mProgressBar.setVisibility(GONE);
     }
 
     private boolean checkValidSlide(float absDx, float absDy) {
@@ -185,7 +217,21 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private void updatePosition(float dx, int currentPos) {
         int totalTimeDuration = mMedia.getDuration();
         mSeekWhenPrepared = Math.min((int) ((currentPos + dx * totalTimeDuration) / getWidth()), totalTimeDuration);
+        showSeekTextView(mSeekWhenPrepared, totalTimeDuration);
+    }
 
+    private void showSeekTextView(int seekPos, int totalDuration) {
+        if (!mTextView.isShown()) {
+            mTextView.setVisibility(VISIBLE);
+        }
+        mTextView.setText(String.format(getResources().getString(R.string.seekTime),
+                Util.stringForTime(seekPos), Util.stringForTime(totalDuration)));
+    }
+
+    private void showBufferingProgress() {
+        if (!mProgressBar.isShown()) {
+            mProgressBar.setVisibility(VISIBLE);
+        }
     }
 
     public void play(String url) {
@@ -213,7 +259,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mMedia.onResume(mRenderView);
     }
 
-    public void onPause(){
+    public void onPause() {
         if (mTargetFullscreen) {
             mTargetFullscreen = false;
             return;

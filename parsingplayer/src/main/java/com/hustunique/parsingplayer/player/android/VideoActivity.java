@@ -17,19 +17,13 @@
 
 package com.hustunique.parsingplayer.player.android;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.WindowManager;
 
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
-import com.orhanobut.logger.Logger;
 
 /**
  * Created by JianGuo on 2/15/17.
@@ -92,5 +86,11 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
                 }
             }, AUTO_HIDE_DELAY_MILLIS);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mVideoView.onResume();
     }
 }

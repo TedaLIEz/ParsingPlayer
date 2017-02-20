@@ -104,6 +104,22 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         return mCurrentPlayer;
     }
 
+    int getVideoWidth() {
+        return mVideoWidth;
+    }
+
+    int getVideoHeight() {
+        return mVideoHeight;
+    }
+
+    int getVideoSarDen() {
+        return mVideoSarDen;
+    }
+
+    int getVideoSarNum() {
+        return mVideoSarNum;
+    }
+
     /**
      * Release current used player
      * @param clearTargetState <tt>true</tt> if you want to clear next state of ParsingPlayerProxy,

@@ -19,6 +19,8 @@ package com.hustunique.parsingplayer.player.view;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -31,6 +33,7 @@ import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
 import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
+import com.hustunique.parsingplayer.util.LogUtil;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -48,10 +51,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
 
     private ControllerView mControllerView;
-    private int mCurrentState;
-    private int mTargetState;
     private int mSeekWhenPrepared;
-    private int mCurrentBufferPercentage;
+    private TextureRenderView mRenderView;
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -75,14 +76,14 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private void initView(Context context) {
         mContext = context;
         LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
-        TextureRenderView renderView = (TextureRenderView) findViewById(R.id.texture_view);
+        mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
         mControllerView = (ControllerView) findViewById(R.id.controller_view);
         mMedia = ParsingMediaManager.getInstance(mContext);
-        mMedia.configureRenderView(renderView);
+        mMedia.configureRenderView(mRenderView);
         mControllerView.setMediaPlayer(mMedia);
         mMedia.setStateChangeListener(this);
         mControllerView.setRestoreListener(mRestoreListener);
-        renderView.setOnClickListener(mRenderViewClickListener);
+        mRenderView.setOnClickListener(mRenderViewClickListener);
     }
 
     public void setRestoreListener(OnClickListener restoreListener) {
@@ -160,17 +161,20 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
 
-
-
     private void showFullscreen() {
         ParsingIntegrator parsingIntegrator = new ParsingIntegrator(mContext);
         parsingIntegrator.parsingToPlay();
     }
 
-    public void onResume(){
-        mMedia.onResume((TextureRenderView) findViewById(R.id.texture_view));
+    public void onResume() {
+        TextureRenderView renderView = (TextureRenderView) findViewById(R.id.texture_view);
+        LogUtil.d(TAG, "onResume, width " + getWidth() + ", height " + getHeight() +
+                "\n renderView Width " + renderView.getWidth() + ", renderView height " + renderView.getHeight());
+        mMedia.onResume(mRenderView);
     }
 
+    public void onStop() {
+    }
 
     @Override
     public void onPrepared() {
@@ -195,4 +199,90 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
             mControllerView.hide();
         }
     }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+        SavedState ss = (SavedState) state;
+        super.onRestoreInstanceState(ss.getSuperState());
+        LogUtil.d(TAG, "onRestoreInstanceState " + ss.toString());
+        mRenderView.setVideoSize(ss.mVideoWidth, ss.mVideoHeight);
+        mRenderView.setVideoSampleAspectRatio(ss.mVideoSarNum, ss.mVideoSarDen);
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable parcelable = super.onSaveInstanceState();
+        SavedState ss = new SavedState(parcelable);
+        ss.mVideoWidth = mMedia.getCurrentVideoWidth();
+        ss.mVideoHeight = mMedia.getCurrentVideoHeight();
+        ss.mVideoSarDen = mMedia.getCurrentVideoSarDen();
+        ss.mVideoSarNum = mMedia.getCurrentVideoSarNum();
+
+        LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
+        return ss;
+    }
+
+    static class SavedState extends BaseSavedState {
+        private int mVideoWidth, mVideoHeight;
+        private int mVideoSarNum, mVideoSarDen;
+        private ClassLoader mClassLoader;
+
+        SavedState(Parcel in) {
+            super(in);
+            mClassLoader = getClass().getClassLoader();
+            mVideoWidth = in.readInt();
+            mVideoHeight = in.readInt();
+            mVideoSarNum = in.readInt();
+            mVideoSarDen = in.readInt();
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        public SavedState(Parcel source, ClassLoader loader) {
+            super(source, loader);
+            if (loader == null) {
+                loader = getClass().getClassLoader();
+            }
+            mClassLoader = loader;
+        }
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(mVideoWidth);
+            out.writeInt(mVideoHeight);
+            out.writeInt(mVideoSarNum);
+            out.writeInt(mVideoSarDen);
+        }
+
+        @Override
+        public String toString() {
+            return "SavedState{" +
+                    "mVideoWidth=" + mVideoWidth +
+                    ", mVideoHeight=" + mVideoHeight +
+                    ", mVideoSarNum=" + mVideoSarNum +
+                    ", mVideoSarDen=" + mVideoSarDen +
+                    '}';
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
+
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
+
+    }
+
 }

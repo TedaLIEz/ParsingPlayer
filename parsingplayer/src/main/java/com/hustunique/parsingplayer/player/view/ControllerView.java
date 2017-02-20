@@ -87,10 +87,10 @@ public class ControllerView extends LinearLayout {
     private final Runnable mShowProgress = new Runnable() {
         @Override
         public void run() {
-            setProgress();
+            int progress = setProgress();
             updatePausePlay();
             if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
-                post(mShowProgress);
+                postDelayed(mShowProgress, 1000 - progress % 1000);
             }
         }
     };
@@ -180,6 +180,7 @@ public class ControllerView extends LinearLayout {
     }
 
     private void updatePausePlay() {
+        // not update image status sometimes
         if (mPlayer.isPlaying()) {
             mPauseButton.setImageResource(R.drawable.ic_portrait_stop);
         } else {

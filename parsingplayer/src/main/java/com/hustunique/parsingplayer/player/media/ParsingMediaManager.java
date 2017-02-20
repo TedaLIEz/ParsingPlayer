@@ -25,7 +25,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private static final int DEFAULT_PLAY_MODE = 1;
     public static final int FULLSCREEN_PLAY_MODE = 1 << 2;
     private int flag = DEFAULT_PLAY_MODE;
-    private TextureRenderView mRenderView, mPrevRenderView;
+    private TextureRenderView mRenderView;
 
     private static ParsingMediaManager mManager;
     private ParsingPlayerProxy mPlayerManager;
@@ -50,9 +50,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     }
 
-    public TextureRenderView getRenderView() {
-        return mRenderView;
-    }
 
     private IRenderView.ISurfaceHolder mSurfaceHolder;
     private int mSurfaceWidth, mSurfaceHeight;
@@ -97,7 +94,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     private void releaseRenderView() {
         if (mRenderView == null) return;
-        mPrevRenderView = mRenderView;
         if (mPlayerManager != null) {
             mPlayerManager.setCurrentDisplay(null);
         }
@@ -120,8 +116,12 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     public void configureRenderView(TextureRenderView renderView) {
         if (renderView == null) throw new IllegalArgumentException("Render view can't be null");
         releaseRenderView();
+        if (getCurrentVideoWidth() > 0 && getCurrentVideoHeight() > 0) {
+            // this will call if the current activity onDestroyed called, then we resume the activity
+            // we will check video specs, if we have, then restore them.
+            renderView.setVideoSize(getCurrentVideoWidth(), getCurrentVideoHeight());
+        }
         mRenderView = renderView;
-
         mRenderView.setAspectRatioMode(mCurrentAspectRatio);
         mRenderView.addRenderCallback(mSHCallback);
     }
@@ -136,16 +136,12 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void start() {
-        if (flag == DEFAULT_PLAY_MODE) {
-            mPlayerManager.start();
-        }
+        mPlayerManager.start();
     }
 
     @Override
     public void pause() {
-        if (flag == DEFAULT_PLAY_MODE) {
-            mPlayerManager.pause();
-        }
+        mPlayerManager.pause();
     }
 
     @Override
@@ -217,26 +213,36 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     }
 
-    private void configureRenderView() {
-        if (flag == FULLSCREEN_PLAY_MODE) {
-            configureRenderView(mPrevRenderView);
-        } else {
-            configureRenderView(mRenderView);
-        }
-    }
-
     public void onResume(TextureRenderView renderView) {
         configureRenderView(renderView);
     }
 
-    public void onPause() {
-        pause();
+
+    /**
+     * Get current width of video
+     *
+     * @return -1 if there is no video on play, else an integer represents the current video's width
+     */
+    public int getCurrentVideoWidth() {
+        return mPlayerManager != null ? mPlayerManager.getVideoWidth() : -1;
+    }
+
+    /**
+     * Get current height of video
+     *
+     * @return -1 if there is no video on play, else an integer represents the current video's height
+     */
+    public int getCurrentVideoHeight() {
+        return mPlayerManager != null ? mPlayerManager.getVideoHeight() : -1;
     }
 
 
-    public void setPlayMode(int flag) {
-        if (flag == FULLSCREEN_PLAY_MODE) {
-            mPrevRenderView = mRenderView;
-        }
+    public int getCurrentVideoSarDen() {
+        return mPlayerManager != null ? mPlayerManager.getVideoSarDen() : -1;
+    }
+
+
+    public int getCurrentVideoSarNum() {
+        return mPlayerManager != null ? mPlayerManager.getVideoSarNum() : -1;
     }
 }

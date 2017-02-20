@@ -16,9 +16,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:theme="@style/MainActivityTheme"
-            android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="user">
+            android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

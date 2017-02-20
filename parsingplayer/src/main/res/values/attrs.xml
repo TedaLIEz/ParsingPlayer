@@ -31,4 +31,8 @@
         <attr name="progressColor" format="color"/>
         <attr name="backgroundColor" format="color"/>
     </declare-styleable>
+
+    <declare-styleable name="ParsingVideoViewTheme">
+        <attr name="fullscreen" format="boolean"/>
+    </declare-styleable>
 </resources>

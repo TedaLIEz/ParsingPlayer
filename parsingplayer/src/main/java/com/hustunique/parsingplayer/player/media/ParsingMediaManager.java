@@ -215,6 +215,15 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     public void onResume(TextureRenderView renderView) {
         configureRenderView(renderView);
+        mPlayerManager.start();
+    }
+
+    /**
+     * release specific player playing url
+     * @param url
+     */
+    public void onDestroy(String url){
+        mPlayerManager.destroyPlayerByURL(url);
     }
 
 

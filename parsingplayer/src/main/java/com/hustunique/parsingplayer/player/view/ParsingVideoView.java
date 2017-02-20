@@ -18,11 +18,13 @@
 package com.hustunique.parsingplayer.player.view;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -54,6 +56,11 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private int mSeekWhenPrepared;
     private TextureRenderView mRenderView;
 
+    private String mUrl;
+
+    private boolean mFullscreen;
+    private boolean mTargetFullscreen = false;
+
     public ParsingVideoView(Context context) {
         this(context, null);
     }
@@ -64,17 +71,18 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initView(context);
+        initView(context,attrs);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public ParsingVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        initView(context);
+        initView(context,attrs);
     }
 
-    private void initView(Context context) {
+    private void initView(Context context,AttributeSet attrs) {
         mContext = context;
+        getFullscreen(context,attrs);
         LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
         mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
         mControllerView = (ControllerView) findViewById(R.id.controller_view);
@@ -84,6 +92,16 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mMedia.setStateChangeListener(this);
         mControllerView.setRestoreListener(mRestoreListener);
         mRenderView.setOnClickListener(mRenderViewClickListener);
+    }
+
+    private void getFullscreen(Context context,AttributeSet attrs) {
+        TypedArray a = null;
+        try {
+            a = context.obtainStyledAttributes(attrs,R.styleable.ParsingVideoViewTheme);
+            mFullscreen = a.getBoolean(R.styleable.ParsingVideoViewTheme_fullscreen,false);
+        }finally {
+            a.recycle();
+        }
     }
 
     public void setRestoreListener(OnClickListener restoreListener) {
@@ -148,6 +166,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public void play(String url) {
+        mUrl = url;
         mMedia.play(url);
     }
 
@@ -164,6 +183,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private void showFullscreen() {
         ParsingIntegrator parsingIntegrator = new ParsingIntegrator(mContext);
         parsingIntegrator.parsingToPlay();
+        mTargetFullscreen = true;
     }
 
     public void onResume() {
@@ -173,7 +193,14 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mMedia.onResume(mRenderView);
     }
 
-    public void onStop() {
+    public void onPause(){
+        if (mTargetFullscreen) return;
+        mMedia.pause();
+    }
+
+    public void onDestroy() {
+        if (mFullscreen) return;
+        mMedia.onDestroy(mUrl);
     }
 
     @Override

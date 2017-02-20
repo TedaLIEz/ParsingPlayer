@@ -122,6 +122,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     /**
      * Release current used player
+     *
      * @param clearTargetState <tt>true</tt> if you want to clear next state of ParsingPlayerProxy,
      *                         <tt>false</tt> otherwise
      */
@@ -145,9 +146,13 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     interface OnStateListener {
         void onPrepared(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen);
+
         void onVideoSizeChanged(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen);
+
         void onCompleted();
+
         void onError(String msg);
+
         void onInfo();
     }
 
@@ -396,12 +401,19 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
     boolean isInPlayBackState() {
-        return mCurrentState !=STATE_ERROR
+        return mCurrentState != STATE_ERROR
                 && mCurrentState != STATE_IDLE
                 && mCurrentState != STATE_PREPARING;
     }
 
-
+    public void destroyPlayerByURL(String url) {
+        if (mPlayerMap.containsKey(url)){
+            IParsingPlayer player = mPlayerMap.get(url);
+            player.release();
+            mPlayerMap.remove(url);
+        }else
+            throw new IllegalArgumentException("no player match this url ");
+    }
 
     @Override
     public int getAudioSessionId() {

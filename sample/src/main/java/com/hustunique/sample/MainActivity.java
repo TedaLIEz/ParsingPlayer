@@ -32,12 +32,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        mVideoView.onPause();
     }
 
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        mVideoView.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
+        mVideoView.onDestroy();
     }
 }

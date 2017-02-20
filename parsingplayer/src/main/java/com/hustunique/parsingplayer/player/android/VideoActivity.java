@@ -93,4 +93,17 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         super.onResume();
         mVideoView.onResume();
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mVideoView.onPause();
+    }
+
+
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        mVideoView.onDestroy();
+//    }
 }

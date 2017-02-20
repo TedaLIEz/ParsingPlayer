@@ -27,7 +27,7 @@ public class VerticalProgressBar extends View {
 
 
     public VerticalProgressBar(Context context) {
-        super(context, null);
+        this(context, null);
     }
 
     public VerticalProgressBar(Context context, AttributeSet attrs) {
@@ -66,7 +66,6 @@ public class VerticalProgressBar extends View {
         // draw background
         canvas.drawRect(0, 0, getWidth(), getHeight(), mBackgroundPaint);
         // draw progress
-        mProgress = 50;
         float dy = (mProgress + 0f) / mMaxProgress * getHeight();
         canvas.drawRect(0, getHeight() - dy, getWidth(), getHeight(), mProgressPaint);
     }

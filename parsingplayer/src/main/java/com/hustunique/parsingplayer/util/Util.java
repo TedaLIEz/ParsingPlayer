@@ -24,6 +24,8 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Process;
+import android.support.annotation.NonNull;
+import android.support.annotation.Px;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -65,8 +67,8 @@ public final class Util {
      * Write <tt>data</tt> to the <tt>context</tt> application package
      *
      * @param directory the parent directory
-     * @param filename the filename
-     * @param content  the content of data
+     * @param filename  the filename
+     * @param content   the content of data
      */
     public static String writeToFile(File directory, String filename, String content)
             throws FileNotFoundException {
@@ -201,7 +203,7 @@ public final class Util {
         }
     }
 
-    public static String getMD5(String str){
+    public static String getMD5(String str) {
         MessageDigest md = null;
         try {
             md = MessageDigest.getInstance("MD5");
@@ -210,9 +212,29 @@ public final class Util {
         }
         md.update(str.getBytes());
         String hashText = new BigInteger(1, md.digest()).toString(16);
-        while(hashText.length() < 32 ){
-            hashText = "0"+hashText ;
+        while (hashText.length() < 32) {
+            hashText = "0" + hashText;
         }
         return hashText;
+    }
+
+    /**
+     * Get screen width in pixels
+     * @param context the Context
+     * @return width in pixels
+     */
+    @Px
+    public static int getScreenWidth(@NonNull Context context) {
+        return context.getApplicationContext().getResources().getDisplayMetrics().widthPixels;
+    }
+
+    /**
+     * Get screen height in pixels
+     * @param context the Context
+     * @return height in pixels
+     */
+    @Px
+    public static int getScreenHeight(@NonNull Context context) {
+        return context.getApplicationContext().getResources().getDisplayMetrics().heightPixels;
     }
 }

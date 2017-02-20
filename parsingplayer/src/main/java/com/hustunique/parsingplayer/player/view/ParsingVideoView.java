@@ -24,7 +24,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -36,13 +35,14 @@ import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
 import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
 import com.hustunique.parsingplayer.util.LogUtil;
+import com.hustunique.parsingplayer.util.Util;
 
 /**
  * Created by JianGuo on 1/16/17.
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
  */
 
-public class ParsingVideoView extends RelativeLayout implements MediaStateChangeListener {
+public class ParsingVideoView extends RelativeLayout implements MediaStateChangeListener, TextureRenderView.OnVideoChangeListener {
     private static final String TAG = "ParsingVideoView";
     private float mSlop;
     private static final float SET_PROGRESS_VERTICAL_SLIP = 10f;
@@ -50,11 +50,11 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private Context mContext;
 
     private ParsingMediaManager mMedia;
-
-
     private ControllerView mControllerView;
     private int mSeekWhenPrepared;
     private TextureRenderView mRenderView;
+    private ProgressSlideView mVolumeProgress, mBrightProgress;
+
 
     private String mUrl;
 
@@ -92,6 +92,25 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mMedia.setStateChangeListener(this);
         mControllerView.setRestoreListener(mRestoreListener);
         mRenderView.setOnClickListener(mRenderViewClickListener);
+        initInfoProgressBar(context);
+    }
+
+    private void initInfoProgressBar(Context context) {
+        LayoutParams volumeParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        volumeParams.addRule(RelativeLayout.CENTER_VERTICAL);
+        volumeParams.addRule(RelativeLayout.ALIGN_PARENT_START, TRUE);
+        volumeParams.setMarginStart(Util.getScreenWidth(context) / 10);
+        LayoutParams brightnessParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        brightnessParams.addRule(RelativeLayout.CENTER_VERTICAL);
+        brightnessParams.addRule(RelativeLayout.ALIGN_PARENT_END, TRUE);
+        brightnessParams.setMarginEnd(Util.getScreenWidth(context) / 10);
+        mVolumeProgress = ProgressSlideView.createView(context, volumeParams, R.drawable.ic_volume_2);
+        mBrightProgress = ProgressSlideView.createView(context, brightnessParams, R.drawable.ic_brightness_2);
+        addView(mVolumeProgress);
+        addView(mBrightProgress);
+        mVolumeProgress.setVisibility(GONE);
+        mBrightProgress.setVisibility(GONE);
+        mRenderView.setOnVideoChangeListener(this);
     }
 
     private void getFullscreen(Context context,AttributeSet attrs) {
@@ -155,7 +174,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     private boolean checkValidSlide(float absDx, float absDy) {
         ViewConfiguration viewConfiguration = ViewConfiguration.get(mContext);
-        mSlop = viewConfiguration.getScaledEdgeSlop();
+        mSlop = viewConfiguration.getScaledTouchSlop();
         return Float.compare(absDx, mSlop) > 0 && Float.compare(absDy, SET_PROGRESS_VERTICAL_SLIP) < 0;
     }
 
@@ -187,14 +206,14 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public void onResume() {
-        TextureRenderView renderView = (TextureRenderView) findViewById(R.id.texture_view);
-        LogUtil.d(TAG, "onResume, width " + getWidth() + ", height " + getHeight() +
-                "\n renderView Width " + renderView.getWidth() + ", renderView height " + renderView.getHeight());
         mMedia.onResume(mRenderView);
     }
 
     public void onPause(){
-        if (mTargetFullscreen) return;
+        if (mTargetFullscreen) {
+            mTargetFullscreen = false;
+            return;
+        }
         mMedia.pause();
     }
 
@@ -251,6 +270,34 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
         LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
         return ss;
+    }
+
+    @Override
+    public void onVolumeDialogShow(int volumePercent) {
+        int progress = Math.min(Math.max(0, volumePercent), 100);
+        if (!mVolumeProgress.isShown()) {
+            mVolumeProgress.setVisibility(VISIBLE);
+        }
+        mVolumeProgress.setProgress(progress);
+    }
+
+    @Override
+    public void onVolumeDialogDismiss() {
+        if (mVolumeProgress != null) mVolumeProgress.setVisibility(GONE);
+    }
+
+    @Override
+    public void onBrightnessShow(int brightness) {
+        int progress = Math.min(Math.max(0, brightness), 100);
+        if (!mBrightProgress.isShown()) {
+            mBrightProgress.setVisibility(VISIBLE);
+        }
+        mBrightProgress.setProgress(progress);
+    }
+
+    @Override
+    public void onBrightnessDismiss() {
+        if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
     }
 
     static class SavedState extends BaseSavedState {

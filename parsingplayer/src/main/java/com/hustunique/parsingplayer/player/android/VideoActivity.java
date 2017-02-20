@@ -29,12 +29,13 @@ import android.view.WindowManager;
 
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
+import com.orhanobut.logger.Logger;
 
 /**
  * Created by JianGuo on 2/15/17.
  * Activity supporting playing video in fullscreen
  */
-public class VideoActivity extends AppCompatActivity {
+public class VideoActivity extends AppCompatActivity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "VideoActivity";
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -46,71 +47,24 @@ public class VideoActivity extends AppCompatActivity {
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
      * user interaction before hiding the system UI.
      */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+    private static final int AUTO_HIDE_DELAY_MILLIS = 2000;
 
     /**
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
     private static final int UI_ANIMATION_DELAY = 300;
-    private final Handler mHideHandler = new Handler();
     private ParsingVideoView mVideoView;
-    private final Runnable mHidePart2Runnable = new Runnable() {
-        @SuppressLint("InlinedApi")
-        @Override
-        public void run() {
-            // Delayed removal of status and navigation bar
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//                enterImmersiveMode();
-//            } else {
-//                enterImmersiveModeBelowKitKat();
-//            }
-        }
-    };
-
-    @TargetApi(value = Build.VERSION_CODES.KITKAT)
-    private void enterImmersiveMode() {
-        mVideoView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_IMMERSIVE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-    }
-
-    private void enterImmersiveModeBelowKitKat() {
-        findViewById(android.R.id.content).setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
-    }
-
-
-
-    private View mControlsView;
-    private final Runnable mShowPart2Runnable = new Runnable() {
-        @Override
-        public void run() {
-            // TODO: 2/15/17 Delayed display of UI elements
-
-        }
-    };
-    private boolean mVisible;
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
-
+    private View mDecorView;
 
 
     @Override
-    //// FIXME: 2/16/17 VideoView turns black when back key pressed
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        mDecorView = getWindow().getDecorView();
+        mDecorView.setOnSystemUiVisibilityChangeListener(this);
+        hideSystemUI();
         setContentView(R.layout.activity_video);
-        mVisible = true;
         mVideoView = (ParsingVideoView) findViewById(R.id.fullscreen_content);
         mVideoView.setRestoreListener(new View.OnClickListener() {
             @Override
@@ -118,75 +72,32 @@ public class VideoActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
 
+    // This snippet hides the system bars.
+    private void hideSystemUI() {
+        // Set the IMMERSIVE flag.
+        // Set the content to appear under the system bars so that the content
+        // doesn't resize when the system bars hide and show.
+        mDecorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-//        ParsingMediaManager.getInstance(this).onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-//        ParsingMediaManager.getInstance(this).onDestroy();
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        delayedHide(100);
-    }
-
-    private void toggle() {
-        if (mVisible) {
-            hide();
-        } else {
-            show();
+    public void onSystemUiVisibilityChange(int visibility) {
+        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0){
+            Handler handler = new Handler(getMainLooper());
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    hideSystemUI();
+                }
+            },AUTO_HIDE_DELAY_MILLIS);
         }
-    }
-
-    private void hide() {
-        // Hide UI first
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.hide();
-        }
-        mVisible = false;
-
-        // Schedule a runnable to remove the status and navigation bar after a delay
-        mHideHandler.removeCallbacks(mShowPart2Runnable);
-        mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
-    }
-
-    @SuppressLint("InlinedApi")
-    private void show() {
-//        // TODO: 2/15/17 find solution when below sdk 16
-//        mVideoView.setSystemUiVisibility(
-//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-//        mVisible = true;
-//
-//        mHideHandler.removeCallbacks(mHidePart2Runnable);
-//        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
-//        if (AUTO_HIDE) {
-//            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-//        }
-    }
-
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 }

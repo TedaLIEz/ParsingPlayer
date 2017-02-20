@@ -167,7 +167,9 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         parsingIntegrator.parsingToPlay();
     }
 
-
+    public void onResume(){
+        mMedia.onResume((TextureRenderView) findViewById(R.id.texture_view));
+    }
 
 
     @Override

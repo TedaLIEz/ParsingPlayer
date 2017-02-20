@@ -78,7 +78,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
             mSurfaceHeight = height;
             boolean isValidState = mPlayerManager.isInPlayBackState();
             boolean hasValidSize = !mRenderView.shouldWaitForResize();
-//                    || (mVideoWidth == width && mVideoHeight == height);
             if (mPlayerManager != null && isValidState && hasValidSize) {
                 mPlayerManager.start();
             }
@@ -119,7 +118,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
 
     public void configureRenderView(TextureRenderView renderView) {
-        if (renderView == null) return;
+        if (renderView == null) throw new IllegalArgumentException("Render view can't be null");
         releaseRenderView();
         mRenderView = renderView;
 
@@ -185,27 +184,22 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void onPrepared(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen) {
-        if (mRenderView != null) {
-            mRenderView.setVideoSize(videoWidth, videoHeight);
-            mRenderView.setVideoSampleAspectRatio(videoSarNum, videoSarDen);
+        mRenderView.setVideoSize(videoWidth, videoHeight);
+        mRenderView.setVideoSampleAspectRatio(videoSarNum, videoSarDen);
 
-            if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == videoWidth
-                    || mSurfaceHeight == videoHeight) {
-                mPlayerManager.start();
-                if (!mPlayerManager.isPlaying() && (mPlayerManager.getCurrentPosition() > 0)) {
-                    // TODO: show controllerView
-                    if (mStateChangeListener != null) mStateChangeListener.onPrepared();
-                }
+        if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == videoWidth
+                || mSurfaceHeight == videoHeight) {
+            mPlayerManager.start();
+            if (!mPlayerManager.isPlaying() && (mPlayerManager.getCurrentPosition() > 0)) {
+                if (mStateChangeListener != null) mStateChangeListener.onPrepared();
             }
         }
     }
 
     @Override
     public void onVideoSizeChanged(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen) {
-        if (mRenderView != null) {
-            mRenderView.setVideoSize(videoWidth, videoHeight);
-            mRenderView.setVideoSampleAspectRatio(videoSarNum, videoSarDen);
-        }
+        mRenderView.setVideoSize(videoWidth, videoHeight);
+        mRenderView.setVideoSampleAspectRatio(videoSarNum, videoSarDen);
     }
 
     @Override
@@ -231,14 +225,13 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         }
     }
 
-    public void onResume() {
-        configureRenderView(mPrevRenderView);
+    public void onResume(TextureRenderView renderView) {
+        configureRenderView(renderView);
     }
 
     public void onPause() {
         pause();
     }
-
 
 
     public void setPlayMode(int flag) {

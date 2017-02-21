@@ -26,9 +26,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -65,6 +63,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private boolean mTargetFullScreen = false;
     private boolean mTargetTinyScreen = false;
 
+    private double mTotalPositionChanged;
+
     public ParsingVideoView(Context context) {
         this(context, null);
     }
@@ -95,7 +95,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mControllerView.setMediaPlayer(mMedia);
         mMedia.setStateChangeListener(this);
         mControllerView.setRestoreListener(mRestoreListener);
-        mRenderView.setOnClickListener(mRenderViewClickListener);
         initInfoProgressBar(context);
         initProgressBar(context);
         initSeekTextView(context);
@@ -167,57 +166,16 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         }
     };
 
-    private View.OnClickListener mRenderViewClickListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            toggleMediaControlsVisibility();
-        }
-    };
 
     public void setTargetTiny() {
         mTargetTinyScreen = true;
     }
 
-    private float mDownX, mDownY;
-    private boolean mChangePos = false;
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        switch (ev.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                mDownX = ev.getX();
-                mDownY = ev.getY();
-                mChangePos = false;
-                break;
-            case MotionEvent.ACTION_MOVE:
-                final float dx = ev.getX() - mDownX;
-                final float dy = ev.getY() - mDownY;
-                float absDx = Math.abs(dx);
-                float absDy = Math.abs(dy);
-                if (checkValidSlide(absDx, absDy)) {
-                    mChangePos = true;
-                    updatePosition(dx, mMedia.getCurrentPosition());
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-                dismissSeekTextView();
-                if (mChangePos) {
-                    mMedia.seekTo(mSeekWhenPrepared);
-                }
-                break;
-        }
-        return this.mChangePos || super.dispatchTouchEvent(ev);
-    }
-
-    private boolean checkValidSlide(float absDx, float absDy) {
-        ViewConfiguration viewConfiguration = ViewConfiguration.get(mContext);
-        mSlop = viewConfiguration.getScaledTouchSlop();
-        return Float.compare(absDx, mSlop) > 0 && Float.compare(absDy, SET_PROGRESS_VERTICAL_SLIP) < 0;
-    }
-
-    private void updatePosition(float dx, int currentPos) {
+    private void updatePosition(float dx) {
         int totalTimeDuration = mMedia.getDuration();
-        mSeekWhenPrepared = Math.min(currentPos + (int) (dx * totalTimeDuration / getWidth()), totalTimeDuration);
+        int currentPos = mMedia.getCurrentPosition();
+        mTotalPositionChanged = dx * 3 * totalTimeDuration / getWidth() + mTotalPositionChanged;
+        mSeekWhenPrepared = Math.min(currentPos + (int) (mTotalPositionChanged), totalTimeDuration);
         showSeekTextView(mSeekWhenPrepared, totalTimeDuration);
     }
 
@@ -238,6 +196,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void showBufferingProgress() {
+        dismissSeekTextView();
         mProgressBar.setVisibility(VISIBLE);
     }
 
@@ -329,6 +288,22 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
     }
 
+    @Override
+    public void onTogglePlayingState() {
+        toggleMediaControlsVisibility();
+    }
+
+    @Override
+    public void onUpdatePosition(float dx) {
+        updatePosition(dx);
+    }
+
+    @Override
+    public void onSeekToPosition() {
+        mMedia.seekTo(mSeekWhenPrepared);
+        mTotalPositionChanged = 0;
+    }
+
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
@@ -363,7 +338,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
         return ss;
     }
-
 
 
     static class SavedState extends BaseSavedState {

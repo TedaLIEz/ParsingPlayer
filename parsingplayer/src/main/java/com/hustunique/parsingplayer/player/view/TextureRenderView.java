@@ -28,6 +28,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -47,10 +48,17 @@ import tv.danmaku.ijk.media.player.ISurfaceTextureHolder;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class TextureRenderView extends TextureView implements IRenderView {
+public class TextureRenderView extends TextureView implements IRenderView, SimpleGestureListener.Listener {
     private static final String TAG = "TextureRenderView";
     private static final float MINIMUM_BRIGHTNESS = 0.04f;
     private MeasureHelper mMeasureHelper;
+
+    private GestureDetector mGestureDetector;
+
+    private double mVolume;
+    private boolean mPositionChanged;
+    private boolean mVolumeOrBrightnessChanged;
+
 
     public TextureRenderView(Context context) {
         this(context, null);
@@ -75,7 +83,10 @@ public class TextureRenderView extends TextureView implements IRenderView {
         mMeasureHelper = new MeasureHelper(this);
         mSurfaceCallback = new SurfaceCallback(this);
         setSurfaceTextureListener(mSurfaceCallback);
-
+        SimpleGestureListener gestureListener = new SimpleGestureListener();
+        mGestureDetector = new GestureDetector(context, gestureListener);
+        gestureListener.setListener(this);
+        mVolume = getCurrentVolume();
     }
 
 
@@ -136,6 +147,27 @@ public class TextureRenderView extends TextureView implements IRenderView {
         setMeasuredDimension(mMeasureHelper.getMeasuredWidth(), mMeasureHelper.getMeasuredHeight());
     }
 
+    @Override
+    public void onScrollHorizontal(float dx) {
+        if (mVolumeOrBrightnessChanged) return;
+        mOnVideoChangeListener.onUpdatePosition(-dx);
+        mPositionChanged = true;
+    }
+
+    @Override
+    public void onScrollVertical(float x, float dy) {
+        if (mPositionChanged) return;
+        if (x < getWidth() / 2)
+            updateBrightness(dy);
+        else
+            updateVolume(dy);
+        mVolumeOrBrightnessChanged = true;
+    }
+
+    @Override
+    public void onClick() {
+        mOnVideoChangeListener.onTogglePlayingState();
+    }
 
     public interface OnVideoChangeListener {
         void onVolumeDialogShow(int volumePercent);
@@ -145,6 +177,12 @@ public class TextureRenderView extends TextureView implements IRenderView {
         void onBrightnessShow(int brightness);
 
         void onBrightnessDismiss();
+
+        void onTogglePlayingState();
+
+        void onUpdatePosition(float dx);
+
+        void onSeekToPosition();
     }
 
     private OnVideoChangeListener mOnVideoChangeListener;
@@ -153,66 +191,22 @@ public class TextureRenderView extends TextureView implements IRenderView {
         mOnVideoChangeListener = onVideoChangeListener;
     }
 
-    private float mLastTouchX;
-    private float mLastTouchY;
-    private int mActivePointerId = MotionEvent.INVALID_POINTER_ID;
-    private int mGestureDownVolume;
-    private int mGestureDownBrightness;
-    private boolean mChangeVolume;
-    private boolean mChangeBrightness;
-    private static final float MUSIC_SLIDE_GAP = 2f;
-    private static final float VOLUME_SLOP = 2f;
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        mGestureDetector.onTouchEvent(event);
         int action = event.getActionMasked();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                mGestureDownVolume = getCurrentVolume();
-                mGestureDownBrightness = getCurrentBrightness();
-                final int pointerIndex = event.getActionIndex();
-                mLastTouchX = event.getX(pointerIndex);
-                mLastTouchY = event.getY(pointerIndex);
-                mActivePointerId = event.getPointerId(0);
-                mChangeBrightness = mChangeVolume = false;
-            }
-            case MotionEvent.ACTION_MOVE: {
-                final int pointerIndex = event.findPointerIndex(mActivePointerId);
-                final float x = event.getX(pointerIndex);
-                final float y = event.getY(pointerIndex);
-                final float dx = Math.abs(x - mLastTouchX);
-                final float dy = y - mLastTouchY;
-                float delta = Math.abs(dy);
-                if (x > getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0 && Float.compare(delta, VOLUME_SLOP) > 0) {
-                    mChangeVolume = true;
-                }
-                if (x < getWidth() / 2 && Float.compare(dx, MUSIC_SLIDE_GAP) < 0 && Float.compare(delta, VOLUME_SLOP) > 0) {
-                    mChangeBrightness = true;
-                }
-                if (mChangeBrightness) {
-                    updateBrightness(dy);
-                }
-                if (mChangeVolume) {
-                    updateVolume(dy);
-                }
-                break;
-            }
-            case MotionEvent.ACTION_CANCEL:
-                mActivePointerId = MotionEvent.INVALID_POINTER_ID;
-                dismissVolumeDialog();
+        if (action == MotionEvent.ACTION_UP) {
+            if (mPositionChanged) {
+                mOnVideoChangeListener.onSeekToPosition();
+                mPositionChanged = false;
+            } else {
                 dismissBrightnessDialog();
-                break;
-            case MotionEvent.ACTION_UP: {
                 dismissVolumeDialog();
-                dismissBrightnessDialog();
-                mActivePointerId = MotionEvent.INVALID_POINTER_ID;
-                if (!mChangeBrightness && !mChangeVolume) {
-                    performClick();
-                }
-                break;
+                mVolumeOrBrightnessChanged = false;
             }
+
         }
-        return !mChangeBrightness || !mChangeVolume;
+        return true;
     }
 
     private void dismissBrightnessDialog() {
@@ -248,13 +242,12 @@ public class TextureRenderView extends TextureView implements IRenderView {
     }
 
     private void updateBrightness(float dy) {
-        dy = -dy;
+        int gestureDownBrightness = getCurrentBrightness();
         float deltaV = 255 * dy * 3 / getHeight();
         WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
-        lp.screenBrightness = Math.min(Math.max(MINIMUM_BRIGHTNESS, (mGestureDownBrightness + deltaV) / 255), 1);
+        lp.screenBrightness = Math.min(Math.max(0, (gestureDownBrightness + deltaV) / 255), 1);
         ((Activity) getContext()).getWindow().setAttributes(lp);
-        int brightnessPercent = (int) (mGestureDownBrightness * 100 / 255 + dy * 3 * 100 / getHeight());
-        showBrightnessDialog(brightnessPercent);
+        showBrightnessDialog((int) (lp.screenBrightness * 100));
     }
 
     private void showBrightnessDialog(int brightnessPercent) {
@@ -264,16 +257,16 @@ public class TextureRenderView extends TextureView implements IRenderView {
     }
 
     private void updateVolume(float dy) {
-        dy = -dy;
         AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        int deltaV = (int) (maxVolume * dy * 3 / (getHeight()));
-        am.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
-        int volumePercent = (int) (mGestureDownVolume * 100 / maxVolume + dy * 3 * 100 / getHeight());
-        showVolumeDialog(-dy, volumePercent);
+        mVolume = dy * 4f / getHeight() * maxVolume + mVolume;
+        mVolume = Math.min(maxVolume, Math.max(mVolume, 0));
+        am.setStreamVolume(AudioManager.STREAM_MUSIC, (int) mVolume, 0);
+        double volumePercent = mVolume / maxVolume;
+        showVolumeDialog((int) (volumePercent * 100));
     }
 
-    private void showVolumeDialog(float dy, int volumePercent) {
+    private void showVolumeDialog(int volumePercent) {
         if (mOnVideoChangeListener != null) {
             mOnVideoChangeListener.onVolumeDialogShow(volumePercent);
         }

@@ -266,6 +266,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         }
         if (mTargetTinyscreen)
             return;
+        LogUtil.w(TAG, "pause ongoing");
         mMedia.pause();
     }
 
@@ -351,6 +352,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     public void onBrightnessDismiss() {
         if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
     }
+
 
     static class SavedState extends BaseSavedState {
         private int mVideoWidth, mVideoHeight;

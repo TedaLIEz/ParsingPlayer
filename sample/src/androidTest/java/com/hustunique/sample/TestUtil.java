@@ -35,6 +35,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
  */
 
 class TestUtil {
+
+    static final String YOUKU_URL_1 = "http://v.youku.com/v_show/id_XMjUyNDIxNjAwNA==.html";
     static Matcher<View> childAtPosition(
             final Matcher<View> parentMatcher, final int position) {
 
@@ -57,7 +59,7 @@ class TestUtil {
     /**
      * Wait for main thread looping for a while
      * @param millis time looping in millis
-     * @return {@link ViewAction} used in {@link android.support.test.espresso.ViewInteraction#perform(ViewAction...)}
+     * @return a {@link ViewAction} used in {@link android.support.test.espresso.ViewInteraction#perform(ViewAction...)}
      */
     static ViewAction waitFor(final long millis) {
         return new ViewAction() {

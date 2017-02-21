@@ -117,7 +117,7 @@ public class YoukuExtractor extends Extractor {
     VideoInfo createInfo(@NonNull Response response) throws IOException {
         // TODO: 2/7/17 Check response info if we are in no-network case
         JsonObject data = getData(response.body().string());
-        LogUtil.i(TAG, "encrypt string: " + getEncrypt(data));
+        if (data == null) return null;
         checkError(data);
         String encrypt = getEncrypt(data);
         String[] sidAndToken = getSidAndToken(encrypt);
@@ -184,12 +184,13 @@ public class YoukuExtractor extends Extractor {
     // Check error if response return error data
     private void checkError(JsonObject data) {
         if (data.has("error")) {
+            LogUtil.e(TAG, "extract error: " + data.toString());
             JsonObject jsonObject = data.getAsJsonObject("error");
             String errorMsg = jsonObject.get("note").getAsString();
             // TODO: 1/25/17 Try to avoid hard-coding
             if (errorMsg.contains("该视频已经加密")) {
                 throw new ExtractException("Youku said: Sorry, this video is private");
-            } else if (errorMsg.contains("因版权原因无法观看此视频")) {
+            } else if (errorMsg.contains("抱歉,该视频仅限中国大陆地区播放,请您观看其他视频!")) {
                 throw new ExtractException("Youku said: Sorry, this video is available in China only");
             } else {
                 throw new ExtractException("Youku server reported error " + jsonObject.get("error").getAsString());

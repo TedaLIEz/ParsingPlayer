@@ -3,6 +3,7 @@ package com.hustunique.parsingplayer.player.media;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
@@ -139,7 +140,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @param url
      */
     public void onDestroy(String url){
-        mPlayerManager.destroyPlayerByURL(url);
+//        mPlayerManager.destroyPlayerByURL(url);
+        mPlayerManager.reset();
     }
 
 
@@ -247,4 +249,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     }
 
+    @VisibleForTesting
+    public boolean isIdle() {
+        return getCurrentVideoHeight() <= 0 && getCurrentVideoWidth() <= 0;
+    }
 }

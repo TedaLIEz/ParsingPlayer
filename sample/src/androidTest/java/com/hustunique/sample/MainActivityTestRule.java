@@ -19,17 +19,13 @@ package com.hustunique.sample;
 
 import android.support.test.rule.ActivityTestRule;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
-import static com.hustunique.sample.TestUtil.waitFor;
-
 /**
  * Created by JianGuo on 2/21/17.
  * Custom test rule for UI test, we want to check video for a while.
  */
 
 class MainActivityTestRule extends ActivityTestRule<MainActivity> {
-
+    private static final String TAG = "MainActivity";
     MainActivityTestRule(Class<MainActivity> activityClass) {
         this(activityClass, false);
     }
@@ -41,10 +37,14 @@ class MainActivityTestRule extends ActivityTestRule<MainActivity> {
     MainActivityTestRule(Class<MainActivity> activityClass, boolean initialTouchMode, boolean launchActivity) {
         super(activityClass, initialTouchMode, launchActivity);
     }
-
     @Override
-    protected void afterActivityLaunched() {
-        super.afterActivityLaunched();
-        onView(isRoot()).perform(waitFor(5000));
+    protected void afterActivityFinished() {
+        super.afterActivityFinished();
+        // dirty hack to make sure ever activity lifecycle status changes in
+        // PRE_ON_CREATE, CREATED, STARTED, RESUMED, PAUSED, STOPPED, DESTROYED
+        // ref: https://code.google.com/p/android/issues/detail?id=201513#c3
+//        ((ParsingVideoView)getActivity().findViewById(R.id.videoView)).onDestroy();
     }
+
+
 }

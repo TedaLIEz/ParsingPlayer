@@ -17,39 +17,32 @@
 
 package com.hustunique.sample;
 
-import android.support.test.espresso.UiController;
-import android.support.test.espresso.ViewAction;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.matcher.BoundedMatcher;
 import android.view.View;
 
+import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
-import org.hamcrest.Matcher;
-
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
+import org.hamcrest.Description;
 
 /**
- * Created by JianGuo on 2/21/17.
- * View Action used in testing {@link ParsingVideoView}
+ * A Matcher for Espresso that checks status of {@link ParsingVideoView}
  */
 
-class ParsingVideoViewAction {
-
-    static ViewAction play(final String url) {
-        return new ViewAction() {
+public class ParsingVideoViewMatcher {
+    public static BoundedMatcher<View, ParsingVideoView> isPlaying() {
+        return new BoundedMatcher<View, ParsingVideoView>(ParsingVideoView.class) {
             @Override
-            public Matcher<View> getConstraints() {
-                return isAssignableFrom(ParsingVideoView.class);
+            protected boolean matchesSafely(ParsingVideoView item) {
+                return ParsingMediaManager.getInstance(InstrumentationRegistry.getTargetContext()).isPlaying();
             }
 
             @Override
-            public String getDescription() {
-                return "Play url " + url;
-            }
-
-            @Override
-            public void perform(UiController uiController, View view) {
-                ((ParsingVideoView) view).play(url);
+            public void describeTo(Description description) {
+                description.appendText("video is playing");
             }
         };
     }
+
 }

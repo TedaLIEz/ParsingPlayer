@@ -4,6 +4,8 @@ package com.hustunique.sample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
@@ -16,7 +18,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        mVideoView.play("http://v.youku.com/v_show/id_XOTQ4ODk5OTc2.html");
+        Button button = (Button) findViewById(R.id.play);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mVideoView.play("http://v.youku.com/v_show/id_XMjUyNDIxNjAwNA==.html");
+            }
+        });
     }
 
     // turn black when resume to this activity

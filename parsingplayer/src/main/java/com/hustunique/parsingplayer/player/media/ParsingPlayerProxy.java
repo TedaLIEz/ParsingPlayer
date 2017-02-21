@@ -120,28 +120,28 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         return mVideoSarNum;
     }
 
-    /**
-     * Release current used player
-     *
-     * @param clearTargetState <tt>true</tt> if you want to clear next state of ParsingPlayerProxy,
-     *                         <tt>false</tt> otherwise
-     */
-    void releaseCurrentPlayer(boolean clearTargetState) {
+
+    void setCurrentDisplay(SurfaceHolder holder) {
+        // mCurrentPlayer may be null if we don't set url
+        if (mCurrentPlayer != null)
+            mCurrentPlayer.setDisplay(holder);
+    }
+
+    void reset() {
         if (mCurrentPlayer != null) {
             mCurrentPlayer.reset();
             mCurrentPlayer.release();
             mCurrentPlayer = null;
-            mCurrentState = STATE_IDLE;
-            if (clearTargetState) {
-                mTargetState = STATE_IDLE;
-            }
-            AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-            am.abandonAudioFocus(null);
         }
+        mCurrentState = mTargetState = STATE_IDLE;
+        mVideoHeight = mVideoWidth = 0;
+        mVideoSarDen = mVideoSarNum = 0;
+        AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        am.abandonAudioFocus(null);
     }
 
-    void setCurrentDisplay(SurfaceHolder holder) {
-        mCurrentPlayer.setDisplay(holder);
+    public int getCurrentState() {
+        return mCurrentState;
     }
 
     interface OnStateListener {
@@ -334,12 +334,12 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             return;
         }
         mCurrentUri = videoUrl;
-        if (mPlayerMap.containsKey(videoUrl)) {
-            mCurrentPlayer = mPlayerMap.get(videoUrl);
-        } else {
+//        if (mPlayerMap.containsKey(videoUrl)) {
+//            mCurrentPlayer = mPlayerMap.get(videoUrl);
+//        } else {
             mCurrentPlayer = createPlayer(mContext);
-            mPlayerMap.put(videoUrl, mCurrentPlayer);
-        }
+//            mPlayerMap.put(videoUrl, mCurrentPlayer);
+//        }
         play(videoUrl, VideoInfo.HD_UNSPECIFIED);
 
     }
@@ -401,7 +401,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
     boolean isInPlayBackState() {
-        return mCurrentState != STATE_ERROR
+        return mCurrentPlayer != null && mCurrentState != STATE_ERROR
                 && mCurrentState != STATE_IDLE
                 && mCurrentState != STATE_PREPARING;
     }
@@ -410,6 +410,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         if (mPlayerMap.containsKey(url)) {
             IParsingPlayer player = mPlayerMap.get(url);
             player.release();
+            LogUtil.w(TAG, "release one player with url" + url);
             mPlayerMap.remove(url);
         } else {
             LogUtil.e(TAG, "No url matching this url " + url);

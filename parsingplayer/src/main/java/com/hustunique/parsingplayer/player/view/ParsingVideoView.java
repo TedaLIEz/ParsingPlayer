@@ -22,6 +22,7 @@ import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -61,8 +62,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private String mUrl;
 
     private boolean mFullscreen;
-    private boolean mTargetFullscreen = false;
-    private boolean mTargetTinyscreen = false;
+    private boolean mTargetFullScreen = false;
+    private boolean mTargetTinyScreen = false;
 
     public ParsingVideoView(Context context) {
         this(context, null);
@@ -96,7 +97,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mControllerView.setRestoreListener(mRestoreListener);
         mRenderView.setOnClickListener(mRenderViewClickListener);
         initInfoProgressBar(context);
-        initControlPanel(context);
+        initProgressBar(context);
         initSeekTextView(context);
     }
 
@@ -110,7 +111,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mTextView.setVisibility(GONE);
     }
 
-    private void initControlPanel(Context context) {
+    private void initProgressBar(Context context) {
         mProgressBar = new ProgressBar(context);
         LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         lp.addRule(RelativeLayout.CENTER_IN_PARENT);
@@ -142,11 +143,17 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
             a = context.obtainStyledAttributes(attrs, R.styleable.ParsingVideoViewTheme);
             mFullscreen = a.getBoolean(R.styleable.ParsingVideoViewTheme_fullscreen, false);
         } finally {
-            a.recycle();
+            if (a != null)
+                a.recycle();
         }
     }
 
-    public void setRestoreListener(OnClickListener restoreListener) {
+    public void play(String url) {
+        mUrl = url;
+        mMedia.play(url);
+    }
+
+    public void setRestoreListener(@Nullable OnClickListener restoreListener) {
         mControllerView.setRestoreListener(restoreListener);
     }
 
@@ -164,8 +171,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         }
     };
 
-    public void setTargetTiny(){
-        mTargetTinyscreen = true;
+    public void setTargetTiny() {
+        mTargetTinyScreen = true;
     }
 
     private float mDownX, mDownY;
@@ -190,7 +197,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                dismissProgressBar();
                 dismissSeekTextView();
                 if (mChangePos) {
                     mMedia.seekTo(mSeekWhenPrepared);
@@ -200,14 +206,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return this.mChangePos || super.dispatchTouchEvent(ev);
     }
 
-    private void dismissSeekTextView() {
-        if (mTextView != null) mTextView.setVisibility(GONE);
-    }
-
-    private void dismissProgressBar() {
-        if (mProgressBar != null) mProgressBar.setVisibility(GONE);
-    }
-
     private boolean checkValidSlide(float absDx, float absDy) {
         ViewConfiguration viewConfiguration = ViewConfiguration.get(mContext);
         mSlop = viewConfiguration.getScaledTouchSlop();
@@ -215,9 +213,18 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void updatePosition(float dx, int currentPos) {
+        // FIXME: 2/21/17 Show current Pos when pops up
         int totalTimeDuration = mMedia.getDuration();
         mSeekWhenPrepared = Math.min((int) ((currentPos + dx * totalTimeDuration) / getWidth()), totalTimeDuration);
         showSeekTextView(mSeekWhenPrepared, totalTimeDuration);
+    }
+
+    private void dismissSeekTextView() {
+        if (mTextView != null) mTextView.setVisibility(GONE);
+    }
+
+    private void dismissBufferingProgress() {
+        mProgressBar.setVisibility(GONE);
     }
 
     private void showSeekTextView(int seekPos, int totalDuration) {
@@ -229,16 +236,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void showBufferingProgress() {
-        if (!mProgressBar.isShown()) {
-            mProgressBar.setVisibility(VISIBLE);
-        }
+        mProgressBar.setVisibility(VISIBLE);
     }
-
-    public void play(String url) {
-        mUrl = url;
-        mMedia.play(url);
-    }
-
 
     private void toggleMediaControlsVisibility() {
         if (mControllerView.isShowing()) {
@@ -248,11 +247,10 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         }
     }
 
-
     private void showFullscreen() {
         ParsingIntegrator parsingIntegrator = new ParsingIntegrator(mContext);
         parsingIntegrator.parsingToPlay();
-        mTargetFullscreen = true;
+        mTargetFullScreen = true;
     }
 
     public void onResume() {
@@ -260,11 +258,11 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public void onPause() {
-        if (mTargetFullscreen) {
-            mTargetFullscreen = false;
+        if (mTargetFullScreen) {
+            mTargetFullScreen = false;
             return;
         }
-        if (mTargetTinyscreen)
+        if (mTargetTinyScreen)
             return;
         mMedia.pause();
     }
@@ -290,13 +288,43 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     @Override
+    // FIXME: 2/21/17 Can't restore progress bar when switch renderView
     public void onBufferingStart() {
-
+        showBufferingProgress();
     }
 
     @Override
     public void onBufferingEnd() {
+        dismissBufferingProgress();
+    }
 
+
+    @Override
+    public void onVolumeDialogShow(int volumePercent) {
+        int progress = Math.min(Math.max(0, volumePercent), 100);
+        if (!mVolumeProgress.isShown()) {
+            mVolumeProgress.setVisibility(VISIBLE);
+        }
+        mVolumeProgress.setProgress(progress);
+    }
+
+    @Override
+    public void onVolumeDialogDismiss() {
+        if (mVolumeProgress != null) mVolumeProgress.setVisibility(GONE);
+    }
+
+    @Override
+    public void onBrightnessShow(int brightness) {
+        int progress = Math.min(Math.max(0, brightness), 100);
+        if (!mBrightProgress.isShown()) {
+            mBrightProgress.setVisibility(VISIBLE);
+        }
+        mBrightProgress.setProgress(progress);
+    }
+
+    @Override
+    public void onBrightnessDismiss() {
+        if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
     }
 
 
@@ -334,33 +362,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return ss;
     }
 
-    @Override
-    public void onVolumeDialogShow(int volumePercent) {
-        int progress = Math.min(Math.max(0, volumePercent), 100);
-        if (!mVolumeProgress.isShown()) {
-            mVolumeProgress.setVisibility(VISIBLE);
-        }
-        mVolumeProgress.setProgress(progress);
-    }
 
-    @Override
-    public void onVolumeDialogDismiss() {
-        if (mVolumeProgress != null) mVolumeProgress.setVisibility(GONE);
-    }
-
-    @Override
-    public void onBrightnessShow(int brightness) {
-        int progress = Math.min(Math.max(0, brightness), 100);
-        if (!mBrightProgress.isShown()) {
-            mBrightProgress.setVisibility(VISIBLE);
-        }
-        mBrightProgress.setProgress(progress);
-    }
-
-    @Override
-    public void onBrightnessDismiss() {
-        if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
-    }
 
     static class SavedState extends BaseSavedState {
         private int mVideoWidth, mVideoHeight;

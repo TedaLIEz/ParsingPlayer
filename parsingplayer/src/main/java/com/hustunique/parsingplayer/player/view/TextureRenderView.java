@@ -79,7 +79,6 @@ public class TextureRenderView extends TextureView implements IRenderView {
     }
 
 
-
     @Override
     public boolean shouldWaitForResize() {
         return false;
@@ -131,7 +130,6 @@ public class TextureRenderView extends TextureView implements IRenderView {
     }
 
 
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         mMeasureHelper.doMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -141,9 +139,11 @@ public class TextureRenderView extends TextureView implements IRenderView {
 
     public interface OnVideoChangeListener {
         void onVolumeDialogShow(int volumePercent);
+
         void onVolumeDialogDismiss();
 
         void onBrightnessShow(int brightness);
+
         void onBrightnessDismiss();
     }
 
@@ -228,13 +228,18 @@ public class TextureRenderView extends TextureView implements IRenderView {
     }
 
     private int getCurrentBrightness() {
-        int brightness = 0;
-        try {
-            brightness = Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-        } catch (Settings.SettingNotFoundException e) {
-            LogUtil.wtf(TAG, e);
+        float defaultBrightness = ((Activity) getContext()).getWindow().getAttributes().screenBrightness;
+        if (Float.compare(defaultBrightness, 0) < 0) {
+            int brightness = 0;
+            try {
+                brightness = Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+            } catch (Settings.SettingNotFoundException e) {
+                LogUtil.wtf(TAG, e);
+            }
+            return brightness;
+        } else {
+            return (int) (defaultBrightness * 255);
         }
-        return brightness;
     }
 
     private int getCurrentVolume() {

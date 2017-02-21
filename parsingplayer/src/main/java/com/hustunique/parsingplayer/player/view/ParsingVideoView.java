@@ -103,6 +103,9 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     private void initSeekTextView(Context context) {
         mTextView = new TextView(context);
+        mTextView.setBackgroundColor(getResources().getColor(R.color.panel_slide_background));
+        int padding = Util.getScreenWidth(context);
+        mTextView.setPadding(padding / 50, padding / 50, padding / 50, padding / 50);
         LayoutParams lp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         lp.addRule(RelativeLayout.CENTER_IN_PARENT);
         addView(mTextView, lp);
@@ -213,9 +216,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void updatePosition(float dx, int currentPos) {
-        // FIXME: 2/21/17 Show current Pos when pops up
         int totalTimeDuration = mMedia.getDuration();
-        mSeekWhenPrepared = Math.min((int) ((currentPos + dx * totalTimeDuration) / getWidth()), totalTimeDuration);
+        mSeekWhenPrepared = Math.min(currentPos + (int) (dx * totalTimeDuration / getWidth()), totalTimeDuration);
         showSeekTextView(mSeekWhenPrepared, totalTimeDuration);
     }
 

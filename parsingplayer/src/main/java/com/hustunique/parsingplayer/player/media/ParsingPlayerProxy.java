@@ -407,12 +407,13 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
     public void destroyPlayerByURL(String url) {
-        if (mPlayerMap.containsKey(url)){
+        if (mPlayerMap.containsKey(url)) {
             IParsingPlayer player = mPlayerMap.get(url);
             player.release();
             mPlayerMap.remove(url);
-        }else
-            throw new IllegalArgumentException("no player match this url ");
+        } else {
+            LogUtil.e(TAG, "No url matching this url " + url);
+        }
     }
 
     @Override

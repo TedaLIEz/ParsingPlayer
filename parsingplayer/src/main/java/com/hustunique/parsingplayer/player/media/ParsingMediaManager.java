@@ -233,8 +233,12 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     @Override
-    public void onInfo() {
-
+    public void onInfo(int arg1) {
+        if ( arg1== IMediaPlayer.MEDIA_INFO_BUFFERING_START){
+            mStateChangeListener.onBufferingStart();
+        }else if (arg1 == IMediaPlayer.MEDIA_INFO_BUFFERING_END){
+            mStateChangeListener.onBufferingEnd();
+        }
     }
 
 

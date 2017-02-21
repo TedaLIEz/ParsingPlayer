@@ -153,7 +153,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
         void onError(String msg);
 
-        void onInfo();
+        void onInfo(int arg);
     }
 
     void setStateListener(@Nullable OnStateListener onVideoPreparedListener) {
@@ -216,7 +216,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public boolean onInfo(IMediaPlayer mp, int arg1, int arg2) {
         if (mOnVideoPreparedListener != null)
-            mOnVideoPreparedListener.onInfo();
+            mOnVideoPreparedListener.onInfo(arg1);
         switch (arg1) {
             case IMediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING:
                 LogUtil.d(TAG, "MEDIA_INFO_VIDEO_TRACK_LAGGING:");

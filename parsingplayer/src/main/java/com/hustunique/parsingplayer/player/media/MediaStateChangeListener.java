@@ -26,4 +26,6 @@ public interface MediaStateChangeListener {
     void onPrepared();
     void onError(String msg);
     void onPlayCompleted();
+    void onBufferingStart();
+    void onBufferingEnd();
 }

@@ -289,6 +289,16 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mControllerView.complete();
     }
 
+    @Override
+    public void onBufferingStart() {
+
+    }
+
+    @Override
+    public void onBufferingEnd() {
+
+    }
+
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {

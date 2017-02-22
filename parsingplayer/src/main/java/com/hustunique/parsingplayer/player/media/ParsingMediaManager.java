@@ -1,6 +1,8 @@
 package com.hustunique.parsingplayer.player.media;
 
+import android.app.Activity;
 import android.content.Context;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -9,6 +11,9 @@ import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
 import com.hustunique.parsingplayer.util.LogUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
@@ -25,9 +30,13 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private TextureRenderView mRenderView;
 
     private static ParsingMediaManager mManager;
-    private ParsingPlayerProxy mPlayerManager;
+    private ParsingPlayerProxy mCurrentPlayerProxy;
+    private Map<String, ParsingPlayerProxy> mPlayerMap;
+    private Context mContext;
+
     private ParsingMediaManager(Context context) {
-        mPlayerManager = new ParsingPlayerProxy(context, this);
+        mPlayerMap = new HashMap<>();
+        mContext = context;
     }
 
     public static ParsingMediaManager getInstance(Context context) {
@@ -44,8 +53,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
                 LogUtil.e(TAG, "onSurfaceCreated: unmatched render callback\n");
                 return;
             }
-            if (mPlayerManager != null)
-                bindSurfaceHolder(mPlayerManager.getCurrentPlayer(), holder);
+            if (mCurrentPlayerProxy != null)
+                bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), holder);
         }
 
         @Override
@@ -56,10 +65,10 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
             }
             mSurfaceWidth = width;
             mSurfaceHeight = height;
-            boolean isValidState = mPlayerManager.isInPlayBackState();
+            boolean isValidState = mCurrentPlayerProxy.isInPlayBackState();
             boolean hasValidSize = !mRenderView.shouldWaitForResize();
-            if (mPlayerManager != null && isValidState && hasValidSize) {
-                mPlayerManager.start();
+            if (mCurrentPlayerProxy != null && isValidState && hasValidSize) {
+                mCurrentPlayerProxy.start();
             }
         }
 
@@ -76,8 +85,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     private void releaseRenderView() {
         if (mRenderView == null) return;
-        if (mPlayerManager != null) {
-            mPlayerManager.setCurrentDisplay(null);
+        if (mCurrentPlayerProxy != null) {
+            mCurrentPlayerProxy.setCurrentDisplay(null);
         }
         // Clear display
         mRenderView.removeRenderCallback(mSHCallback);
@@ -114,8 +123,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
         if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == videoWidth
                 || mSurfaceHeight == videoHeight) {
-            mPlayerManager.start();
-            if (!mPlayerManager.isPlaying() && (mPlayerManager.getCurrentPosition() > 0)) {
+            mCurrentPlayerProxy.start();
+            if (!mCurrentPlayerProxy.isPlaying() && (mCurrentPlayerProxy.getCurrentPosition() > 0)) {
                 if (mStateChangeListener != null) mStateChangeListener.onPrepared();
             }
         }
@@ -128,18 +137,18 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
 
-
     public void onResume(TextureRenderView renderView) {
         configureRenderView(renderView);
-        mPlayerManager.start();
+        mCurrentPlayerProxy.start();
     }
 
     /**
      * release specific player playing url
+     *
      * @param url
      */
-    public void onDestroy(String url){
-        mPlayerManager.destroyPlayerByURL(url);
+    public void onDestroy(String url) {
+        destroyPlayerByURL(url);
     }
 
 
@@ -149,7 +158,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @return -1 if there is no video on play, else an integer represents the current video's width
      */
     public int getCurrentVideoWidth() {
-        return mPlayerManager != null ? mPlayerManager.getVideoWidth() : -1;
+        return mCurrentPlayerProxy != null ? mCurrentPlayerProxy.getVideoWidth() : -1;
     }
 
     /**
@@ -158,17 +167,17 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @return -1 if there is no video on play, else an integer represents the current video's height
      */
     public int getCurrentVideoHeight() {
-        return mPlayerManager != null ? mPlayerManager.getVideoHeight() : -1;
+        return mCurrentPlayerProxy != null ? mCurrentPlayerProxy.getVideoHeight() : -1;
     }
 
 
     public int getCurrentVideoSarDen() {
-        return mPlayerManager != null ? mPlayerManager.getVideoSarDen() : -1;
+        return mCurrentPlayerProxy != null ? mCurrentPlayerProxy.getVideoSarDen() : -1;
     }
 
 
     public int getCurrentVideoSarNum() {
-        return mPlayerManager != null ? mPlayerManager.getVideoSarNum() : -1;
+        return mCurrentPlayerProxy != null ? mCurrentPlayerProxy.getVideoSarNum() : -1;
     }
 
     public void setStateChangeListener(@Nullable MediaStateChangeListener stateChangeListener) {
@@ -180,41 +189,47 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void start() {
-        mPlayerManager.start();
+        mCurrentPlayerProxy.start();
     }
 
     @Override
     public void pause() {
-        mPlayerManager.pause();
+        mCurrentPlayerProxy.pause();
     }
 
     @Override
     public int getDuration() {
-        return mPlayerManager.getDuration();
+        return mCurrentPlayerProxy.getDuration();
     }
 
     @Override
     public int getCurrentPosition() {
-        return mPlayerManager.getCurrentPosition();
+        return mCurrentPlayerProxy.getCurrentPosition();
     }
 
     @Override
     public void seekTo(int pos) {
-        mPlayerManager.seekTo(pos);
+        mCurrentPlayerProxy.seekTo(pos);
     }
 
     @Override
     public boolean isPlaying() {
-        return mPlayerManager.isPlaying();
+        return mCurrentPlayerProxy.isPlaying();
     }
 
     @Override
     public int getBufferPercentage() {
-        return mPlayerManager.getBufferPercentage();
+        return mCurrentPlayerProxy.getBufferPercentage();
     }
 
     public void play(String videoUrl) {
-        mPlayerManager.play(videoUrl);
+        if (mPlayerMap.containsKey(videoUrl)) {
+            mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
+        } else {
+            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext, this);
+            mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
+        }
+        mCurrentPlayerProxy.play(videoUrl);
     }
 
     @Override
@@ -234,9 +249,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void onInfo(int arg1) {
-        if ( arg1== IMediaPlayer.MEDIA_INFO_BUFFERING_START){
+        if (arg1 == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
             mStateChangeListener.onBufferingStart();
-        }else if (arg1 == IMediaPlayer.MEDIA_INFO_BUFFERING_END){
+        } else if (arg1 == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
             mStateChangeListener.onBufferingEnd();
         }
     }
@@ -249,6 +264,24 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      */
     public void setQuality(@Quality int quality) {
 
+    }
+
+    private void destroyPlayerByURL(String url) {
+        if (mPlayerMap.containsKey(url)) {
+            ParsingPlayerProxy player = mPlayerMap.get(url);
+            player.release();
+            mPlayerMap.remove(url);
+        } else
+            throw new IllegalArgumentException("no player match this url ");
+    }
+
+    public double getCurrentBrightness() {
+        return mCurrentPlayerProxy == null ? ((Activity) mContext).getWindow().getAttributes().screenBrightness
+                : mCurrentPlayerProxy.getBrightness();
+    }
+
+    public void setCurrentBrightness(@FloatRange(from = 0f, to = 1f) double brightness) {
+        mCurrentPlayerProxy.setBrightness(brightness);
     }
 
 }

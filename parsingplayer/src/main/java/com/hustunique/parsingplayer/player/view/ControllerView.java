@@ -186,7 +186,6 @@ public class ControllerView extends LinearLayout {
 
     public void setMediaPlayer(IMediaPlayerControl player) {
         mPlayer = player;
-        updatePausePlay();
     }
 
 

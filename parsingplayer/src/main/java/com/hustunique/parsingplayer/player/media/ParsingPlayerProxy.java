@@ -21,6 +21,7 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.SystemClock;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -35,7 +36,6 @@ import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -64,12 +64,11 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     private static final int STATE_PAUSED = 4;
     private static final int STATE_PLAYBACK_COMPLETED = 5;
 
-    private IParsingPlayer mCurrentPlayer;
-    private String mCurrentUri;
-    private Map<String, IParsingPlayer> mPlayerMap;
+    private IParsingPlayer mPlayer;
     private ParsingTask mParsingTask;
     private VideoInfoSourceProvider mProvider;
-    private int mCurrentBufferPercentage;
+    private int mBufferPercentage;
+    private double mBrightness = Double.MAX_VALUE;
 
     private int mVideoWidth, mVideoHeight;
     private int mVideoSarNum, mVideoSarDen;
@@ -78,7 +77,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     ParsingPlayerProxy(Context context, OnStateListener listener) {
         mOnVideoPreparedListener = listener;
         mContext = context;
-        mPlayerMap = new HashMap<>();
     }
 
 
@@ -100,8 +98,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     private OnStateListener mOnVideoPreparedListener;
 
-    IMediaPlayer getCurrentPlayer() {
-        return mCurrentPlayer;
+    IMediaPlayer getPlayer() {
+        return mPlayer;
     }
 
     int getVideoWidth() {
@@ -120,17 +118,26 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         return mVideoSarNum;
     }
 
+
+    void setBrightness(@FloatRange(from = 0f, to = 1f) double brightness) {
+        mBrightness = brightness;
+    }
+
+    double getBrightness() {
+        return mBrightness;
+    }
+
     /**
      * Release current used player
      *
      * @param clearTargetState <tt>true</tt> if you want to clear next state of ParsingPlayerProxy,
      *                         <tt>false</tt> otherwise
      */
-    void releaseCurrentPlayer(boolean clearTargetState) {
-        if (mCurrentPlayer != null) {
-            mCurrentPlayer.reset();
-            mCurrentPlayer.release();
-            mCurrentPlayer = null;
+    private void releasePlayer(boolean clearTargetState) {
+        if (mPlayer != null) {
+            mPlayer.reset();
+            mPlayer.release();
+            mPlayer = null;
             mCurrentState = STATE_IDLE;
             if (clearTargetState) {
                 mTargetState = STATE_IDLE;
@@ -141,7 +148,11 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
     void setCurrentDisplay(SurfaceHolder holder) {
-        mCurrentPlayer.setDisplay(holder);
+        mPlayer.setDisplay(holder);
+    }
+
+    void release() {
+        releasePlayer(true);
     }
 
     interface OnStateListener {
@@ -266,7 +277,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     @Override
     public void onBufferingUpdate(IMediaPlayer iMediaPlayer, int percent) {
-        mCurrentBufferPercentage = percent;
+        mBufferPercentage = percent;
     }
 
     @Override
@@ -275,7 +286,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             seekTo(mSeekWhenPrepared);
         }
         if (isInPlayBackState()) {
-            mCurrentPlayer.start();
+            mPlayer.start();
             mCurrentState = STATE_PLAYING;
         }
         mTargetState = STATE_PLAYING;
@@ -284,8 +295,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public void pause() {
         if (isInPlayBackState()) {
-            if (mCurrentPlayer.isPlaying()) {
-                mCurrentPlayer.pause();
+            if (mPlayer.isPlaying()) {
+                mPlayer.pause();
                 mCurrentState = STATE_PAUSED;
             }
         }
@@ -295,7 +306,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public int getDuration() {
         if (isInPlayBackState()) {
-            return (int) mCurrentPlayer.getDuration();
+            return (int) mPlayer.getDuration();
         }
         return -1;
     }
@@ -303,7 +314,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public int getCurrentPosition() {
         if (isInPlayBackState()) {
-            return (int) mCurrentPlayer.getCurrentPosition();
+            return (int) mPlayer.getCurrentPosition();
         }
         return 0;
     }
@@ -311,7 +322,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public void seekTo(int pos) {
         if (isInPlayBackState()) {
-            mCurrentPlayer.seekTo(pos);
+            mPlayer.seekTo(pos);
             mSeekWhenPrepared = 0;
         } else {
             mSeekWhenPrepared = pos;
@@ -320,26 +331,21 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     @Override
     public boolean isPlaying() {
-        return isInPlayBackState() && mCurrentPlayer.isPlaying();
+        return isInPlayBackState() && mPlayer.isPlaying();
     }
 
     @Override
     public int getBufferPercentage() {
-        return mCurrentBufferPercentage;
+        return mBufferPercentage;
     }
 
     @Override
     public void play(String videoUrl) {
-        if (mCurrentPlayer != null && mCurrentPlayer.isPlaying() && videoUrl.equals(mCurrentUri)) {
+        if (mPlayer != null && mPlayer.isPlaying()) {
             return;
         }
-        mCurrentUri = videoUrl;
-        if (mPlayerMap.containsKey(videoUrl)) {
-            mCurrentPlayer = mPlayerMap.get(videoUrl);
-        } else {
-            mCurrentPlayer = createPlayer(mContext);
-            mPlayerMap.put(videoUrl, mCurrentPlayer);
-        }
+        if (mPlayer == null)
+            mPlayer = createPlayer(mContext);
         play(videoUrl, VideoInfo.HD_UNSPECIFIED);
 
     }
@@ -357,7 +363,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     // TODO: 2/5/17 Show sth if the io is running
     private void setConcatContent(String content) {
         LogUtil.i(TAG, "set temp file content: \n" + content);
-        mCurrentPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
+        mPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
                 content, new LoadingCallback<String>() {
                     @Override
                     public void onSuccess(final String result) {
@@ -384,7 +390,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         try {
-            mCurrentPlayer.setDataSource(mContext, uri, headers);
+            mPlayer.setDataSource(mContext, uri, headers);
             openVideo();
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);
@@ -395,9 +401,9 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     private void openVideo() {
         mCurrentState = STATE_PREPARING;
-        mCurrentBufferPercentage = 0;
-        mCurrentPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mCurrentPlayer.prepareAsync();
+        mBufferPercentage = 0;
+        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mPlayer.prepareAsync();
     }
 
     boolean isInPlayBackState() {
@@ -406,14 +412,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
                 && mCurrentState != STATE_PREPARING;
     }
 
-    public void destroyPlayerByURL(String url) {
-        if (mPlayerMap.containsKey(url)){
-            IParsingPlayer player = mPlayerMap.get(url);
-            player.release();
-            mPlayerMap.remove(url);
-        }else
-            throw new IllegalArgumentException("no player match this url ");
-    }
+
 
     @Override
     public int getAudioSessionId() {

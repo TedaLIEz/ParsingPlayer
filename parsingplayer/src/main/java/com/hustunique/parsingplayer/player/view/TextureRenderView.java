@@ -18,12 +18,9 @@
 package com.hustunique.parsingplayer.player.view;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
-import android.media.AudioManager;
 import android.os.Build;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -33,7 +30,6 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.TextureView;
-import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -50,12 +46,10 @@ import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class TextureRenderView extends TextureView implements IRenderView, SimpleGestureListener.Listener {
     private static final String TAG = "TextureRenderView";
-    private static final float MINIMUM_BRIGHTNESS = 0.04f;
     private MeasureHelper mMeasureHelper;
 
     private GestureDetector mGestureDetector;
 
-    private double mVolume;
     private boolean mPositionChanged;
     private boolean mVolumeOrBrightnessChanged;
 
@@ -86,7 +80,7 @@ public class TextureRenderView extends TextureView implements IRenderView, Simpl
         SimpleGestureListener gestureListener = new SimpleGestureListener();
         mGestureDetector = new GestureDetector(context, gestureListener);
         gestureListener.setListener(this);
-        mVolume = getCurrentVolume();
+
     }
 
 
@@ -158,9 +152,9 @@ public class TextureRenderView extends TextureView implements IRenderView, Simpl
     public void onScrollVertical(float x, float dy) {
         if (mPositionChanged) return;
         if (x < getWidth() / 2)
-            updateBrightness(dy);
+            mOnVideoChangeListener.onBrightnessChange(dy);
         else
-            updateVolume(dy);
+            mOnVideoChangeListener.onVolumeChange(dy);
         mVolumeOrBrightnessChanged = true;
     }
 
@@ -170,14 +164,15 @@ public class TextureRenderView extends TextureView implements IRenderView, Simpl
     }
 
     public interface OnVideoChangeListener {
-        void onVolumeDialogShow(int volumePercent);
+
+        void onVolumeChange(float dy);
 
         void onVolumeDialogDismiss();
 
-        void onBrightnessShow(int brightness);
 
         void onBrightnessDismiss();
 
+        void onBrightnessChange(float dy);
         void onTogglePlayingState();
 
         void onUpdatePosition(float dx);
@@ -221,56 +216,7 @@ public class TextureRenderView extends TextureView implements IRenderView, Simpl
         }
     }
 
-    private int getCurrentBrightness() {
-        float defaultBrightness = ((Activity) getContext()).getWindow().getAttributes().screenBrightness;
-        if (Float.compare(defaultBrightness, 0) < 0) {
-            int brightness = 0;
-            try {
-                brightness = Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-            } catch (Settings.SettingNotFoundException e) {
-                LogUtil.wtf(TAG, e);
-            }
-            return brightness;
-        } else {
-            return (int) (defaultBrightness * 255);
-        }
-    }
 
-    private int getCurrentVolume() {
-        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        return am.getStreamVolume(AudioManager.STREAM_MUSIC);
-    }
-
-    private void updateBrightness(float dy) {
-        int gestureDownBrightness = getCurrentBrightness();
-        float deltaV = 255 * dy * 3 / getHeight();
-        WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
-        lp.screenBrightness = Math.min(Math.max(0, (gestureDownBrightness + deltaV) / 255), 1);
-        ((Activity) getContext()).getWindow().setAttributes(lp);
-        showBrightnessDialog((int) (lp.screenBrightness * 100));
-    }
-
-    private void showBrightnessDialog(int brightnessPercent) {
-        if (mOnVideoChangeListener != null) {
-            mOnVideoChangeListener.onBrightnessShow(brightnessPercent);
-        }
-    }
-
-    private void updateVolume(float dy) {
-        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        mVolume = dy * 4f / getHeight() * maxVolume + mVolume;
-        mVolume = Math.min(maxVolume, Math.max(mVolume, 0));
-        am.setStreamVolume(AudioManager.STREAM_MUSIC, (int) mVolume, 0);
-        double volumePercent = mVolume / maxVolume;
-        showVolumeDialog((int) (volumePercent * 100));
-    }
-
-    private void showVolumeDialog(int volumePercent) {
-        if (mOnVideoChangeListener != null) {
-            mOnVideoChangeListener.onVolumeDialogShow(volumePercent);
-        }
-    }
 
 
     //--------------------

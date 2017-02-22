@@ -17,8 +17,10 @@
 
 package com.hustunique.parsingplayer.player.view;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -27,6 +29,7 @@ import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -45,8 +48,6 @@ import com.hustunique.parsingplayer.util.Util;
 
 public class ParsingVideoView extends RelativeLayout implements MediaStateChangeListener, TextureRenderView.OnVideoChangeListener {
     private static final String TAG = "ParsingVideoView";
-    private float mSlop;
-    private static final float SET_PROGRESS_VERTICAL_SLIP = 10f;
 
     private Context mContext;
 
@@ -93,12 +94,19 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mMedia = ParsingMediaManager.getInstance(mContext);
         mMedia.configureRenderView(mRenderView);
         mControllerView.setMediaPlayer(mMedia);
-        mMedia.setStateChangeListener(this);
+        mVolume = getCurrentVolume();
         mControllerView.setRestoreListener(mRestoreListener);
         initInfoProgressBar(context);
         initProgressBar(context);
         initSeekTextView(context);
     }
+
+
+    private int getCurrentVolume() {
+        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        return am.getStreamVolume(AudioManager.STREAM_MUSIC);
+    }
+
 
     private void initSeekTextView(Context context) {
         mTextView = new TextView(context);
@@ -215,10 +223,16 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public void onResume() {
+        mMedia.setStateChangeListener(this);
         mMedia.onResume(mRenderView);
+        mBrightness = mMedia.getCurrentBrightness();
+        WindowManager.LayoutParams lp = ((Activity) mContext).getWindow().getAttributes();
+        lp.screenBrightness = (float) mBrightness;
+        ((Activity) mContext).getWindow().setAttributes(lp);
     }
 
     public void onPause() {
+        onBufferingEnd();
         if (mTargetFullScreen) {
             mTargetFullScreen = false;
             return;
@@ -251,18 +265,27 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     @Override
     // FIXME: 2/21/17 Can't restore progress bar when switch renderView
     public void onBufferingStart() {
+        LogUtil.d(TAG, "onBufferingStart, " + toString());
         showBufferingProgress();
     }
 
     @Override
     public void onBufferingEnd() {
+        LogUtil.d(TAG, "onBufferingEnd, " + toString());
         dismissBufferingProgress();
     }
 
 
+    private double mVolume;
     @Override
-    public void onVolumeDialogShow(int volumePercent) {
-        int progress = Math.min(Math.max(0, volumePercent), 100);
+    public void onVolumeChange(float dy) {
+        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        mVolume = dy * 4f / getHeight() * maxVolume + mVolume;
+        mVolume = Math.min(maxVolume, Math.max(mVolume, 0));
+        am.setStreamVolume(AudioManager.STREAM_MUSIC, (int) mVolume, 0);
+        double volumePercent = mVolume / maxVolume;
+        int progress = (int) Math.min(Math.max(0, volumePercent * 100), 100);
         if (!mVolumeProgress.isShown()) {
             mVolumeProgress.setVisibility(VISIBLE);
         }
@@ -274,18 +297,26 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         if (mVolumeProgress != null) mVolumeProgress.setVisibility(GONE);
     }
 
-    @Override
-    public void onBrightnessShow(int brightness) {
-        int progress = Math.min(Math.max(0, brightness), 100);
-        if (!mBrightProgress.isShown()) {
-            mBrightProgress.setVisibility(VISIBLE);
-        }
-        mBrightProgress.setProgress(progress);
-    }
 
     @Override
     public void onBrightnessDismiss() {
         if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
+    }
+
+    private double mBrightness;
+    @Override
+    public void onBrightnessChange(float dy) {
+        mBrightness += dy * 4f / getHeight();
+        WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
+        mBrightness = Math.min(Math.max(0f, mBrightness), 1f);
+        lp.screenBrightness = (float) mBrightness;
+        ((Activity) getContext()).getWindow().setAttributes(lp);
+        mMedia.setCurrentBrightness(mBrightness);
+        int progress = (int) (lp.screenBrightness * 100);
+        if (!mBrightProgress.isShown()) {
+            mBrightProgress.setVisibility(VISIBLE);
+        }
+        mBrightProgress.setProgress(progress);
     }
 
     @Override

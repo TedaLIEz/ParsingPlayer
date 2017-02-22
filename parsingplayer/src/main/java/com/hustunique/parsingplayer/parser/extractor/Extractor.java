@@ -24,19 +24,15 @@ import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import com.hustunique.parsingplayer.parser.ExtractException;
-import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.StringReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,8 +96,10 @@ public abstract class Extractor {
     }
 
     protected JsonObject parseResponse(String response) {
+        JsonReader reader = new JsonReader(new StringReader(response));
+        reader.setLenient(true);
         JsonParser parser = new JsonParser();
-        return parser.parse(response).getAsJsonObject();
+        return parser.parse(reader).getAsJsonObject();
     }
 
     protected String searchValue(String s, String regex) {

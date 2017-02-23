@@ -232,6 +232,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public void onPause() {
+        LogUtil.d(TAG, "onPause");
         onBufferingEnd();
         if (mTargetFullScreen) {
             mTargetFullScreen = false;

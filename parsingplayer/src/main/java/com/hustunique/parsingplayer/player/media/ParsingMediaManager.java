@@ -2,11 +2,13 @@ package com.hustunique.parsingplayer.player.media;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.hustunique.parsingplayer.parser.provider.Quality;
+import com.hustunique.parsingplayer.player.view.EGLPosterRendererThread;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
@@ -53,6 +55,12 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
                 LogUtil.e(TAG, "onSurfaceCreated: unmatched render callback\n");
                 return;
             }
+            LogUtil.d(TAG, "onSurfaceCreated: current renderView" + mRenderView);
+            LogUtil.d(TAG, "onSurfaceCreated: current thumbnail: " + mBitmap);
+            if (mBitmap != null && !isPlaying()) {
+                LogUtil.d(TAG, "rending : " + mBitmap);
+                new EGLPosterRendererThread(mBitmap, false, holder.getSurfaceTexture()).start();
+            }
             if (mCurrentPlayerProxy != null)
                 bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), holder);
         }
@@ -78,13 +86,15 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
                 LogUtil.e(TAG, "onSurfaceDestroyed: unmatched render callback\n");
                 return;
             }
-
+            LogUtil.v(TAG, "onSurfaceDestroyed: current renderView" + mRenderView);
             releaseRenderView();
         }
     };
-
+    private Bitmap mBitmap;
     private void releaseRenderView() {
         if (mRenderView == null) return;
+        LogUtil.d(TAG, "release current renderView: " + mRenderView +
+                "\ncurrent bitmap " + mBitmap);
         if (mCurrentPlayerProxy != null) {
             mCurrentPlayerProxy.setCurrentDisplay(null);
         }
@@ -105,6 +115,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     public void configureRenderView(TextureRenderView renderView) {
         if (renderView == null) throw new IllegalArgumentException("Render view can't be null");
+        LogUtil.d(TAG, "configure renderView: " + renderView);
         releaseRenderView();
         mRenderView = renderView;
         if (getCurrentVideoWidth() > 0 && getCurrentVideoHeight() > 0) {
@@ -138,8 +149,10 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
 
     public void onResume(TextureRenderView renderView) {
+        LogUtil.v(TAG, "onResume: current view " + Integer.toHexString(System.identityHashCode(mRenderView))
+                + ", target view: " + Integer.toHexString(System.identityHashCode(renderView)));
+        if (mRenderView == renderView) return;
         configureRenderView(renderView);
-        mCurrentPlayerProxy.start();
     }
 
     /**
@@ -194,6 +207,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void pause() {
+        mBitmap = mRenderView.getBitmap();
+        LogUtil.d(TAG, "video paused, cache thumbnail: " + mBitmap);
         mCurrentPlayerProxy.pause();
     }
 
@@ -270,6 +285,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         if (mPlayerMap.containsKey(url)) {
             ParsingPlayerProxy player = mPlayerMap.get(url);
             player.release();
+            LogUtil.w(TAG, "release player " + player);
             mPlayerMap.remove(url);
         } else
             throw new IllegalArgumentException("no player match this url ");

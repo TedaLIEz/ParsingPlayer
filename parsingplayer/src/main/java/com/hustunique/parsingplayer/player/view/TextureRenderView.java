@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.ISurfaceTextureHolder;
 import tv.danmaku.ijk.media.player.ISurfaceTextureHost;
 
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -246,22 +245,8 @@ public class TextureRenderView extends TextureView implements IRenderView, Simpl
             LogUtil.d(TAG, "bind mediaPlayer");
             if (mp == null)
                 return;
+            mp.setSurface(openSurface());
 
-            if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) &&
-                    (mp instanceof ISurfaceTextureHolder)) {
-                ISurfaceTextureHolder textureHolder = (ISurfaceTextureHolder) mp;
-                mTextureView.mSurfaceCallback.setOwnSurfaceTexture(false);
-
-                SurfaceTexture surfaceTexture = textureHolder.getSurfaceTexture();
-                if (surfaceTexture != null) {
-                    mTextureView.setSurfaceTexture(surfaceTexture);
-                } else {
-                    textureHolder.setSurfaceTexture(mSurfaceTexture);
-                    textureHolder.setSurfaceTextureHost(mTextureView.mSurfaceCallback);
-                }
-            } else {
-                mp.setSurface(openSurface());
-            }
         }
 
         @NonNull
@@ -356,9 +341,9 @@ public class TextureRenderView extends TextureView implements IRenderView, Simpl
             mIsFormatChanged = false;
             mWidth = 0;
             mHeight = 0;
-
+            LogUtil.e(TAG, "onSurfaceTextureAvailable" + surface);
             ISurfaceHolder surfaceHolder = new InternalSurfaceHolder(mWeakRenderView.get(), surface, this);
-            LogUtil.w(TAG, "callback size " + mRenderCallbackMap.size());
+//            LogUtil.w(TAG, "callback size " + mRenderCallbackMap.size());
             for (IRenderCallback renderCallback : mRenderCallbackMap.keySet()) {
                 renderCallback.onSurfaceCreated(surfaceHolder, 0, 0);
             }

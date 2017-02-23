@@ -343,7 +343,7 @@ public class ParsingPlayer implements IParsingPlayer {
         private boolean startOnPrepared = true;
 
 
-        private String whiteList = "ffconcat,file,http,https,crypto,tcp";
+        private String whiteList = "rtmp,concat,ffconcat,file,subfile,http,https,tls,rtp,tcp,udp,crypto";
         private boolean mediacodec = true;
         private boolean mediacodecAutoRotate = true;
         private boolean mediacodecHandleResolutionChange = true;

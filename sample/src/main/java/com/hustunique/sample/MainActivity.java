@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
+import com.hustunique.parsingplayer.util.LogUtil;
 
 public class MainActivity extends AppCompatActivity {
     private ParsingVideoView mVideoView;
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        LogUtil.w(TAG, "onResume");
         mVideoView.onResume();
     }
 
@@ -30,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        LogUtil.w(TAG, "onPause");
         mVideoView.onPause();
     }
 

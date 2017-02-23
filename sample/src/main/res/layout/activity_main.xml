@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.hustunique.jianguo.sample.MainActivity">
@@ -17,11 +18,11 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <TextView
-            android:layout_gravity="center"
-            android:text="Other Content"
+        <Button
+            android:id="@+id/play"
+            android:text="Play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </FrameLayout>
 
-</RelativeLayout>
+</LinearLayout>

@@ -107,4 +107,10 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         super.onPause();
         mVideoView.onPause();
     }
+
+    @Override
+    public void onBackPressed() {
+        mVideoView.setTargetTiny();
+        super.onBackPressed();
+    }
 }

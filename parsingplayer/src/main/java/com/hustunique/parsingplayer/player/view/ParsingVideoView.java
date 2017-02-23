@@ -240,6 +240,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         }
         if (mTargetTinyScreen)
             return;
+
         mMedia.pause();
     }
 
@@ -370,6 +371,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         LogUtil.d(TAG, "onSaveInstanceState " + ss.toString());
         return ss;
     }
+
 
 
     static class SavedState extends BaseSavedState {

@@ -47,6 +47,8 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 public final class Util {
 
+    private static final String TAG = "Util";
+
     public static boolean isLollipop() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
@@ -147,10 +149,9 @@ public final class Util {
         // Check if media is mounted or storage is built-in, if so, try and use external cache dir
         // otherwise use internal cache dir
         final String cachePath =
-                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
-                        !Util.isExternalStorageRemovable() ? Util.getExternalCacheDir(context).getPath() :
+//                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ? Util.getExternalCacheDir(context).getPath() :
                         context.getCacheDir().getPath();
-
+        LogUtil.i(TAG, "cachePath " + cachePath);
         return new File(cachePath + File.separator + uniqueName);
     }
 

@@ -19,8 +19,6 @@ package com.hustunique.parsingplayer.player.view;
 
 import android.view.View;
 
-import com.hustunique.parsingplayer.player.view.IRenderView;
-
 import java.lang.ref.WeakReference;
 
 
@@ -110,8 +108,8 @@ public final class MeasureHelper {
             heightMeasureSpec = tempSpec;
         }
         float displayAspectRatio = getDisplayRatio();
-        int width = View.getDefaultSize(mVideoWidth, widthMeasureSpec);
-        int height = View.getDefaultSize(mVideoHeight, heightMeasureSpec);
+        int width = mVideoWidth == 0 ? 0 : View.getDefaultSize(mVideoWidth, widthMeasureSpec);
+        int height = mVideoHeight == 0 ? 0 : View.getDefaultSize(mVideoHeight, heightMeasureSpec);
         if (mCurrentAspectRatioMode == IRenderView.AR_MATCH_PARENT) {
             width = widthMeasureSpec;
             height = heightMeasureSpec;

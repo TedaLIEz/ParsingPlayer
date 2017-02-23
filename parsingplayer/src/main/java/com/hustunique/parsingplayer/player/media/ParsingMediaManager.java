@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
@@ -139,7 +140,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     public void onResume(TextureRenderView renderView) {
         configureRenderView(renderView);
-        mCurrentPlayerProxy.start();
+        // buggy if we don't set url immediately in onCreate
+        if (mCurrentPlayerProxy != null)
+            mCurrentPlayerProxy.start();
     }
 
     /**
@@ -266,6 +269,10 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     }
 
+    @VisibleForTesting
+    public boolean isIdle() {
+        return getCurrentVideoHeight() <= 0 && getCurrentVideoWidth() <= 0;
+    }
     private void destroyPlayerByURL(String url) {
         if (mPlayerMap.containsKey(url)) {
             ParsingPlayerProxy player = mPlayerMap.get(url);

@@ -3,8 +3,19 @@ language: android
 
 jdk:
   - oraclejdk8
+
+notifications:
+  email:
+    - justcoxier@gmail.com
+    - aliezted@gmail.com
 env:
-  - TEST=android ANDROID_TARGET=android-21 ANDROID_ABI=armeabi-v7a ADB_INSTALL_TIMEOUT=10
+  matrix:
+    - TEST=unit
+    - TEST=android ANDROID_TARGET=android-21 ANDROID_ABI=armeabi-v7a ADB_INSTALL_TIMEOUT=10
+  global:
+    - ADB_INSTALL_TIMEOUT=10
+
+
 
 sudo: required
 
@@ -23,7 +34,8 @@ android:
     # Specify at least one system image,
     # if you need to run emulator(s) during your tests
     - sys-img-armeabi-v7a-android-21
-
+    - sys-img-armeabi-v7a-android-23
+    - sys-img-armeabi-v7a-android-25
 
 
 licenses:
@@ -36,16 +48,32 @@ before_install:
     - sudo apt-get update
 
 
-before-script:
-     - if [ ${TEST} == "android" ]; then
-       echo no | android create avd --force --name test --target $ANDROID_TARGET --abi $ANDROID_ABI;
-       emulator -avd test -no-skin -no-audio -no-window &
-       android-wait-for-emulator;
-       sleep 10;
-       adb shell input keyevent 82;
-       fi
+addons:
+  apt_packages:
+    - pandoc
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+
+before_script:
+  - android list targets
+  - ./gradlew clean
+  - adb -e logcat *:W | tee logcat.log > /dev/null 2>&1 &
+
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
 
 script:
-     - ./gradlew clean
-     - ./gradlew assembleDebug
-     - ./gradlew test
+     - echo "Travis branch is $TRAVIS_BRANCH"
+     - echo "Travis branch is in pull request $TRAVIS_PULL+REQUEST"
+     - ./run_tests.sh
+
+after_failure:
+    - "pandoc $TRAVIS_BUILD_DIR/sample/build/reports/androidTests/connected/index.html -t plain | sed -n '/^Failed tests/,/default-package/p'"
+    - cat logcat.log; pkill -KILL -f adb

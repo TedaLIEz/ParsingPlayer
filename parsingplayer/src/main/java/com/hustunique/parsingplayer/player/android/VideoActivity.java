@@ -21,8 +21,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
+import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 
 /**
@@ -31,25 +33,18 @@ import com.hustunique.parsingplayer.player.view.ParsingVideoView;
  */
 public class VideoActivity extends AppCompatActivity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "VideoActivity";
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
 
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
     private static final int AUTO_HIDE_DELAY_MILLIS = 2000;
 
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static final int UI_ANIMATION_DELAY = 300;
     private ParsingVideoView mVideoView;
     private View mDecorView;
+    private View mTitleGroupView;
+    private TextView mTVTitle;
+    private TextView mTVQuality;
+    private View mVBack;
+
+    private VideoInfo mVideoInfo;
+    private int mQuality;
 
 
     @Override
@@ -59,8 +54,32 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         mDecorView.setOnSystemUiVisibilityChangeListener(this);
         hideSystemUI();
         setContentView(R.layout.activity_video);
+        init();
+    }
+
+    private void init() {
+        mTitleGroupView = findViewById(R.id.fullscreen_title_view);
+        mTVTitle = (TextView) mTitleGroupView.findViewById(R.id.fullscreen_title);
+        mTVQuality = (TextView) mTitleGroupView.findViewById(R.id.fullscreen_quality);
+        mVBack = mTitleGroupView.findViewById(R.id.fullscreen_back);
         mVideoView = (ParsingVideoView) findViewById(R.id.fullscreen_content);
+        mTitleGroupView.setVisibility(View.GONE);
+        intiVideoInfoAndQuality();
         mVideoView.setRestoreListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mVideoView.setTargetTiny();
+                finish();
+            }
+        });
+        mVideoView.setClickCallback(new ParsingVideoView.ClickCallback() {
+            @Override
+            public void onClick() {
+                mTitleGroupView.setVisibility(mTitleGroupView.isShown()?View.GONE:View.VISIBLE);
+            }
+        });
+
+        mVBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mVideoView.setTargetTiny();
@@ -69,11 +88,41 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         });
     }
 
-    // This snippet hides the system bars.
+    private void intiVideoInfoAndQuality() {
+        mVideoInfo = mVideoView.getVideoInfo();
+        mQuality = mVideoView.getQuality();
+        if (mVideoInfo != null){
+            mTVTitle.setText(mVideoInfo.getTitle());
+            mTVQuality.setText(getQualityAsString(mQuality));
+        }else{
+            mVideoView.setVideoInfoLoadedCallback(new ParsingVideoView.VideoInfoLoadedCallback() {
+                @Override
+                public void videoInfoLoaded(VideoInfo videoInfo,int quality) {
+                    mVideoInfo = videoInfo;
+                    mQuality = quality;
+                    mTVTitle.setText(mVideoInfo.getTitle());
+                    mTVQuality.setText(getQualityAsString(mQuality));
+                }
+            });
+        }
+    }
+
+    private String getQualityAsString(int quality){
+        switch (quality){
+            case VideoInfo.HD_LOW:
+                return getString(R.string.hd_low);
+            case VideoInfo.HD_MEDIUM:
+                return getString(R.string.hd_medium);
+            case VideoInfo.HD_STANDARD:
+                return getString(R.string.hd_standard);
+            case VideoInfo.HD_HIGH:
+                return getString(R.string.hd_high);
+            default:
+                return null;
+        }
+    }
+
     private void hideSystemUI() {
-//        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
-//                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-//                View.SYSTEM_UI_FLAG_IMMERSIVE);
         mDecorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -82,6 +131,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
                         | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
                         | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
+
 
     @Override
     public void onSystemUiVisibilityChange(int visibility) {

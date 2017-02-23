@@ -42,11 +42,6 @@ public class VideoInfo {
 
 
     public Stream getStream(@Quality int hd) {
-        while (!streamMap.containsKey(hd)) {
-            hd--;
-            if (hd < 0)
-                throw new RuntimeException("No such hd in this url");
-        }
         return streamMap.get(hd);
     }
 

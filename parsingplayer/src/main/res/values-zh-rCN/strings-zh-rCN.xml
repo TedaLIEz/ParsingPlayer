@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">ParsingPlayer</string>
+    <string name="hd_low">标清</string>
+    <string name="hd_medium">高清</string>
+    <string name="hd_standard">超清</string>
+    <string name="hd_high">1080P</string>
+    <string name="VideoView_error_button">OK</string>
+    <string name="seekTime" formatted="false">%s / %s</string>
+</resources>

@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
+import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
@@ -291,4 +292,11 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         mCurrentPlayerProxy.setBrightness(brightness);
     }
 
+    public VideoInfo getVideoInfo() {
+        return mCurrentPlayerProxy.getVideoInfo();
+    }
+
+    public @Quality int getQuality() {
+        return mCurrentPlayerProxy.getQuality();
+    }
 }

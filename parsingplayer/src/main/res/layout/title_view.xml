@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="45dp"
+              android:background="@color/panel_background_dark"
+              android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/fullscreen_back"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content">
+        <ImageButton
+            android:background="@drawable/bili_player_back_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20dp"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/fullscreen_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="4"
+        android:ellipsize="marquee"
+        android:maxLines="1"
+        android:textColor="@color/title_view_text"
+        android:textSize="17sp"
+        tools:text="I am a title I am a title I am a titleI am a titleI am a title  "/>
+
+    <TextView
+        android:id="@+id/fullscreen_quality"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:textColor="@color/title_view_text"
+        tools:text="1080P"/>
+</LinearLayout>

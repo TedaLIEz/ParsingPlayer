@@ -23,11 +23,12 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.util.LogUtil;
 
+import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_STANDARD;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
 
 /**
  * Created by JianGuo on 2/10/17.
@@ -35,11 +36,27 @@ import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
  */
 
 public class ConcatSourceProvider extends VideoInfoSourceProvider {
+    private static final String TAG = "ConcatSourceProvider";
     private Context mContext;
+    private
+    @Quality
+    int mQuality;
     @Override
     public String provideSource(@Quality int quality) {
         quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
+        while (mVideoInfo.getStream(quality) == null) {
+            quality--;
+        }
+        if (quality < VideoInfo.HD_LOW)
+            throw new RuntimeException("No such hd in this url");
+        mQuality = quality;
+        LogUtil.i(TAG,"current quality:" + mQuality);
         return ProtocolHelper.concat(mVideoInfo.getStream(quality).getSegs());
+    }
+
+    @Override
+    public int getQuality() {
+        return mQuality;
     }
 
     public ConcatSourceProvider(VideoInfo videoInfo, Context context) {
@@ -47,11 +64,13 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
         mContext = context;
     }
 
-    private @Quality int getHdByNetwork() {
+    private
+    @Quality
+    int getHdByNetwork() {
         ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
 //        if (networkInfo==null)
-            //TODO:show warning on TextRenderView
+        //TODO:show warning on TextRenderView
         switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:
             case ConnectivityManager.TYPE_WIMAX:
@@ -75,8 +94,8 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
                     default:
                         return HD_LOW;
                 }
-                default:
-                    return HD_LOW;
+            default:
+                return HD_LOW;
         }
     }
 }

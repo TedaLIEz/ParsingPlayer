@@ -9,4 +9,6 @@
     <color name="panel_slide_background">#0e0e0e</color>
     <color name="panel_slide_progressbar">#fffdff</color>
     <color name="panel_progress">#fb7299</color>
+
+    <color name="title_view_text">#fafafa</color>
 </resources>

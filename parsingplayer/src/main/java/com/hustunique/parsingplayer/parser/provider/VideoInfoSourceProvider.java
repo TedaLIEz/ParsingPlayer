@@ -12,4 +12,8 @@ public abstract class VideoInfoSourceProvider implements VideoSourceProvider {
     public VideoInfoSourceProvider(VideoInfo videoInfo) {
         mVideoInfo = videoInfo;
     }
+
+    public VideoInfo getVideoInfo(){
+        return mVideoInfo;
+    }
 }

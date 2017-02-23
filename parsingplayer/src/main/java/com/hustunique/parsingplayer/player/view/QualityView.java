@@ -67,7 +67,7 @@ public class QualityView extends LinearLayout {
 
 
     public void attachViewWithInfo(final ParsingVideoView view, VideoInfo videoInfo) {
-        LogUtil.d(TAG, "hds size " + videoInfo.toString());
+        LogUtil.d(TAG, "hd's size " + videoInfo.toString());
         for (final int q : videoInfo.getStreamMap().keySet()) {
             TextView tv = new TextView(getContext());
             LinearLayout.LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -94,13 +94,13 @@ public class QualityView extends LinearLayout {
 
     private String getString(int q) {
         if (q == VideoInfo.HD_HIGH) {
-            return getResources().getString(R.string.hd_high);
+            return getString(R.string.hd_high);
         } else if (q == VideoInfo.HD_LOW) {
-            return getResources().getString(R.string.hd_low);
+            return getString(R.string.hd_low);
         } else if (q == VideoInfo.HD_MEDIUM) {
-            return getResources().getString(R.string.hd_medium);
+            return getString(R.string.hd_medium);
         } else if (q == VideoInfo.HD_STANDARD) {
-            return getResources().getString(R.string.hd_standard);
+            return getString(R.string.hd_standard);
         }
         return null;
     }

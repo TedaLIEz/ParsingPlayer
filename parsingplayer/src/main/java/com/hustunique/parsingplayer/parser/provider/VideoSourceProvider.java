@@ -30,4 +30,6 @@ interface VideoSourceProvider {
      * @return string describing data source
      */
     String provideSource(@Quality int quality);
+
+    @Quality int getQuality();
 }

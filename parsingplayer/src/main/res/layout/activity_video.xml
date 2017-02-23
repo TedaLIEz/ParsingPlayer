@@ -15,11 +15,10 @@
   ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black_overlay"
     tools:context=".player.android.VideoActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -32,4 +31,8 @@
         android:layout_gravity="center"
         app:fullscreen="true" />
 
-</FrameLayout>
+    <include
+        android:id="@+id/fullscreen_title_view"
+        layout="@layout/title_view"/>
+
+</RelativeLayout>

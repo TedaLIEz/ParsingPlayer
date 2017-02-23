@@ -155,6 +155,17 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         releasePlayer(true);
     }
 
+    public VideoInfo getVideoInfo() {
+        if (mProvider != null)
+            return mProvider.getVideoInfo();
+        return null;
+    }
+
+    public @Quality int getQuality() {
+        return mProvider.getQuality();
+    }
+
+
     interface OnStateListener {
         void onPrepared(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen);
 
@@ -346,18 +357,14 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         }
         if (mPlayer == null)
             mPlayer = createPlayer(mContext);
-        play(videoUrl, VideoInfo.HD_UNSPECIFIED);
-
-    }
-
-    private void play(String videoUrl, @Quality int quality) {
-        mParsingTask = new ParsingTask(this, quality);
+        mParsingTask = new ParsingTask(this);
         mParsingTask.execute(videoUrl);
     }
 
-    public void setConcatVideos(@NonNull VideoInfo videoInfo, @Quality int quality) {
+
+    void setConcatVideos(@NonNull VideoInfo videoInfo) {
         mProvider = new ConcatSourceProvider(videoInfo, mContext);
-        setConcatContent(mProvider.provideSource(quality));
+        setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
     }
 
     // TODO: 2/5/17 Show sth if the io is running
@@ -369,7 +376,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
                     public void onSuccess(final String result) {
                         // use post here to run in main thread
                         setVideoPath(result);
-
                     }
 
                     @Override
@@ -379,11 +385,11 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
                 });
     }
 
-    public void setVideoPath(String path) {
+    private void setVideoPath(String path) {
         setVideoURI(Uri.parse(path));
     }
 
-    public void setVideoURI(Uri uri) {
+    private void setVideoURI(Uri uri) {
         setVideoURI(uri, null);
     }
 

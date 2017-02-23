@@ -35,6 +35,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
+import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
 import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
@@ -250,6 +252,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     @Override
     public void onPrepared() {
+        if(mVideoInfoLoadedCallback!=null)
+            mVideoInfoLoadedCallback.videoInfoLoaded(getVideoInfo(),getQuality());
         mControllerView.show();
     }
 
@@ -322,6 +326,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     @Override
     public void onTogglePlayingState() {
+        if (mClickCallback!=null)
+            mClickCallback.onClick();
         toggleMediaControlsVisibility();
     }
 
@@ -371,7 +377,13 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return ss;
     }
 
+    public VideoInfo getVideoInfo(){
+        return mMedia.getVideoInfo();
+    }
 
+    public @Quality int getQuality(){
+        return mMedia.getQuality();
+    }
 
     static class SavedState extends BaseSavedState {
         private int mVideoWidth, mVideoHeight;
@@ -432,4 +444,20 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     }
 
+    private ClickCallback mClickCallback;
+    public interface ClickCallback{
+        void onClick();
+    }
+    public void setClickCallback(ClickCallback callback){
+        this.mClickCallback = callback;
+    }
+
+    private VideoInfoLoadedCallback mVideoInfoLoadedCallback;
+    public interface VideoInfoLoadedCallback{
+        void videoInfoLoaded(VideoInfo videoInfo,int quality);
+    }
+
+    public void setVideoInfoLoadedCallback(VideoInfoLoadedCallback videoInfoLoadedCallback) {
+        mVideoInfoLoadedCallback = videoInfoLoadedCallback;
+    }
 }

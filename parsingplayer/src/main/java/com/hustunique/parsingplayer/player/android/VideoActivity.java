@@ -34,6 +34,9 @@ import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 public class VideoActivity extends AppCompatActivity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "VideoActivity";
 
+    /**
+     * the number of milliseconds to wait after user interaction before hiding the system UI.
+     */
     private static final int AUTO_HIDE_DELAY_MILLIS = 2000;
 
     private ParsingVideoView mVideoView;
@@ -123,6 +126,9 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
     }
 
     private void hideSystemUI() {
+//        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
+//                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+//                View.SYSTEM_UI_FLAG_IMMERSIVE);
         mDecorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION

@@ -83,9 +83,9 @@ public class ControllerView extends LinearLayout {
         public void run() {
             int progress = setProgress();
             updatePausePlay();
-            // fixme: 2/20/17 ImageButton will update icon a short time later
             if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
-                postDelayed(mShowProgress, 1000 - progress % 1000);
+                // fixme: 2/20/17 ImageButton will update icon a short time later
+                postDelayed(mShowProgress, 200 - progress % 200);
             }
         }
     };

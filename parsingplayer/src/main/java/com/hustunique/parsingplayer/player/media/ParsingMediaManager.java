@@ -330,5 +330,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         return mCurrentPlayerProxy == null;
     }
 
-
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        mRenderThread.quitSafely();
+    }
 }

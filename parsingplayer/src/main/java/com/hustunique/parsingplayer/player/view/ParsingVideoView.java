@@ -352,7 +352,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         if (mClickCallback != null)
             mClickCallback.onClick();
         toggleMediaControlsVisibility();
-        hideControllerAndHeaderDelayed();
     }
 
     @Override
@@ -443,19 +442,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         vp.removeView(mControllerView);
         vp.addView(mControllerView, controllerLp);
         mMedia.configureRenderView(mRenderView);
-    }
-
-    private void hideControllerAndHeaderDelayed() {
-        postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mControllerView.isShown()) {
-                    mControllerView.hide();
-                    if (mClickCallback != null)
-                        mClickCallback.onClick();
-                }
-            }
-        }, 4000);
     }
 
     static class SavedState extends BaseSavedState {

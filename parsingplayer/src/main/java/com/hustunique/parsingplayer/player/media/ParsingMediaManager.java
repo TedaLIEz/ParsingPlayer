@@ -256,6 +256,27 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         mCurrentPlayerProxy.play(videoUrl);
     }
 
+    @VisibleForTesting
+    void play(VideoInfo info) {
+        quickCheckInMap(info.getTitle());
+        mCurrentPlayerProxy.setConcatVideos(info);
+    }
+
+    private void quickCheckInMap(String videoUrl) {
+        if (mPlayerMap.containsKey(videoUrl)) {
+            mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
+            LogUtil.v(TAG, "get player from map");
+        } else {
+            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
+            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
+            mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
+        }
+
+    }
+
+
+
+
     @Override
     public int getAudioSessionId() {
         return 0;
@@ -292,8 +313,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     @VisibleForTesting
-    public boolean isIdle() {
-        return getCurrentVideoHeight() <= 0 && getCurrentVideoWidth() <= 0;
+    boolean isIdle() {
+        return mCurrentPlayerProxy == null || !mCurrentPlayerProxy.isInPlayBackState();
     }
 
     private void destroyPlayerByURL(String url) {

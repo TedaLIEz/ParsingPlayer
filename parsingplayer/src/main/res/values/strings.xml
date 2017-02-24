@@ -5,4 +5,5 @@
     <string name="hd_medium">Medium</string>
     <string name="hd_standard">Standard</string>
     <string name="seekTime" formatted="false">%s / %s</string>
+    <string name="other_content">Other content</string>
 </resources>

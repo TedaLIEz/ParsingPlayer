@@ -28,6 +28,7 @@ import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.annotation.VisibleForTesting;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -169,6 +170,11 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     public void play(String url) {
         mUrl = url;
         mMedia.play(url);
+    }
+
+    @VisibleForTesting
+    void setUrl(String url) {
+        mUrl = url;
     }
 
     private int getCurrentVolume() {

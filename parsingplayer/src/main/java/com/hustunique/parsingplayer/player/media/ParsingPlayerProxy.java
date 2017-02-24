@@ -349,14 +349,14 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         if (mPlayer != null && mPlayer.isPlaying()) {
             return;
         }
-        if (mPlayer == null)
-            mPlayer = createPlayer(mContext);
         mParsingTask = new ParsingTask(this);
         mParsingTask.execute(videoUrl);
     }
 
 
     void setConcatVideos(@NonNull VideoInfo videoInfo) {
+        if (mPlayer == null)
+            mPlayer = createPlayer(mContext);
         mProvider = new ConcatSourceProvider(videoInfo, mContext);
         setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
     }

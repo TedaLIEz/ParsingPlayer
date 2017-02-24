@@ -15,14 +15,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.sample;
+package com.hustunique.parsingplayer;
 
 import android.support.test.espresso.Espresso;
-import android.support.test.espresso.IdlingPolicies;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+
+import com.hustunique.parsingplayer.player.media.MediaManagerIdleResource;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,17 +31,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.concurrent.TimeUnit;
-
 import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static com.hustunique.sample.ParsingVideoViewAction.play;
-import static com.hustunique.sample.ParsingVideoViewMatcher.isPlaying;
-import static com.hustunique.sample.TestUtil.YOUKU_URL_1;
+import static com.hustunique.parsingplayer.ParsingVideoViewMatcher.isPlaying;
+import static com.hustunique.parsingplayer.TestUtil.URL_1;
+import static com.hustunique.parsingplayer.player.view.ParsingVideoViewAction.play;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -57,13 +54,11 @@ public class VideoViewPlayingTest {
     public ActivityTestRule<MainActivity> mRule = new ActivityTestRule<>(MainActivity.class);
 
     private MediaManagerIdleResource mResource;
-    private ViewInteraction mVideoView;
+
     @Before
     public void setUp() {
         mResource = new MediaManagerIdleResource(mRule.getActivity());
-        IdlingPolicies.setIdlingResourceTimeout(30, TimeUnit.SECONDS);
-        mVideoView = onView(withId(R.id.videoView));
-        mVideoView.perform(play(YOUKU_URL_1));
+        onView(withId(R.id.videoView)).perform(play(URL_1, 10, URL_1));
         Espresso.registerIdlingResources(mResource);
     }
 
@@ -78,17 +73,9 @@ public class VideoViewPlayingTest {
         ViewInteraction linearLayout = onView(
                 withId(R.id.controller_view));
         linearLayout.check(matches(not(isDisplayed())));
-        mVideoView.perform(click());
-        linearLayout.check(matches(isDisplayed()));
-        ViewInteraction pauseButton = onView(
-                withId(R.id.pause));
-        pauseButton.check(matches(isCompletelyDisplayed()));
-        ViewInteraction fullscreenButton = onView(
-                withId(R.id.fullscreen));
-        fullscreenButton.check(matches(isCompletelyDisplayed()));
-        pauseButton.perform(click());
-        mVideoView.check(matches(not(isPlaying())));
+        onView(withId(R.id.videoView)).check(matches(isPlaying()));
     }
+
 
 }
 

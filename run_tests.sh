@@ -7,8 +7,8 @@ if [ $retval -ne 0 ]; then
     exit $retval
 fi
 if [ ${TEST} == "android" ]; then
-    echo no | android create avd --force --name test --target $ANDROID_TARGET --abi $ANDROID_ABI --sdcard 800M
-    emulator -memory 1536 -avd test -cache-size 100 -netdelay none -netspeed full -no-window &
+    echo no | android create avd --force --name test --target $ANDROID_TARGET --abi $ANDROID_ABI --sdcard 400M
+    emulator -memory 768 -avd test -no-audio -cache-size 100 -netdelay none -netspeed full -no-window &
     android-wait-for-emulator
     adb devices
     adb shell svc power stayon true
@@ -16,7 +16,7 @@ if [ ${TEST} == "android" ]; then
     adb shell settings put global window_animation_scale 0.0 
     adb shell settings put global transition_animation_scale 0.0
     adb shell settings put global animator_duration_scale 0.0
-    ./gradlew --stacktrace connectedAndroidTest -i
+    ./gradlew connectedAndroidTest -PdisablePreDex --stacktrace -i
 elif [${TEST} == "unit"]; then
     ./gradlew --stacktrace test
 fi

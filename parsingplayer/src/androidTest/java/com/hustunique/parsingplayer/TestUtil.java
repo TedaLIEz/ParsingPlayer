@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.sample;
+package com.hustunique.parsingplayer;
 
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
@@ -36,7 +36,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 
 class TestUtil {
 
-    static final String YOUKU_URL_1 = "http://v.youku.com/v_show/id_XMjUyNDIxNjAwNA==.html";
+    static final String YOUKU_URL_1 = "http://v.youku.com/v_show/id_XOTY1MDAyNDY4.html";
+    static final String URL_1 = "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear2/prog_index.m3u8";
     static Matcher<View> childAtPosition(
             final Matcher<View> parentMatcher, final int position) {
 

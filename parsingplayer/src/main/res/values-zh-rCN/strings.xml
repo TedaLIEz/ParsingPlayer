@@ -17,6 +17,5 @@
   -->
 
 <resources>
-    <string name="seekTime" formatted="false">%s / %s</string>
     <string name="other_content">Other content</string>
 </resources>

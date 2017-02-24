@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.sample;
+package com.hustunique.parsingplayer;
 
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.matcher.BoundedMatcher;
@@ -30,8 +30,8 @@ import org.hamcrest.Description;
  * A Matcher for Espresso that checks status of {@link ParsingVideoView}
  */
 
-public class ParsingVideoViewMatcher {
-    public static BoundedMatcher<View, ParsingVideoView> isPlaying() {
+class ParsingVideoViewMatcher {
+    static BoundedMatcher<View, ParsingVideoView> isPlaying() {
         return new BoundedMatcher<View, ParsingVideoView>(ParsingVideoView.class) {
             @Override
             protected boolean matchesSafely(ParsingVideoView item) {

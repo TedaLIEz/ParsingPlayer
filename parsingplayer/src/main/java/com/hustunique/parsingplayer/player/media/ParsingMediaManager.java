@@ -16,8 +16,8 @@ import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
 import com.hustunique.parsingplayer.util.LogUtil;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
@@ -39,7 +39,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private Context mContext;
 
     private ParsingMediaManager(Context context) {
-        mPlayerMap = new HashMap<>();
+        mPlayerMap = new ConcurrentHashMap<>();
         mContext = context;
         mRenderThread = new VideoRenderThread();
         mRenderThread.start();
@@ -210,7 +210,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void pause() {
-        LogUtil.d(TAG, "pause called");
         mBitmap = mRenderView.getBitmap();
         LogUtil.v(TAG, "paused, cache thumbnail " + mBitmap + " from " + mRenderView + " size " + mBitmap.getByteCount());
         mCurrentPlayerProxy.pause();
@@ -242,10 +241,13 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public void play(String videoUrl) {
+        LogUtil.v(TAG, "current map" + mPlayerMap);
         if (mPlayerMap.containsKey(videoUrl)) {
             mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
+            LogUtil.v(TAG, "get player from map");
         } else {
             mCurrentPlayerProxy = new ParsingPlayerProxy(mContext, this);
+            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
             mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
         }
         mCurrentPlayerProxy.play(videoUrl);

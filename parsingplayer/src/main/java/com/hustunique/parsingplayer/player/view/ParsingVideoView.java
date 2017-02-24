@@ -24,6 +24,7 @@ import android.media.AudioManager;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
@@ -245,7 +246,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public void onDestroy() {
-        if (mFullscreen) return;
+        if (mFullscreen || Settings.System.getInt(getContext().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1) return;
         mMedia.onDestroy(mUrl);
     }
 

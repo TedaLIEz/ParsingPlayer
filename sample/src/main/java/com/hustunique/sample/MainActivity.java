@@ -18,13 +18,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mVideoView = (ParsingVideoView) findViewById(R.id.videoView);
-        Button button = (Button) findViewById(R.id.play);
+        final Button button = (Button) findViewById(R.id.play);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mVideoView.play("http://v.youku.com/v_show/id_XMjUyNDIxNjAwNA==.html");
             }
         });
+
     }
 
     // turn black when resume to this activity

@@ -84,8 +84,6 @@ public class ParsingPlayer implements IParsingPlayer {
                 "safe", config.safe ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "protocol_whitelist", config.whiteList);
-//        ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
-//                "mediacodec", config.mediacodec ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,
                 "mediacodec-auto-rotate", config.mediacodecAutoRotate ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER,

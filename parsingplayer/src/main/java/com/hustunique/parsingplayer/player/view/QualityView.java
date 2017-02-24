@@ -17,7 +17,6 @@
 
 package com.hustunique.parsingplayer.player.view;
 
-import android.animation.Animator;
 import android.content.Context;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -25,11 +24,15 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.util.LogUtil;
+import com.hustunique.parsingplayer.util.Util;
+
+import java.util.Set;
 
 /**
  * Created by JianGuo on 2/14/17.
@@ -38,6 +41,7 @@ import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 
 public class QualityView extends LinearLayout {
     private static final String TAG = "QualityChooseView";
+
     public QualityView(Context context) {
         this(context, null);
     }
@@ -61,14 +65,13 @@ public class QualityView extends LinearLayout {
     private void initView() {
         setOrientation(LinearLayout.VERTICAL);
         setGravity(Gravity.CENTER);
-
         setBackgroundColor(getResources().getColor(R.color.panel_background_dark));
     }
 
 
-    public void attachViewWithInfo(final ParsingVideoView view, VideoInfo videoInfo) {
-        LogUtil.d(TAG, "hd's size " + videoInfo.toString());
-        for (final int q : videoInfo.getStreamMap().keySet()) {
+    public void attachViewWithInfo(final ParsingVideoView videoView, Set<Integer> qualitySet, final TextView qualityTextView) {
+        LogUtil.d(TAG, "hd's size " + qualitySet.size());
+        for (final int q : qualitySet) {
             TextView tv = new TextView(getContext());
             LinearLayout.LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
             lp.bottomMargin = 16;
@@ -80,80 +83,34 @@ public class QualityView extends LinearLayout {
             tv.setBackground(getResources().getDrawable(R.drawable.quality_text_bgd));
             tv.setTextSize(14);
             tv.setText(getString(q));
+//            LogUtil.d(TAG,"hd text = " + getString(q));
             tv.setTextAlignment(TEXT_ALIGNMENT_CENTER);
             tv.setTextColor(getResources().getColor(R.color.dim_foreground_dark));
             tv.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-//                    view.setQuality(q);
+                    qualityTextView.setText(getString(q));
+                    videoView.setQuality(q);
                 }
             });
             addView(tv);
         }
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(videoView.getWidth() / 6,
+                LayoutParams.WRAP_CONTENT);
+        params.setMargins(videoView.getWidth() * 5 / 6, Util.dip2px(getContext(), 45), 0, 0);
+        videoView.addView(this, params);
     }
 
     private String getString(int q) {
         if (q == VideoInfo.HD_HIGH) {
-            return getString(R.string.hd_high);
+            return getResources().getString(R.string.hd_high);
         } else if (q == VideoInfo.HD_LOW) {
-            return getString(R.string.hd_low);
+            return getResources().getString(R.string.hd_low);
         } else if (q == VideoInfo.HD_MEDIUM) {
-            return getString(R.string.hd_medium);
+            return getResources().getString(R.string.hd_medium);
         } else if (q == VideoInfo.HD_STANDARD) {
-            return getString(R.string.hd_standard);
+            return getResources().getString(R.string.hd_standard);
         }
         return null;
     }
-
-    public void show() {
-        LogUtil.d(TAG, "width: " + getMeasuredWidth());
-        animate().translationXBy(-getMeasuredWidth()).setListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                bringToFront();
-                setVisibility(VISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        }).start();
-
-    }
-
-    public void hide() {
-        animate().translationXBy(getMeasuredWidth()).setListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                setVisibility(GONE);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        }).start();
-
-    }
-
 }

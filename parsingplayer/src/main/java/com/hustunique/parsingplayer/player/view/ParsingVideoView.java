@@ -385,6 +385,13 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return mMedia.getQuality();
     }
 
+    public void setQuality(int q) {
+        // if q = current quality,nothing need be changed
+        if (mMedia.getQuality() != q){
+            mMedia.setQuality(q);
+        }
+    }
+
     static class SavedState extends BaseSavedState {
         private int mVideoWidth, mVideoHeight;
         private int mVideoSarNum, mVideoSarDen;

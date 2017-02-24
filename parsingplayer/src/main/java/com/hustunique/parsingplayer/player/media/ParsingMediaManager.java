@@ -14,6 +14,7 @@ import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
 import com.hustunique.parsingplayer.util.LogUtil;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,11 +35,11 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private static ParsingMediaManager mManager;
     private ParsingPlayerProxy mCurrentPlayerProxy;
     private Map<String, ParsingPlayerProxy> mPlayerMap;
-    private Context mContext;
+    private WeakReference<Context> mContext;
 
     private ParsingMediaManager(Context context) {
         mPlayerMap = new HashMap<>();
-        mContext = context;
+        mContext = new WeakReference<Context>(context);
     }
 
     public static ParsingMediaManager getInstance(Context context) {
@@ -80,7 +81,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
                 LogUtil.e(TAG, "onSurfaceDestroyed: unmatched render callback\n");
                 return;
             }
-
             releaseRenderView();
         }
     };
@@ -230,7 +230,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         if (mPlayerMap.containsKey(videoUrl)) {
             mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
         } else {
-            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext, this);
+            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
             mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
         }
         mCurrentPlayerProxy.play(videoUrl);
@@ -267,7 +267,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @param quality the quality, specified in {@link Quality}
      */
     public void setQuality(@Quality int quality) {
-
+        mCurrentPlayerProxy.setQuality(quality);
+        bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(),mRenderView.getSurfaceHolder());
     }
 
     @VisibleForTesting
@@ -284,7 +285,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public double getCurrentBrightness() {
-        return mCurrentPlayerProxy == null ? ((Activity) mContext).getWindow().getAttributes().screenBrightness
+        return mCurrentPlayerProxy == null ? ((Activity) mContext.get()).getWindow().getAttributes().screenBrightness
                 : mCurrentPlayerProxy.getBrightness();
     }
 

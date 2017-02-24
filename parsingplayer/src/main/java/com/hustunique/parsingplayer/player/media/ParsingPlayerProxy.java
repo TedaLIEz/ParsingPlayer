@@ -165,6 +165,13 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         return mProvider.getQuality();
     }
 
+    public void setQuality(@Quality int quality) {
+        mPlayer.release();
+        mPlayer = createPlayer(mContext);
+//        mPlayer = createPlayer(mContext);
+        setConcatVideos(quality);
+    }
+
 
     interface OnStateListener {
         void onPrepared(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen);
@@ -367,6 +374,9 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
     }
 
+    private void setConcatVideos(@Quality int quality){
+        setConcatContent(mProvider.provideSource(quality));
+    }
     // TODO: 2/5/17 Show sth if the io is running
     private void setConcatContent(String content) {
         LogUtil.i(TAG, "set temp file content: \n" + content);

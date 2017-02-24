@@ -26,6 +26,8 @@ import android.widget.TextView;
 import com.hustunique.parsingplayer.R;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
+import com.hustunique.parsingplayer.player.view.QualityView;
+import com.hustunique.parsingplayer.util.LogUtil;
 
 /**
  * Created by JianGuo on 2/15/17.
@@ -44,6 +46,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
     private View mVBack;
 
     private VideoInfo mVideoInfo;
+    private QualityView mQualityView;
     private int mQuality;
 
 
@@ -75,7 +78,9 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         mVideoView.setClickCallback(new ParsingVideoView.ClickCallback() {
             @Override
             public void onClick() {
-                mTitleGroupView.setVisibility(mTitleGroupView.isShown()?View.GONE:View.VISIBLE);
+                mTitleGroupView.setVisibility(mTitleGroupView.isShown() ? View.GONE : View.VISIBLE);
+                if (mQualityView != null)
+                    mQualityView.setVisibility(mQualityView.isShown() ? View.GONE:View.INVISIBLE);
             }
         });
 
@@ -86,18 +91,30 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
                 finish();
             }
         });
+
+        mTVQuality.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LogUtil.d(TAG, "quality button click");
+                if (mQualityView == null) {
+                    mQualityView = new QualityView(VideoActivity.this);
+                    mQualityView.attachViewWithInfo(mVideoView, mVideoInfo.getStreamMap().keySet(),mTVQuality);
+                } else
+                    mQualityView.setVisibility(mQualityView.isShown() ? View.GONE : View.VISIBLE);
+            }
+        });
     }
 
     private void intiVideoInfoAndQuality() {
         mVideoInfo = mVideoView.getVideoInfo();
         mQuality = mVideoView.getQuality();
-        if (mVideoInfo != null){
+        if (mVideoInfo != null) {
             mTVTitle.setText(mVideoInfo.getTitle());
             mTVQuality.setText(getQualityAsString(mQuality));
-        }else{
+        } else {
             mVideoView.setVideoInfoLoadedCallback(new ParsingVideoView.VideoInfoLoadedCallback() {
                 @Override
-                public void videoInfoLoaded(VideoInfo videoInfo,int quality) {
+                public void videoInfoLoaded(VideoInfo videoInfo, int quality) {
                     mVideoInfo = videoInfo;
                     mQuality = quality;
                     mTVTitle.setText(mVideoInfo.getTitle());
@@ -107,8 +124,8 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         }
     }
 
-    private String getQualityAsString(int quality){
-        switch (quality){
+    private String getQualityAsString(int quality) {
+        switch (quality) {
             case VideoInfo.HD_LOW:
                 return getString(R.string.hd_low);
             case VideoInfo.HD_MEDIUM:
@@ -163,4 +180,5 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         mVideoView.setTargetTiny();
         super.onBackPressed();
     }
+
 }

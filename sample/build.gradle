@@ -28,8 +28,7 @@ dependencies {
     })
     androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
     androidTestCompile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
-    // version just for jianxinli,we can modify it in later
-    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.1.1'
     testCompile 'junit:junit:4.12'
     // this will use the default all64release of parsingplayer,uncomment the line below to use other productFlavors
     // compile project(path: ':parsingplayer', configuration: 'all64Debug')

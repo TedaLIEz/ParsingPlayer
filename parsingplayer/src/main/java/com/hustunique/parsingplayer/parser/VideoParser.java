@@ -78,6 +78,7 @@ public class VideoParser {
     }
 
     @Nullable
+    @SuppressWarnings("unchecked")
     private Class<? extends Extractor> findClass(@NonNull String url) {
         for (String reg : sMatchMap.keySet()) {
             Pattern pattern = Pattern.compile(reg);

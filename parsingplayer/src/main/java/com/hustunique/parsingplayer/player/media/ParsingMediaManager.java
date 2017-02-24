@@ -3,10 +3,7 @@ package com.hustunique.parsingplayer.player.media;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.SurfaceTexture;
-import android.opengl.EGL14;
-import android.opengl.GLES20;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,18 +14,10 @@ import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
-import com.hustunique.parsingplayer.player.view.gles.EglCore;
-import com.hustunique.parsingplayer.player.view.gles.WindowSurface;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
@@ -43,7 +32,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private int mCurrentAspectRatio = IRenderView.AR_ASPECT_FIT_PARENT;
 
     private TextureRenderView mRenderView;
-    //    private VideoRenderThread mRenderThread;
+    private VideoRenderThread mRenderThread;
     private static ParsingMediaManager mManager;
     private ParsingPlayerProxy mCurrentPlayerProxy;
     private Map<String, ParsingPlayerProxy> mPlayerMap;
@@ -52,9 +41,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private ParsingMediaManager(Context context) {
         mPlayerMap = new HashMap<>();
         mContext = context;
-//        mRenderThread = new VideoRenderThread();
-//        mRenderThread.start();
-//        mRenderThread.prepareHandler();
+        mRenderThread = new VideoRenderThread();
+        mRenderThread.start();
+        mRenderThread.prepareHandler();
     }
 
     public static ParsingMediaManager getInstance(Context context) {
@@ -65,101 +54,27 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     private int mSurfaceWidth, mSurfaceHeight;
 
-    private static Bitmap colorBitmap(int color) {
-        Bitmap bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.RGB_565);
-
-        Canvas canvas = new Canvas(bitmap);
-        canvas.drawColor(color);
-
-        return bitmap;
-    }
 
 
     private IRenderView.IRenderCallback mSHCallback = new IRenderView.IRenderCallback() {
         @Override
-        public void onSurfaceCreated(@NonNull IRenderView.ISurfaceHolder holder, int width, int height) {
-            if (holder.getRenderView() != mRenderView) {
-                LogUtil.e(TAG, "onSurfaceCreated: unmatched render callback\n");
-                return;
-            }
+        public void onSurfaceCreated(@NonNull SurfaceTexture surfaceTexture, int width, int height) {
 
-            LogUtil.e(TAG, "holder " + holder.getSurfaceTexture());
-            LogUtil.w(TAG, "onSurfaceCreated: current texture" + holder.getSurfaceTexture());
-            LogUtil.w(TAG, "onSurfaceCreated: current thumbnail: " + mBitmap);
+            LogUtil.v(TAG, "onSurfaceCreated: " + surfaceTexture + " ,current thumbnail: " + mBitmap);
 
             if (mCurrentPlayerProxy != null)
-                bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), holder);
+                bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), surfaceTexture);
             if (mBitmap != null && !isPlaying()) {
-                new RenderTask(mBitmap, false, holder.getSurfaceTexture()).execute();
+                mRenderThread.render(mBitmap, false, surfaceTexture);
             }
 
         }
 
-
-        private void clearSurface(Surface surface) {
-            EGL10 egl = (EGL10) EGLContext.getEGL();
-            EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-            egl.eglInitialize(display, null);
-
-            int[] attribList = {
-                    EGL10.EGL_RED_SIZE, 8,
-                    EGL10.EGL_GREEN_SIZE, 8,
-                    EGL10.EGL_BLUE_SIZE, 8,
-                    EGL10.EGL_ALPHA_SIZE, 8,
-                    EGL10.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
-                    EGL10.EGL_NONE, 0,      // placeholder for recordable [@-3]
-                    EGL10.EGL_NONE
-            };
-            EGLConfig[] configs = new EGLConfig[1];
-            int[] numConfigs = new int[1];
-            egl.eglChooseConfig(display, attribList, configs, configs.length, numConfigs);
-            EGLConfig config = configs[0];
-            EGLContext context = egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT, new int[]{
-                    EGL14.EGL_CONTEXT_CLIENT_VERSION, 2,
-                    EGL10.EGL_NONE
-            });
-            EGLSurface eglSurface = egl.eglCreateWindowSurface(display, config, surface,
-                    new int[]{
-                            EGL14.EGL_NONE
-                    });
-
-            egl.eglMakeCurrent(display, eglSurface, eglSurface, context);
-            GLES20.glClearColor(0, 0, 0, 1);
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-            egl.eglSwapBuffers(display, eglSurface);
-            egl.eglDestroySurface(display, eglSurface);
-            egl.eglMakeCurrent(display, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE,
-                    EGL10.EGL_NO_CONTEXT);
-            egl.eglDestroyContext(display, context);
-            egl.eglTerminate(display);
-        }
-
-        private void clearSurface(SurfaceTexture surface) {
-            // We need to do this with OpenGL ES (*not* Canvas -- the "software render" bits
-            // are sticky).  We can't stay connected to the Surface after we're done because
-            // that'd prevent the video encoder from attaching.
-            //
-            // If the Surface is resized to be larger, the new portions will be black, so
-            // clearing to something other than black may look weird unless we do the clear
-            // post-resize.
-            EglCore eglCore = new EglCore();
-            WindowSurface win = new WindowSurface(eglCore, surface);
-            win.makeCurrent();
-            GLES20.glClearColor(0, 0, 0, 0);
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-            win.swapBuffers();
-            win.release();
-            eglCore.release();
-        }
 
 
 
         @Override
-        public void onSurfaceChanged(@NonNull IRenderView.ISurfaceHolder holder, int format, int width, int height) {
-            if (holder.getRenderView() != mRenderView) {
-                LogUtil.e(TAG, "onSurfaceChanged: unmatched render callback\n");
-                return;
-            }
+        public void onSurfaceChanged(@NonNull SurfaceTexture surfaceTexture, int format, int width, int height) {
             mSurfaceWidth = width;
             mSurfaceHeight = height;
             boolean isValidState = mCurrentPlayerProxy.isInPlayBackState();
@@ -170,14 +85,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         }
 
         @Override
-        public void onSurfaceDestroyed(@NonNull IRenderView.ISurfaceHolder holder) {
-            if (holder.getRenderView() != mRenderView) {
-                LogUtil.e(TAG, "onSurfaceDestroyed: unmatched render callback\n");
-                return;
-            }
-            LogUtil.w(TAG, "onSurfaceDestroyed: current thumbnail: " + mBitmap);
-//            releaseRenderView();
-//            mSurface.release();
+        public void onSurfaceDestroyed(@NonNull SurfaceTexture surfaceTexture) {
+            LogUtil.v(TAG, "onSurfaceDestroyed: " + surfaceTexture + " ,current thumbnail: " + mBitmap);
+            // TODO: 2/24/17 Not sure this method is necessary
         }
     };
     private Bitmap mBitmap;
@@ -185,23 +95,22 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private void releaseRenderView() {
         if (mRenderView == null) return;
         if (mCurrentPlayerProxy != null) {
+            // Clear display
             mCurrentPlayerProxy.setCurrentDisplay(null);
         }
-        // Clear display
-        mRenderView.removeRenderCallback(mSHCallback);
-        LogUtil.w(TAG, "release current renderView: " + mRenderView +
+        LogUtil.v(TAG, "release current renderView: " + mRenderView +
                 "\ncurrent bitmap " + mBitmap);
         mRenderView = null;
 
     }
 
-    private void bindSurfaceHolder(IMediaPlayer mp, IRenderView.ISurfaceHolder holder) {
+    private void bindSurfaceHolder(IMediaPlayer mp, SurfaceTexture surfaceTexture) {
         if (mp == null) return;
-        if (holder == null) {
+        if (surfaceTexture == null) {
             mp.setDisplay(null);
             return;
         }
-        holder.bindToMediaPlayer(mp);
+        mp.setSurface(new Surface(surfaceTexture));
     }
 
     public void configureRenderView(TextureRenderView renderView) {
@@ -215,7 +124,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
             mRenderView.setVideoSize(getCurrentVideoWidth(), getCurrentVideoHeight());
         }
         mRenderView.setAspectRatioMode(mCurrentAspectRatio);
-        mRenderView.addRenderCallback(mSHCallback);
+        mRenderView.setRenderCallback(mSHCallback);
     }
 
     @Override
@@ -240,7 +149,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
 
     public void onResume(TextureRenderView renderView) {
-        LogUtil.w(TAG, "onResume: current view " + Integer.toHexString(System.identityHashCode(mRenderView))
+        LogUtil.v(TAG, "onResume: current view " + Integer.toHexString(System.identityHashCode(mRenderView))
                 + ", target view: " + Integer.toHexString(System.identityHashCode(renderView)));
         if (mRenderView == renderView) return;
         configureRenderView(renderView);
@@ -301,9 +210,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void pause() {
-        LogUtil.e(TAG, "pause called");
+        LogUtil.d(TAG, "pause called");
         mBitmap = mRenderView.getBitmap();
-        LogUtil.w(TAG, "paused, cache thumbnail " + mBitmap + " from " + mRenderView + " size " + mBitmap.getByteCount());
+        LogUtil.v(TAG, "paused, cache thumbnail " + mBitmap + " from " + mRenderView + " size " + mBitmap.getByteCount());
         mCurrentPlayerProxy.pause();
     }
 
@@ -385,7 +294,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         if (mPlayerMap.containsKey(url)) {
             ParsingPlayerProxy player = mPlayerMap.get(url);
             player.release();
-            LogUtil.w(TAG, "release player " + player);
+            LogUtil.d(TAG, "release player " + player);
             mPlayerMap.remove(url);
         } else
             throw new IllegalArgumentException("no player match this url ");

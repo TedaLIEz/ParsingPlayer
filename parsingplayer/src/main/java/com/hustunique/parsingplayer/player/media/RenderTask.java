@@ -41,8 +41,9 @@ import javax.microedition.khronos.egl.EGLSurface;
 
 /**
  * Created by JianGuo on 2/23/17.
+ * Deprecated, use {@link VideoRenderThread instead}
  */
-
+@Deprecated
 public class RenderTask extends AsyncTask<Void, Void, Void> {
     private Object mNativeWindow;
     private boolean mRecycled;

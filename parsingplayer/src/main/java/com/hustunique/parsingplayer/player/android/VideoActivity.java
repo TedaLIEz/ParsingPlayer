@@ -31,23 +31,12 @@ import com.hustunique.parsingplayer.player.view.ParsingVideoView;
  */
 public class VideoActivity extends AppCompatActivity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "VideoActivity";
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
 
     /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
+     * the number of milliseconds to wait after user interaction before hiding the system UI.
      */
     private static final int AUTO_HIDE_DELAY_MILLIS = 2000;
 
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static final int UI_ANIMATION_DELAY = 300;
     private ParsingVideoView mVideoView;
     private View mDecorView;
 
@@ -71,9 +60,6 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
 
     // This snippet hides the system bars.
     private void hideSystemUI() {
-//        mDecorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN |
-//                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-//                View.SYSTEM_UI_FLAG_IMMERSIVE);
         mDecorView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION

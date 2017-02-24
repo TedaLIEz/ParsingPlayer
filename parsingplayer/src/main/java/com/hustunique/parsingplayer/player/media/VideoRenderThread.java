@@ -44,9 +44,10 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 /**
  * Created by JianGuo on 2/23/17.
+ * {@link HandlerThread} used for gles rendering
  */
 
-public class VideoRenderThread extends HandlerThread {
+class VideoRenderThread extends HandlerThread {
     private Handler mWorker;
     private SurfaceTexture mNativeWindow;
     private static final String TAG = "VideoRenderThread";
@@ -138,23 +139,32 @@ public class VideoRenderThread extends HandlerThread {
     private EGLSurface eglSurface;
     private EGLContext eglContext;
 
-    public VideoRenderThread() {
+    VideoRenderThread() {
         this(TAG);
     }
-    public VideoRenderThread(String name) {
+
+    VideoRenderThread(String name) {
         this(name, THREAD_PRIORITY_BACKGROUND);
     }
 
-    public VideoRenderThread(String name, int priority) {
+    VideoRenderThread(String name, int priority) {
         super(name, priority);
     }
+
 
     @Override
     protected void onLooperPrepared() {
         super.onLooperPrepared();
-        initEGL();
+        setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                LogUtil.wtf(TAG, e);
+                t.interrupt();
+            }
+        });
     }
 
+    @WorkerThread
     private void initEGL() {
         egl10 = (EGL10) EGLContext.getEGL();
         eglDisplay = egl10.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -187,7 +197,7 @@ public class VideoRenderThread extends HandlerThread {
             raiseEGLInitError();
         }
 
-        Log.d(TAG, "initEGL");
+        LogUtil.d(TAG, "initEGL");
     }
 
     private void raiseEGLInitError() {
@@ -200,14 +210,15 @@ public class VideoRenderThread extends HandlerThread {
     private void checkGLESError(String where) {
         int error = GLES20.glGetError();
         if (error != GLES20.GL_NO_ERROR) {
-            Log.e(TAG, "checkGLESError: " + GLU.gluErrorString(error));
+            LogUtil.e(TAG, "checkGLESError: " + GLU.gluErrorString(error));
             throw new RuntimeException(where);
         }
     }
 
 
+    @WorkerThread
     private void shutdownEGL() {
-        Log.d(TAG, "shutdownEGL");
+        LogUtil.d(TAG, "shutdownEGL");
         egl10.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
         egl10.eglDestroyContext(eglDisplay, eglContext);
         egl10.eglDestroySurface(eglDisplay, eglSurface);
@@ -218,10 +229,6 @@ public class VideoRenderThread extends HandlerThread {
     }
 
 
-//    @Override
-//    protected void onLooperPrepared() {
-//        initEGL();
-//    }
 
     void prepareHandler() {
         mWorker = new Handler(getLooper(), new Handler.Callback() {
@@ -232,9 +239,9 @@ public class VideoRenderThread extends HandlerThread {
                 LogUtil.w(TAG, "start rendering: {" + bitmap + ", size: " +
                         bitmap.getAllocationByteCount() + ", \n recycled: "
                         + recycled + ", \n textureSurface: " + mNativeWindow + "}");
-//                initEGL();
+                initEGL();
                 performRenderPoster(bitmap, recycled);
-//                shutdownEGL();
+                shutdownEGL();
                 return true;
             }
         });
@@ -330,11 +337,6 @@ public class VideoRenderThread extends HandlerThread {
     }
 
 
-    @Override
-    public boolean quitSafely() {
-        shutdownEGL();
-        return super.quitSafely();
-    }
 
     void render(Bitmap bitmap, boolean recycled, SurfaceTexture surfaceTexture) {
         mNativeWindow = surfaceTexture;

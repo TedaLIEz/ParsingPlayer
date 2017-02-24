@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-
+apply plugin: 'com.novoda.bintray-release'
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "2.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -33,6 +33,8 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
+    androidTestCompile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
     compile 'com.android.support:appcompat-v7:25.1.1'
     compile 'com.squareup.okhttp3:logging-interceptor:3.5.0'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
@@ -47,4 +49,15 @@ dependencies {
     compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.7.1'
 
     androidTestCompile 'com.android.support.test:runner:0.5'
+}
+
+publish {
+    userOrg = 'tedaliez'
+    groupId = 'com.uniquestudio'
+    artifactId = 'ParsingPlayer'
+    publishVersion = '2.0.0'
+    website = 'https://github.com/TedaLIEz/ParsingPlayer'
+    licences = ['LGPL-2.0']
+    description = 'A media player playing videos from video sites.'
+
 }

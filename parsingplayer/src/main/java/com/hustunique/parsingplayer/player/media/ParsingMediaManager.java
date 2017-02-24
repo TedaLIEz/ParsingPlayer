@@ -155,7 +155,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     /**
      * release specific player playing url
      *
-     * @param url
+     * @param url the target url
      */
     public void onDestroy(String url) {
         if (mBitmap != null)
@@ -306,6 +306,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * Change video quality in {@link Quality}
      *
      * @param quality the quality, specified in {@link Quality}
+     * @param bitmap the bitmap you want to render on view
      */
     public void setQuality(@Quality int quality, Bitmap bitmap) {
         mBitmap = bitmap;

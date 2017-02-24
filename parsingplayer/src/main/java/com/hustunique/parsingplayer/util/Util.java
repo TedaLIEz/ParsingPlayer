@@ -73,6 +73,8 @@ public final class Util {
      * @param directory the parent directory
      * @param filename  the filename
      * @param content   the content of data
+     * @return the absolute path of the file
+     * @throws FileNotFoundException
      */
     public static String writeToFile(File directory, String filename, String content)
             throws FileNotFoundException {

@@ -41,7 +41,7 @@ public interface IMediaPlayerControl {
      * As ParsingPlayer animated to parse video url and play real video address,
      * the param videoUrl is limited.
      *
-     * @param videoUrl
+     * @param videoUrl the video's url
      */
     void play(String videoUrl);
 

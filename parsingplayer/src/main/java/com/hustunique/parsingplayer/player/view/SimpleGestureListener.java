@@ -62,15 +62,15 @@ public class SimpleGestureListener extends GestureDetector.SimpleOnGestureListen
         int left = 0;
         int right = 1;
         /**
-         * left scroll dx >0
-         * right scroll dx <0
+         * left scroll dx &gt; 0
+         * right scroll dx &lt; 0
          * @param dx
          */
         void onScrollHorizontal(float dx);
 
         /**
-         * upward scroll dy > 0
-         * downward scroll dy < 0
+         * upward scroll dy &gt; 0
+         * downward scroll dy &lt; 0
          * @param x
          * @param dy
          */

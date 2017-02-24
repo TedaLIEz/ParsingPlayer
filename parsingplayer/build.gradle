@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-
+apply plugin: 'com.novoda.bintray-release'
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -7,8 +7,8 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "2.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -47,4 +47,15 @@ dependencies {
     compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.7.1'
 
     androidTestCompile 'com.android.support.test:runner:0.5'
+}
+
+publish {
+    userOrg = 'coxier'
+    groupId = 'com.uniquestudio'
+    artifactId = 'ParsingPlayer'
+    publishVersion = '2.0.0'
+    website = 'https://github.com/TedaLIEz/ParsingPlayer'
+    licences = ['LGPL-2.0']
+    description = 'A media player playing videos from video sites.'
+
 }

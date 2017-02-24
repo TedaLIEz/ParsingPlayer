@@ -12,7 +12,9 @@ if [ ${TEST} == "android" ]; then
     android-wait-for-emulator
     adb devices
     adb shell svc power stayon true
+    adb sleep 10
     adb shell input keyevent 82
+    adb sleep 5
     adb shell settings put global window_animation_scale 0.0 
     adb shell settings put global transition_animation_scale 0.0
     adb shell settings put global animator_duration_scale 0.0

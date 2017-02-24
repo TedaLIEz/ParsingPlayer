@@ -93,7 +93,7 @@ public class ProgressSlideView extends LinearLayout {
     public static ProgressSlideView createView(Context context, ViewGroup.LayoutParams lp, @DrawableRes int drawable) {
         ProgressSlideView progressSlideView = new ProgressSlideView(context);
         progressSlideView.setLayoutParams(lp);
-        progressSlideView.setInfoDrawable(context.getResources().getDrawable(drawable, context.getTheme()));
+        progressSlideView.setInfoDrawable(context.getResources().getDrawable(drawable));
         return progressSlideView;
 
     }

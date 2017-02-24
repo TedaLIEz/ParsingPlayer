@@ -29,7 +29,6 @@ import org.hamcrest.Matcher;
  * Created by JianGuo on 2/21/17.
  * Custom error Handler
  */
-// TODO: 2/21/17 Customize handler
 class CustomFailureHandler implements FailureHandler {
     private final FailureHandler delegate;
 

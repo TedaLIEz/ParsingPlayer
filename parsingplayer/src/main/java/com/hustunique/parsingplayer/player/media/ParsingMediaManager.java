@@ -2,10 +2,13 @@ package com.hustunique.parsingplayer.player.media;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.SurfaceTexture;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.view.Surface;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.Quality;
@@ -15,8 +18,8 @@ import com.hustunique.parsingplayer.player.view.TextureRenderView;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
@@ -24,22 +27,22 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
  * Created by CoXier on 17-2-19.
  * Manager managing MediaPlayer and RenderView
  */
-// TODO: 2/19/17 Refactor on this class
 public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, IMediaPlayerControl {
     private static final String TAG = "ParsingMediaManager";
 
-    private int mCurrentAspectRatio = IRenderView.AR_ASPECT_FIT_PARENT;
-
-    private TextureRenderView mRenderView;
-
+    private WeakReference<TextureRenderView> mRenderView;
+    private VideoRenderThread mRenderThread;
     private static ParsingMediaManager mManager;
     private ParsingPlayerProxy mCurrentPlayerProxy;
     private Map<String, ParsingPlayerProxy> mPlayerMap;
     private WeakReference<Context> mContext;
 
     private ParsingMediaManager(Context context) {
-        mPlayerMap = new HashMap<>();
-        mContext = new WeakReference<Context>(context);
+        mPlayerMap = new ConcurrentHashMap<>();
+        mContext = new WeakReference<>(context);
+        mRenderThread = new VideoRenderThread();
+        mRenderThread.start();
+        mRenderThread.prepareHandler();
     }
 
     public static ParsingMediaManager getInstance(Context context) {
@@ -49,82 +52,79 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     private int mSurfaceWidth, mSurfaceHeight;
+
+
     private IRenderView.IRenderCallback mSHCallback = new IRenderView.IRenderCallback() {
         @Override
-        public void onSurfaceCreated(@NonNull IRenderView.ISurfaceHolder holder, int width, int height) {
-            if (holder.getRenderView() != mRenderView) {
-                LogUtil.e(TAG, "onSurfaceCreated: unmatched render callback\n");
-                return;
-            }
+        public void onSurfaceCreated(@NonNull SurfaceTexture surfaceTexture, int width, int height) {
+
+            LogUtil.v(TAG, "onSurfaceCreated: " + surfaceTexture + " ,current thumbnail: " + mBitmap);
+
             if (mCurrentPlayerProxy != null)
-                bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), holder);
+                bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), surfaceTexture);
+            if (mBitmap != null && !isPlaying()) {
+                mRenderThread.render(mBitmap, true, surfaceTexture);
+            }
+
         }
 
+
         @Override
-        public void onSurfaceChanged(@NonNull IRenderView.ISurfaceHolder holder, int format, int width, int height) {
-            if (holder.getRenderView() != mRenderView) {
-                LogUtil.e(TAG, "onSurfaceChanged: unmatched render callback\n");
-                return;
-            }
+        public void onSurfaceChanged(@NonNull SurfaceTexture surfaceTexture, int format, int width, int height) {
             mSurfaceWidth = width;
             mSurfaceHeight = height;
-            boolean isValidState = mCurrentPlayerProxy.isInPlayBackState();
-            boolean hasValidSize = !mRenderView.shouldWaitForResize();
-            if (mCurrentPlayerProxy != null && isValidState && hasValidSize) {
-                mCurrentPlayerProxy.start();
-            }
         }
 
         @Override
-        public void onSurfaceDestroyed(@NonNull IRenderView.ISurfaceHolder holder) {
-            if (holder.getRenderView() != mRenderView) {
-                LogUtil.e(TAG, "onSurfaceDestroyed: unmatched render callback\n");
-                return;
-            }
-            releaseRenderView();
+        public void onSurfaceDestroyed(@NonNull SurfaceTexture surfaceTexture) {
+            LogUtil.v(TAG, "onSurfaceDestroyed: " + surfaceTexture + " ,current thumbnail: " + mBitmap);
         }
     };
+    private Bitmap mBitmap;
 
     private void releaseRenderView() {
         if (mRenderView == null) return;
         if (mCurrentPlayerProxy != null) {
+            // Clear display
             mCurrentPlayerProxy.setCurrentDisplay(null);
         }
-        // Clear display
-        mRenderView.removeRenderCallback(mSHCallback);
+        LogUtil.v(TAG, "release current renderView: " + mRenderView +
+                "\ncurrent bitmap " + mBitmap);
         mRenderView = null;
-
     }
 
-    private void bindSurfaceHolder(IMediaPlayer mp, IRenderView.ISurfaceHolder holder) {
+    private void bindSurfaceHolder(IMediaPlayer mp, SurfaceTexture surfaceTexture) {
         if (mp == null) return;
-        if (holder == null) {
+        if (surfaceTexture == null) {
             mp.setDisplay(null);
             return;
         }
-        holder.bindToMediaPlayer(mp);
+        mp.setSurface(new Surface(surfaceTexture));
     }
 
     public void configureRenderView(TextureRenderView renderView) {
         if (renderView == null) throw new IllegalArgumentException("Render view can't be null");
+        LogUtil.d(TAG, "configure renderView: " + renderView);
         releaseRenderView();
-        mRenderView = renderView;
+        mRenderView = new WeakReference<>(renderView);
         if (getCurrentVideoWidth() > 0 && getCurrentVideoHeight() > 0) {
             // this will call if the current activity onDestroyed called, then we resume the activity
             // we will check video specs, if we have, then restore them.
-            mRenderView.setVideoSize(getCurrentVideoWidth(), getCurrentVideoHeight());
+            mRenderView.get().setVideoSize(getCurrentVideoWidth(), getCurrentVideoHeight());
         }
-        mRenderView.setAspectRatioMode(mCurrentAspectRatio);
-        mRenderView.addRenderCallback(mSHCallback);
+        int currentAspectRatio = IRenderView.AR_ASPECT_FILL_PARENT;
+        mRenderView.get().setAspectRatioMode(currentAspectRatio);
+        mRenderView.get().setRenderCallback(mSHCallback);
     }
 
     @Override
     public void onPrepared(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen) {
-        mRenderView.setVideoSize(videoWidth, videoHeight);
-        mRenderView.setVideoSampleAspectRatio(videoSarNum, videoSarDen);
+        mRenderView.get().setVideoSize(videoWidth, videoHeight);
+        mRenderView.get().setVideoSampleAspectRatio(videoSarNum, videoSarDen);
 
-        if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == videoWidth
+        if (!mRenderView.get().shouldWaitForResize() || mSurfaceWidth == videoWidth
                 || mSurfaceHeight == videoHeight) {
+            LogUtil.d(TAG, "onPrepared: bind start");
             mCurrentPlayerProxy.start();
             if (!mCurrentPlayerProxy.isPlaying() && (mCurrentPlayerProxy.getCurrentPosition() > 0)) {
                 if (mStateChangeListener != null) mStateChangeListener.onPrepared();
@@ -134,16 +134,22 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void onVideoSizeChanged(int videoWidth, int videoHeight, int videoSarNum, int videoSarDen) {
-        mRenderView.setVideoSize(videoWidth, videoHeight);
-        mRenderView.setVideoSampleAspectRatio(videoSarNum, videoSarDen);
+        mRenderView.get().setVideoSize(videoWidth, videoHeight);
+        mRenderView.get().setVideoSampleAspectRatio(videoSarNum, videoSarDen);
     }
 
+    public void onPause() {
+        pause();
+    }
 
     public void onResume(TextureRenderView renderView) {
+        LogUtil.v(TAG, "onResume: current view " + Integer.toHexString(System.identityHashCode(mRenderView.get()))
+                + ", target view: " + Integer.toHexString(System.identityHashCode(renderView)));
+        if (mRenderView.get() == renderView) return;
         configureRenderView(renderView);
         // buggy if we don't set url immediately in onCreate
-        if (mCurrentPlayerProxy != null)
-            mCurrentPlayerProxy.start();
+//        if (mCurrentPlayerProxy != null)
+//            mCurrentPlayerProxy.start();
     }
 
     /**
@@ -152,6 +158,11 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @param url
      */
     public void onDestroy(String url) {
+        if (mBitmap != null)
+            mBitmap.recycle();
+        mBitmap = null;
+        mRenderView.clear();
+        mRenderView = null;
         destroyPlayerByURL(url);
     }
 
@@ -198,7 +209,13 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void pause() {
-        mCurrentPlayerProxy.pause();
+        if (mBitmap != null) {
+            mBitmap.recycle();
+        }
+        mBitmap = mRenderView.get().getBitmap();
+        LogUtil.v(TAG, "paused, cache thumbnail " + mBitmap + " from " + mRenderView);
+        if (mCurrentPlayerProxy != null)
+            mCurrentPlayerProxy.pause();
     }
 
     @Override
@@ -227,10 +244,13 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public void play(String videoUrl) {
+        LogUtil.v(TAG, "current map" + mPlayerMap);
         if (mPlayerMap.containsKey(videoUrl)) {
             mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
+            LogUtil.v(TAG, "get player from map");
         } else {
             mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
+            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
             mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
         }
         mCurrentPlayerProxy.play(videoUrl);
@@ -266,22 +286,25 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      *
      * @param quality the quality, specified in {@link Quality}
      */
-    public void setQuality(@Quality int quality) {
+    public void setQuality(@Quality int quality, Bitmap bitmap) {
+        mBitmap = bitmap;
         mCurrentPlayerProxy.setQuality(quality);
-        bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(),mRenderView.getSurfaceHolder());
     }
 
     @VisibleForTesting
     public boolean isIdle() {
         return getCurrentVideoHeight() <= 0 && getCurrentVideoWidth() <= 0;
     }
+
     private void destroyPlayerByURL(String url) {
         if (mPlayerMap.containsKey(url)) {
             ParsingPlayerProxy player = mPlayerMap.get(url);
             player.release();
+            LogUtil.d(TAG, "release player " + player);
+            mCurrentPlayerProxy = null;
             mPlayerMap.remove(url);
         } else
-            throw new IllegalArgumentException("no player match this url ");
+            throw new IllegalArgumentException("no player matches this url ");
     }
 
     public double getCurrentBrightness() {
@@ -297,7 +320,15 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         return mCurrentPlayerProxy.getVideoInfo();
     }
 
-    public @Quality int getQuality() {
+    public
+    @Quality
+    int getQuality() {
         return mCurrentPlayerProxy.getQuality();
     }
+
+    public boolean isPreparing() {
+        return mCurrentPlayerProxy == null;
+    }
+
+
 }

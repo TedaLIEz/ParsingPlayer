@@ -3,7 +3,6 @@ package com.hustunique.parsingplayer.player.view;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
@@ -41,8 +40,8 @@ public class VerticalProgressBar extends View {
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.VerticalProgressBarTheme);
             mMaxProgress = a.getInt(R.styleable.VerticalProgressBarTheme_max, 100);
-            mProgressColor = a.getColor(R.styleable.VerticalProgressBarTheme_progressColor, Color.parseColor("#fb7299"));
-            mBackgroundColor = a.getColor(R.styleable.VerticalProgressBarTheme_backgroundColor, Color.parseColor("#fffdff"));
+            mProgressColor = a.getColor(R.styleable.VerticalProgressBarTheme_progressColor, getResources().getColor(R.color.panel_progress));
+            mBackgroundColor = a.getColor(R.styleable.VerticalProgressBarTheme_backgroundColor, getResources().getColor(R.color.panel_slide_progressbar));
         } finally {
             a.recycle();
         }

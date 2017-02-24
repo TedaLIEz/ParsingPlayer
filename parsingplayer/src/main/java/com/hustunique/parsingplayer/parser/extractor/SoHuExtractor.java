@@ -19,7 +19,6 @@ package com.hustunique.parsingplayer.parser.extractor;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -28,7 +27,6 @@ import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -86,7 +84,6 @@ public class SoHuExtractor extends Extractor {
             e.printStackTrace();
         }
         mTitle = getTitle(result);
-        Logger.d(mTitle);
         return searchValue(searchValue(result, "var vid ?= ?[\"\\'](\\d+)[\"\\']"), "\\d+");
     }
 

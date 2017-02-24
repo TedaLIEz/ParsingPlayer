@@ -20,15 +20,18 @@ package com.hustunique.parsingplayer.player.view;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -68,6 +71,10 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     private double mTotalPositionChanged;
 
+    private double mVolume;
+    private double mBrightness;
+
+
     public ParsingVideoView(Context context) {
         this(context, null);
     }
@@ -103,12 +110,16 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         initSeekTextView(context);
     }
 
-
-    private int getCurrentVolume() {
-        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        return am.getStreamVolume(AudioManager.STREAM_MUSIC);
+    private void getFullscreen(Context context, AttributeSet attrs) {
+        TypedArray a = null;
+        try {
+            a = context.obtainStyledAttributes(attrs, R.styleable.ParsingVideoViewTheme);
+            mFullscreen = a.getBoolean(R.styleable.ParsingVideoViewTheme_fullscreen, false);
+        } finally {
+            if (a != null)
+                a.recycle();
+        }
     }
-
 
     private void initSeekTextView(Context context) {
         mTextView = new TextView(context);
@@ -134,11 +145,11 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private void initInfoProgressBar(Context context) {
         LayoutParams volumeParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         volumeParams.addRule(RelativeLayout.CENTER_VERTICAL);
-        volumeParams.addRule(RelativeLayout.ALIGN_PARENT_START, TRUE);
+        volumeParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, TRUE);
         volumeParams.setMarginStart(Util.getScreenWidth(context) / 10);
         LayoutParams brightnessParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         brightnessParams.addRule(RelativeLayout.CENTER_VERTICAL);
-        brightnessParams.addRule(RelativeLayout.ALIGN_PARENT_END, TRUE);
+        brightnessParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, TRUE);
         brightnessParams.setMarginEnd(Util.getScreenWidth(context) / 10);
         mVolumeProgress = ProgressSlideView.createView(context, volumeParams, R.drawable.ic_volume_2);
         mBrightProgress = ProgressSlideView.createView(context, brightnessParams, R.drawable.ic_brightness_2);
@@ -149,20 +160,20 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mRenderView.setOnVideoChangeListener(this);
     }
 
-    private void getFullscreen(Context context, AttributeSet attrs) {
-        TypedArray a = null;
-        try {
-            a = context.obtainStyledAttributes(attrs, R.styleable.ParsingVideoViewTheme);
-            mFullscreen = a.getBoolean(R.styleable.ParsingVideoViewTheme_fullscreen, false);
-        } finally {
-            if (a != null)
-                a.recycle();
-        }
-    }
 
+    /**
+     * Play remote video according to url.
+     *
+     * @param url
+     */
     public void play(String url) {
         mUrl = url;
         mMedia.play(url);
+    }
+
+    private int getCurrentVolume() {
+        AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        return am.getStreamVolume(AudioManager.STREAM_MUSIC);
     }
 
     public void setRestoreListener(@Nullable OnClickListener restoreListener) {
@@ -211,6 +222,10 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void toggleMediaControlsVisibility() {
+        LogUtil.d(TAG, "toggle controller,media is preparing: " + mMedia.isPreparing());
+        if (mMedia.isPreparing())
+            return;
+        LogUtil.d(TAG, "controller is showing: " + mControllerView.isShown());
         if (mControllerView.isShowing()) {
             mControllerView.hide();
         } else {
@@ -224,6 +239,26 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mTargetFullScreen = true;
     }
 
+
+    /**
+     * onPause should be called in {@link Activity#onPause()}
+     */
+    public void onPause() {
+        LogUtil.d(TAG, "onPause");
+        onBufferingEnd();
+        if (mTargetFullScreen) {
+            mTargetFullScreen = false;
+            return;
+        }
+        if (mTargetTinyScreen)
+            return;
+
+        mMedia.onPause();
+    }
+
+    /**
+     * onResume should be called in {@link Activity#onResume()}
+     */
     public void onResume() {
         mMedia.setStateChangeListener(this);
         mMedia.onResume(mRenderView);
@@ -233,33 +268,25 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         ((Activity) mContext).getWindow().setAttributes(lp);
     }
 
-    public void onPause() {
-        onBufferingEnd();
-        if (mTargetFullScreen) {
-            mTargetFullScreen = false;
-            return;
-        }
-        if (mTargetTinyScreen)
-            return;
-        LogUtil.w(TAG, "pause ongoing");
-        mMedia.pause();
-    }
-
+    /**
+     * onDestroy should be called in {@link Activity#onDestroy()}
+     */
     public void onDestroy() {
-        if (mFullscreen) return;
+        if (mFullscreen || Settings.System.getInt(getContext().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1)
+            return;
         mMedia.onDestroy(mUrl);
     }
 
     @Override
     public void onPrepared() {
-        if(mVideoInfoLoadedCallback!=null)
-            mVideoInfoLoadedCallback.videoInfoLoaded(getVideoInfo(),getQuality());
+        LogUtil.i(TAG, "onPrepared");
+        if (mVideoInfoLoadedCallback != null)
+            mVideoInfoLoadedCallback.videoInfoLoaded(getVideoInfo(), getQuality());
         mControllerView.show();
     }
 
     @Override
     public void onError(String msg) {
-        // TODO: 2/19/17 Error Handling
     }
 
     @Override
@@ -268,7 +295,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     @Override
-    // FIXME: 2/21/17 Can't restore progress bar when switch renderView
     public void onBufferingStart() {
         LogUtil.d(TAG, "onBufferingStart, " + toString());
         showBufferingProgress();
@@ -280,8 +306,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         dismissBufferingProgress();
     }
 
-
-    private double mVolume;
     @Override
     public void onVolumeChange(float dy) {
         AudioManager am = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
@@ -308,7 +332,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
     }
 
-    private double mBrightness;
     @Override
     public void onBrightnessChange(float dy) {
         mBrightness += dy * 4f / getHeight();
@@ -326,9 +349,10 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     @Override
     public void onTogglePlayingState() {
-        if (mClickCallback!=null)
+        if (mClickCallback != null)
             mClickCallback.onClick();
         toggleMediaControlsVisibility();
+        hideControllerAndHeaderDelayed();
     }
 
     @Override
@@ -341,7 +365,6 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         mMedia.seekTo(mSeekWhenPrepared);
         mTotalPositionChanged = 0;
     }
-
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
@@ -377,19 +400,62 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return ss;
     }
 
-    public VideoInfo getVideoInfo(){
+    public VideoInfo getVideoInfo() {
         return mMedia.getVideoInfo();
     }
 
-    public @Quality int getQuality(){
+    public
+    @Quality
+    int getQuality() {
         return mMedia.getQuality();
     }
 
+    /**
+     * change quality but you should ensure you have playing the url before,
+     * because we use {@link VideoInfo} loaded.
+     *
+     * @param q
+     */
     public void setQuality(int q) {
         // if q = current quality,nothing need be changed
-        if (mMedia.getQuality() != q){
-            mMedia.setQuality(q);
+        if (mMedia.getQuality() != q) {
+            Bitmap bitmap = mRenderView.getBitmap();
+            replaceRenderView();
+            onTogglePlayingState();
+            mMedia.setQuality(q, bitmap);
         }
+    }
+
+    /**
+     * replace {@link TextureRenderView} on this {@link ParsingVideoView}
+     */
+    private void replaceRenderView() {
+        ViewGroup vp = (ViewGroup) getChildAt(0);
+        ViewGroup.LayoutParams lp = mRenderView.getLayoutParams();
+        mRenderView = new TextureRenderView(mContext);
+        mRenderView.setOnVideoChangeListener(this);
+        vp.addView(mRenderView, lp);
+        RelativeLayout.LayoutParams controllerLp = new RelativeLayout.LayoutParams(mControllerView.getWidth(), mControllerView.getHeight());
+        controllerLp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        controllerLp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        controllerLp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        mControllerView.setLayoutParams(controllerLp);
+        vp.removeView(mControllerView);
+        vp.addView(mControllerView, controllerLp);
+        mMedia.configureRenderView(mRenderView);
+    }
+
+    private void hideControllerAndHeaderDelayed() {
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mControllerView.isShown()) {
+                    mControllerView.hide();
+                    if (mClickCallback != null)
+                        mClickCallback.onClick();
+                }
+            }
+        }, 4000);
     }
 
     static class SavedState extends BaseSavedState {
@@ -452,19 +518,22 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private ClickCallback mClickCallback;
-    public interface ClickCallback{
+    private VideoInfoLoadedCallback mVideoInfoLoadedCallback;
+
+    public interface ClickCallback {
         void onClick();
     }
-    public void setClickCallback(ClickCallback callback){
-        this.mClickCallback = callback;
-    }
 
-    private VideoInfoLoadedCallback mVideoInfoLoadedCallback;
-    public interface VideoInfoLoadedCallback{
-        void videoInfoLoaded(VideoInfo videoInfo,int quality);
+    public interface VideoInfoLoadedCallback {
+        void videoInfoLoaded(VideoInfo videoInfo, int quality);
     }
 
     public void setVideoInfoLoadedCallback(VideoInfoLoadedCallback videoInfoLoadedCallback) {
         mVideoInfoLoadedCallback = videoInfoLoadedCallback;
     }
+
+    public void setClickCallback(ClickCallback callback) {
+        this.mClickCallback = callback;
+    }
+
 }

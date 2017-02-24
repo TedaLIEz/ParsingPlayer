@@ -83,8 +83,7 @@ public class QualityView extends LinearLayout {
             tv.setBackground(getResources().getDrawable(R.drawable.quality_text_bgd));
             tv.setTextSize(14);
             tv.setText(getString(q));
-//            LogUtil.d(TAG,"hd text = " + getString(q));
-            tv.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+            tv.setGravity(Gravity.CENTER);
             tv.setTextColor(getResources().getColor(R.color.dim_foreground_dark));
             tv.setOnClickListener(new OnClickListener() {
                 @Override

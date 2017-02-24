@@ -21,6 +21,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
+import android.widget.Toast;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.util.LogUtil;
@@ -69,8 +70,9 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     int getHdByNetwork() {
         ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-//        if (networkInfo==null)
-        //TODO:show warning on TextRenderView
+        if (networkInfo==null){
+            makeToast();
+        }
         switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:
             case ConnectivityManager.TYPE_WIMAX:
@@ -97,5 +99,9 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
             default:
                 return HD_LOW;
         }
+    }
+
+    private void makeToast() {
+        Toast.makeText(mContext,"No network,please check",Toast.LENGTH_SHORT).show();
     }
 }

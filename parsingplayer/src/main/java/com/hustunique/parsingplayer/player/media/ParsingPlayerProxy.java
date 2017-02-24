@@ -53,7 +53,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     private static final String TAG = "ParsingPlayerProxy";
     private final Context mContext;
     private int mCurrentState;
-    private int mTargetState;
 
     // all possible internal states
     private static final int STATE_ERROR = -1;
@@ -81,7 +80,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
 
     private IParsingPlayer createPlayer(Context context) {
-        mCurrentState = mTargetState = STATE_IDLE;
+        mCurrentState = STATE_IDLE;
         IParsingPlayer iParsingPlayer = new ParsingPlayer(context);
         AudioManager audioManager = (AudioManager) context.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -129,33 +128,28 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     /**
      * Release current used player
-     *
-     * @param clearTargetState <tt>true</tt> if you want to clear next state of ParsingPlayerProxy,
-     *                         <tt>false</tt> otherwise
      */
-    private void releasePlayer(boolean clearTargetState) {
+    private void releasePlayer() {
         if (mPlayer != null) {
             mPlayer.reset();
             mPlayer.release();
             mPlayer = null;
             mCurrentState = STATE_IDLE;
-            if (clearTargetState) {
-                mTargetState = STATE_IDLE;
-            }
             AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
             am.abandonAudioFocus(null);
         }
     }
 
     void setCurrentDisplay(SurfaceHolder holder) {
-        mPlayer.setDisplay(holder);
+        if (mPlayer != null)
+            mPlayer.setDisplay(holder);
     }
 
     void release() {
-        releasePlayer(true);
+        releasePlayer();
     }
 
-    public VideoInfo getVideoInfo() {
+    VideoInfo getVideoInfo() {
         if (mProvider != null)
             return mProvider.getVideoInfo();
         return null;
@@ -166,9 +160,10 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
     public void setQuality(@Quality int quality) {
+        mSeekWhenPrepared = (int) mPlayer.getCurrentPosition();
+        mPlayer.setDisplay(null);
         mPlayer.release();
         mPlayer = createPlayer(mContext);
-//        mPlayer = createPlayer(mContext);
         setConcatVideos(quality);
     }
 
@@ -191,8 +186,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     @Override
     public void onPrepared(IMediaPlayer mp) {
+        LogUtil.i(TAG,"Proxy onPrepared");
         mCurrentState = STATE_PREPARED;
-        mTargetState = STATE_PLAYING;
         mVideoWidth = mp.getVideoWidth();
         mVideoHeight = mp.getVideoHeight();
         int seekToPos = mSeekWhenPrepared;
@@ -203,10 +198,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             if (mOnVideoPreparedListener != null)
                 mOnVideoPreparedListener.onPrepared(mVideoWidth,
                         mVideoHeight, mVideoSarNum, mVideoSarDen);
-        } else {
-            if (mTargetState == STATE_PLAYING) {
-                start();
-            }
         }
     }
 
@@ -226,7 +217,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public void onCompletion(IMediaPlayer iMediaPlayer) {
         mCurrentState = STATE_PLAYBACK_COMPLETED;
-        mTargetState = STATE_PLAYBACK_COMPLETED;
         if (mOnVideoPreparedListener != null)
             mOnVideoPreparedListener.onCompleted();
     }
@@ -235,7 +225,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     public boolean onError(IMediaPlayer mp, int framework_err, int impl_err) {
         LogUtil.e(TAG, "Error: " + framework_err + "," + impl_err);
         mCurrentState = STATE_ERROR;
-        mTargetState = STATE_ERROR;
         if (mOnVideoPreparedListener != null)
             // TODO: 2/19/17 Convert identifier to msg
             mOnVideoPreparedListener.onError("Some Error");
@@ -307,7 +296,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             mPlayer.start();
             mCurrentState = STATE_PLAYING;
         }
-        mTargetState = STATE_PLAYING;
     }
 
     @Override
@@ -318,7 +306,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
                 mCurrentState = STATE_PAUSED;
             }
         }
-        mTargetState = STATE_PAUSED;
     }
 
     @Override
@@ -377,7 +364,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     private void setConcatVideos(@Quality int quality){
         setConcatContent(mProvider.provideSource(quality));
     }
-    // TODO: 2/5/17 Show sth if the io is running
     private void setConcatContent(String content) {
         LogUtil.i(TAG, "set temp file content: \n" + content);
         mPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
@@ -411,7 +397,6 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);
             mCurrentState = STATE_ERROR;
-            mTargetState = STATE_ERROR;
         }
     }
 

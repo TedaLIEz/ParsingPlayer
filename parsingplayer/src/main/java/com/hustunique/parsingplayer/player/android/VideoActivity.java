@@ -36,6 +36,9 @@ import com.hustunique.parsingplayer.util.LogUtil;
 public class VideoActivity extends AppCompatActivity implements View.OnSystemUiVisibilityChangeListener {
     private static final String TAG = "VideoActivity";
 
+    /**
+     * the number of milliseconds to wait after user interaction before hiding the system UI.
+     */
     private static final int AUTO_HIDE_DELAY_MILLIS = 2000;
 
     private ParsingVideoView mVideoView;
@@ -43,7 +46,6 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
     private View mTitleGroupView;
     private TextView mTVTitle;
     private TextView mTVQuality;
-    private View mVBack;
 
     private VideoInfo mVideoInfo;
     private QualityView mQualityView;
@@ -64,7 +66,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         mTitleGroupView = findViewById(R.id.fullscreen_title_view);
         mTVTitle = (TextView) mTitleGroupView.findViewById(R.id.fullscreen_title);
         mTVQuality = (TextView) mTitleGroupView.findViewById(R.id.fullscreen_quality);
-        mVBack = mTitleGroupView.findViewById(R.id.fullscreen_back);
+        View vBack = mTitleGroupView.findViewById(R.id.fullscreen_back);
         mVideoView = (ParsingVideoView) findViewById(R.id.fullscreen_content);
         mTitleGroupView.setVisibility(View.GONE);
         intiVideoInfoAndQuality();
@@ -84,7 +86,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
             }
         });
 
-        mVBack.setOnClickListener(new View.OnClickListener() {
+        vBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mVideoView.setTargetTiny();
@@ -144,8 +146,8 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 

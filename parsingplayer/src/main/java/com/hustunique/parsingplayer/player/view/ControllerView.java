@@ -27,6 +27,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
+import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 
 /**
@@ -81,11 +82,10 @@ public class ControllerView extends LinearLayout {
     private final Runnable mShowProgress = new Runnable() {
         @Override
         public void run() {
-            int progress = setProgress();
+            setProgress();
             updatePausePlay();
-            // fixme: 2/20/17 ImageButton will update icon a short time later
             if (!mDragging && mIsShowing && mPlayer.isPlaying()) {
-                postDelayed(mShowProgress, 1000 - progress % 1000);
+                post(mShowProgress);
             }
         }
     };
@@ -190,6 +190,7 @@ public class ControllerView extends LinearLayout {
 
 
     public void show() {
+        LogUtil.d(TAG,"controller shows");
         if (!mIsShowing) {
             setVisibility(VISIBLE);
             mIsShowing = true;

@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mVideoView.play("http://v.youku.com/v_show/id_XMjUyNDIxNjAwNA==.html");
+                mVideoView.play("http://v.youku.com/v_show/id_XOTY1MDAyNDY4.html");
             }
         });
 

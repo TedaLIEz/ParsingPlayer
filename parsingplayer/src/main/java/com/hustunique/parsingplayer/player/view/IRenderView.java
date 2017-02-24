@@ -19,11 +19,6 @@ package com.hustunique.parsingplayer.player.view;
 
 import android.graphics.SurfaceTexture;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-
-import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 /**
  * Created by JianGuo on 1/21/17.
@@ -50,42 +45,25 @@ public interface IRenderView {
 
     void setAspectRatio(float aspectRatio);
 
-    void addRenderCallback(@NonNull IRenderCallback callback);
+    void setRenderCallback(IRenderCallback callback);
 
-    void removeRenderCallback(@NonNull IRenderCallback callback);
-
-    interface ISurfaceHolder {
-        void bindToMediaPlayer(IMediaPlayer mp);
-
-        @NonNull
-        IRenderView getRenderView();
-
-        @Nullable
-        SurfaceHolder getSurfaceHolder();
-
-        @Nullable
-        Surface openSurface();
-
-        @Nullable
-        SurfaceTexture getSurfaceTexture();
-    }
 
     interface IRenderCallback {
         /**
-         * @param holder
+         * @param surfaceTexture
          * @param width  could be 0
          * @param height could be 0
          */
-        void onSurfaceCreated(@NonNull ISurfaceHolder holder, int width, int height);
+        void onSurfaceCreated(@NonNull SurfaceTexture surfaceTexture, int width, int height);
 
         /**
-         * @param holder
+         * @param surfaceTexture
          * @param format could be 0
          * @param width
          * @param height
          */
-        void onSurfaceChanged(@NonNull ISurfaceHolder holder, int format, int width, int height);
+        void onSurfaceChanged(@NonNull SurfaceTexture surfaceTexture, int format, int width, int height);
 
-        void onSurfaceDestroyed(@NonNull ISurfaceHolder holder);
+        void onSurfaceDestroyed(@NonNull SurfaceTexture surfaceTexture);
     }
 }

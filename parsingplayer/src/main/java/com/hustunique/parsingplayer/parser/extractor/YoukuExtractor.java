@@ -33,7 +33,6 @@ import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -42,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
@@ -115,7 +115,6 @@ public class YoukuExtractor extends Extractor {
     @Override
     @Nullable
     VideoInfo createInfo(@NonNull Response response) throws IOException {
-        // TODO: 2/7/17 Check response info if we are in no-network case
         JsonObject data = getData(response.body().string());
         if (data == null) return null;
         checkError(data);
@@ -131,7 +130,7 @@ public class YoukuExtractor extends Extractor {
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
         Map<Integer,Stream> streamMap = getSegMap(data);
-        Logger.d("hd length:"+streamMap.keySet().size());
+        LogUtil.d(TAG,"hd length:"+streamMap.keySet().size());
         return new VideoInfo(streamMap, title);
     }
 
@@ -250,7 +249,7 @@ public class YoukuExtractor extends Extractor {
     }
 
     private String getFileid(String format, int index) {
-        String sIndex = Integer.toString(index, 16).toUpperCase();
+        String sIndex = Integer.toString(index, 16).toUpperCase(Locale.getDefault());
         if (sIndex.length() == 1)
             sIndex = "0" + sIndex;
         String streamFileids = mFiledMap.get(format);

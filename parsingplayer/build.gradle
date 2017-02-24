@@ -1,11 +1,6 @@
-
-
 apply plugin: 'com.android.library'
 
 android {
-    // we use all64 productFlavors as default published library
-    defaultPublishConfig "all64Debug"
-    publishNonDefault true
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
 
@@ -28,11 +23,6 @@ android {
         }
     }
 
-    productFlavors {
-        all32 { minSdkVersion 19 }
-        all64 { minSdkVersion 21 }
-    }
-
 }
 
 dependencies {
@@ -50,16 +40,8 @@ dependencies {
     testCompile 'org.mockito:mockito-core:2.6.3'
     testCompile "org.robolectric:robolectric:3.2.2"
     testCompile 'junit:junit:4.12'
-    compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.6'
-    all32Compile 'tv.danmaku.ijk.media:ijkplayer-armv5:0.7.6'
-    all32Compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.6'
-    all32Compile 'tv.danmaku.ijk.media:ijkplayer-x86:0.7.6'
-
-    all64Compile 'tv.danmaku.ijk.media:ijkplayer-armv5:0.7.6'
-    all64Compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.6'
-    all64Compile 'tv.danmaku.ijk.media:ijkplayer-arm64:0.7.6'
-    all64Compile 'tv.danmaku.ijk.media:ijkplayer-x86:0.7.6'
-    all64Compile 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.7.6'
+    compile 'tv.danmaku.ijk.media:ijkplayer-java:0.7.7.1'
+    compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.7.1'
 
     androidTestCompile 'com.android.support.test:runner:0.5'
 }

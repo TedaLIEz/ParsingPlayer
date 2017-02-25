@@ -2,11 +2,14 @@
 
 ParsingPlayer is an Android video library based on [IjkPlayer](https://github.com/Bilibili/ijkplayer), playing video from Youku or other video sites.
 
+<img src="/screenshots/1.png" alt="screenshot" title="screenshot" width="250" height="436" />
+<img src="/screenshots/2.png" alt="screenshot" title="screenshot" width="436" height="250" />
+
 # Gradle Dependency
 
 [![Build Status](https://travis-ci.org/TedaLIEz/ParsingPlayer.svg?branch=master)](https://travis-ci.org/TedaLIEz/ParsingPlayer)
-[![License: LGPL v2](https://img.shields.io/badge/license-LGPL%20v2-blue.svg)](http://www.gnu.org/licenses/lgpl-2.0)
-[![GitHub release](https://img.shields.io/github/release/qubyte/rubidium.svg)](https://github.com/TedaLIEz/ParsingPlayer/releases/latest)
+[![License: LGPL v2.1](https://img.shields.io/badge/license-LGPL%20v2-blue.svg)](http://www.gnu.org/licenses/lgpl-2.1)
+[![GitHub release](https://img.shields.io/badge/release-2.0.0-blue.svg)](https://github.com/TedaLIEz/ParsingPlayer/releases/latest)
 
 
 
@@ -72,11 +75,11 @@ public class MainActivity extends AppCompatActivity {
 ---
 
 
-#License
+# License
 ```bash
 Copyright (c) 2017 UniqueStudio
 Licensed under LGPLv2.1 or later
-````
+```
 
 # No Commercial Use
 Although this project is is licensed under LGPLv2.1,but commercial use is forbidden.As we parse video's address,

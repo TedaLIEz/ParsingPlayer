@@ -23,12 +23,14 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
-    androidTestCompile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
+//    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+//        exclude group: 'com.android.support', module: 'support-annotations'
+//    })
+//    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
+//    androidTestCompile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
     compile 'com.android.support:appcompat-v7:25.1.1'
     testCompile 'junit:junit:4.12'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'com.jayway.android.robotium:robotium-solo:5.6.3'
     compile project(path:':parsingplayer')
 }

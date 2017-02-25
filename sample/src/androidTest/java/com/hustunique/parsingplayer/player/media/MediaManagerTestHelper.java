@@ -15,25 +15,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.sample;
+package com.hustunique.parsingplayer.player.media;
 
-import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static junit.framework.Assert.assertEquals;
 
 /**
  * Created by JianGuo on 2/24/17.
  */
-@RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
-    @Test
-    public void useAppContext() throws Exception {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-        assertEquals("com.hustunique.sample", appContext.getPackageName());
+
+public class MediaManagerTestHelper {
+
+    public static void setVideoUri(String uri) {
+        ParsingMediaManager.getInstance(InstrumentationRegistry.getTargetContext()).playOrigin(uri);
+    }
+
+    public static boolean isPlaying() {
+        return ParsingMediaManager.getInstance(InstrumentationRegistry.getTargetContext()).isPlaying();
     }
 }

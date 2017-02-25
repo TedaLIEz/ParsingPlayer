@@ -8,7 +8,7 @@ ParsingPlayer is an Android video library based on [IjkPlayer](https://github.co
 # Gradle Dependency
 
 [![Build Status](https://travis-ci.org/TedaLIEz/ParsingPlayer.svg?branch=master)](https://travis-ci.org/TedaLIEz/ParsingPlayer)
-[![License: LGPL v2.1](https://img.shields.io/badge/license-LGPL%20v2-blue.svg)](http://www.gnu.org/licenses/lgpl-2.1)
+[![License: LGPL v2.1](https://img.shields.io/badge/license-LGPL%20v2.1-blue.svg)](http://www.gnu.org/licenses/lgpl-2.1)
 [![GitHub release](https://img.shields.io/badge/release-2.0.0-blue.svg)](https://github.com/TedaLIEz/ParsingPlayer/releases/latest)
 
 

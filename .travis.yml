@@ -70,7 +70,7 @@ cache:
 script:
      - echo "Travis branch is $TRAVIS_BRANCH"
      - echo "Travis branch is in pull request $TRAVIS_PULL+REQUEST"
-     - travis_wait 30 ./run_tests.sh
+     - ./run_tests.sh
 
 after_failure:
     - "pandoc $TRAVIS_BUILD_DIR/sample/build/reports/androidTests/connected/index.html -t plain | sed -n '/^Failed tests/,/default-package/p'"

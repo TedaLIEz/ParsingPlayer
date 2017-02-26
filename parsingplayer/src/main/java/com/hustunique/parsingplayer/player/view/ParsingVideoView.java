@@ -266,6 +266,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
      * onResume should be called in {@link Activity#onResume()}
      */
     public void onResume() {
+        LogUtil.d(TAG, "onResume");
         mMedia.setStateChangeListener(this);
         mMedia.onResume(mRenderView);
         mBrightness = mMedia.getCurrentBrightness();
@@ -278,6 +279,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
      * onDestroy should be called in {@link Activity#onDestroy()}
      */
     public void onDestroy() {
+        LogUtil.d(TAG, "onDestroy");
         if (mFullscreen || Settings.System.getInt(getContext().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1)
             return;
         mMedia.onDestroy(mUrl);
@@ -293,10 +295,12 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     @Override
     public void onError(String msg) {
+        LogUtil.e(TAG, "onError:" + msg);
     }
 
     @Override
     public void onPlayCompleted() {
+        LogUtil.d(TAG, "onPlayCompleted");
         mControllerView.complete();
     }
 
@@ -329,17 +333,20 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     @Override
     public void onVolumeDialogDismiss() {
+        LogUtil.d(TAG, "onVolumeDialogDismiss");
         if (mVolumeProgress != null) mVolumeProgress.setVisibility(GONE);
     }
 
 
     @Override
     public void onBrightnessDismiss() {
+        LogUtil.d(TAG, "onBrightnessDismiss");
         if (mBrightProgress != null) mBrightProgress.setVisibility(GONE);
     }
 
     @Override
     public void onBrightnessChange(float dy) {
+        LogUtil.d(TAG, "onBrightnessChange:" + dy);
         mBrightness += dy * 4f / getHeight();
         WindowManager.LayoutParams lp = ((Activity) getContext()).getWindow().getAttributes();
         mBrightness = Math.min(Math.max(0f, mBrightness), 1f);
@@ -362,6 +369,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     @Override
     public void onUpdatePosition(float dx) {
+        LogUtil.d(TAG, "onUpdatePosition:" + dx);
         updatePosition(dx);
     }
 
@@ -422,6 +430,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
      * @param q
      */
     public void setQuality(int q) {
+        LogUtil.d(TAG, "setQuality:" + q);
         // if q = current quality,nothing need be changed
         if (mMedia.getQuality() != q) {
             Bitmap bitmap = mRenderView.getBitmap();

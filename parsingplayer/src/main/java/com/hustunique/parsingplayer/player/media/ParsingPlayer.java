@@ -51,6 +51,7 @@ public class ParsingPlayer implements IParsingPlayer {
     private final IjkMediaPlayer mMediaPlayer;
     private final ParsingFileManager mManager;
 
+    private String mConcatFilePath;
 
     public ParsingPlayer(Context context) {
         this(context, new Config());
@@ -107,10 +108,11 @@ public class ParsingPlayer implements IParsingPlayer {
     @Override
     public void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback) {
         mManager.write(concatVideoPath, content, callback);
+        mConcatFilePath = concatVideoPath;
     }
 
     private void cleanUp() {
-        mManager.cleanUp();
+        mManager.cleanUp(mConcatFilePath);
     }
 
     @Override

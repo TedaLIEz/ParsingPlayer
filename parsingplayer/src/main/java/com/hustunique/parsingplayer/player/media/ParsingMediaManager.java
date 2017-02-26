@@ -63,7 +63,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
             if (mCurrentPlayerProxy != null)
                 bindSurfaceHolder(mCurrentPlayerProxy.getPlayer(), surfaceTexture);
             if (mBitmap != null && !isPlaying()) {
-                mRenderThread.render(mBitmap, true, surfaceTexture);
+                mRenderThread.render(mBitmap, false, surfaceTexture);
             }
 
         }
@@ -158,9 +158,9 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @param url the target url
      */
     public void onDestroy(String url) {
-        if (mBitmap != null)
-            mBitmap.recycle();
-        mBitmap = null;
+//        if (mBitmap != null)
+//            mBitmap.recycle();
+//        mBitmap = null;
         mRenderView.clear();
         mRenderView = null;
         destroyPlayerByURL(url);

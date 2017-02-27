@@ -24,6 +24,7 @@ import android.os.SystemClock;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
@@ -187,7 +188,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public void onPrepared(IMediaPlayer mp) {
         LogUtil.i(TAG,"Proxy onPrepared");
-        mCurrentState = STATE_PREPARED;
+        mCurrentState = STATE_PLAYING;
         mVideoWidth = mp.getVideoWidth();
         mVideoHeight = mp.getVideoHeight();
         int seekToPos = mSeekWhenPrepared;
@@ -371,7 +372,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
                     @Override
                     public void onSuccess(final String result) {
                         // use post here to run in main thread
-                        setVideoPath(result);
+                        setVideoURI(Uri.parse(result));
                     }
 
                     @Override
@@ -381,8 +382,17 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
                 });
     }
 
-    private void setVideoPath(String path) {
-        setVideoURI(Uri.parse(path));
+    @VisibleForTesting
+    void setVideoPath(String path) {
+        if (mPlayer == null)
+            mPlayer = createPlayer(mContext);
+        try {
+            mPlayer.setDataSource(mContext, Uri.parse(path));
+            openVideo();
+        } catch (IOException e) {
+            LogUtil.wtf(TAG, e);
+            e.printStackTrace();
+        }
     }
 
     private void setVideoURI(Uri uri) {

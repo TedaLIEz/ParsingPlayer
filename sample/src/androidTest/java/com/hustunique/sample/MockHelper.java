@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer;
+package com.hustunique.sample;
 
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;

@@ -14,7 +14,7 @@ env:
     - TEST=android ANDROID_TARGET=android-21 ANDROID_ABI=armeabi-v7a ADB_INSTALL_TIMEOUT=10
   global:
     - ADB_INSTALL_TIMEOUT=10
-
+    - GRADLE_OPTS="-Xmx512m -XX:MaxPermSize=512m"
 
 
 sudo: required
@@ -58,20 +58,21 @@ before_cache:
 before_script:
   - android list targets
   - ./gradlew clean
-  - adb -e logcat *:W | tee logcat.log > /dev/null 2>&1 &
+  - ./create_avd.sh
 
 
 cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-    - $HOME/.android/build-cache
 
 script:
-     - echo "Travis branch is $TRAVIS_BRANCH"
-     - echo "Travis branch is in pull request $TRAVIS_PULL+REQUEST"
+     - ./building.sh
      - ./run_tests.sh
 
+after_script:
+    - "pandoc $TRAVIS_BUILD_DIR/parsingplayer/build/reports/androidTests/connected/index.html -t plain | sed -n '/^Failed tests/,/default-package/p'"
+    - cat logcat.log; pkill -KILL -f adb
 after_failure:
     - "pandoc $TRAVIS_BUILD_DIR/sample/build/reports/androidTests/connected/index.html -t plain | sed -n '/^Failed tests/,/default-package/p'"
     - cat logcat.log; pkill -KILL -f adb

@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ ${TEST} == "android" ]; then
     echo no | android create avd --force --name test --target $ANDROID_TARGET --abi $ANDROID_ABI --sdcard 800M
-    emulator -avd test -memory 4000 -noskin -no-audio -cache-size 400 -netfast -no-window -no-boot-anim &
+    emulator -avd test -memory 4000 -noskin -noaudio -cache-size 400 -netfast -no-window -no-boot-anim &
     android-wait-for-emulator
     echo "EMULATOR STARTED"
     adb shell input keyevent 82 &

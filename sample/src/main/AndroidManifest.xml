@@ -4,7 +4,7 @@
     package="com.hustunique.sample">
 
 
-
+    <uses-permission android:name="android.permission.SET_ANIMATION_SCALE"/>
     <!--this is a workaround to maintain videoview's status when configuration changes-->
     <application
         android:allowBackup="true"

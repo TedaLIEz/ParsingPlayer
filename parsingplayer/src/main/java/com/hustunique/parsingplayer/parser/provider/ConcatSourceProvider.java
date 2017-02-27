@@ -70,8 +70,10 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     int getHdByNetwork() {
         ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if (networkInfo==null){
+        if (networkInfo==null || !networkInfo.isConnected()){
+            LogUtil.e(TAG, "No networking found");
             makeToast();
+            return VideoInfo.HD_UNSPECIFIED;
         }
         switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:

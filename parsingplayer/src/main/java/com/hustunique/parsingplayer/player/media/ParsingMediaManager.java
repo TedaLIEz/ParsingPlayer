@@ -37,17 +37,16 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     private Map<String, ParsingPlayerProxy> mPlayerMap;
     private WeakReference<Context> mContext;
 
-    private ParsingMediaManager(Context context) {
+    private ParsingMediaManager() {
         mPlayerMap = new ConcurrentHashMap<>();
-        mContext = new WeakReference<>(context);
         mRenderThread = new VideoRenderThread();
         mRenderThread.start();
         mRenderThread.prepareHandler();
     }
 
-    public static ParsingMediaManager getInstance(Context context) {
+    public static ParsingMediaManager getInstance() {
         if (mManager == null)
-            mManager = new ParsingMediaManager(context);
+            mManager = new ParsingMediaManager();
         return mManager;
     }
 
@@ -127,7 +126,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
             LogUtil.d(TAG, "onPrepared: bind start");
             mCurrentPlayerProxy.start();
             if (!mCurrentPlayerProxy.isPlaying() && (mCurrentPlayerProxy.getCurrentPosition() > 0)) {
-                if (mStateChangeListener != null) mStateChangeListener.onPrepared();
+                if (mStateChangeListener.get() != null) mStateChangeListener.get().onPrepared();
             }
         }
     }
@@ -142,9 +141,10 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         pause();
     }
 
-    public void onResume(TextureRenderView renderView) {
+    public void onResume(TextureRenderView renderView,Context context) {
         LogUtil.v(TAG, "onResume: current view " + Integer.toHexString(System.identityHashCode(mRenderView.get()))
                 + ", target view: " + Integer.toHexString(System.identityHashCode(renderView)));
+        mContext = new WeakReference<>(context);
         if (mRenderView.get() == renderView) return;
         configureRenderView(renderView);
         // buggy if we don't set url immediately in onCreate
@@ -196,11 +196,11 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public void setStateChangeListener(@Nullable MediaStateChangeListener stateChangeListener) {
-        mStateChangeListener = stateChangeListener;
+        mStateChangeListener = new WeakReference<>(stateChangeListener);
     }
 
 
-    private MediaStateChangeListener mStateChangeListener;
+    private WeakReference<MediaStateChangeListener> mStateChangeListener;
 
     @Override
     public void start() {
@@ -284,20 +284,22 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
 
     @Override
     public void onCompleted() {
-        if (mStateChangeListener != null) mStateChangeListener.onPlayCompleted();
+        if (mStateChangeListener.get() != null) mStateChangeListener.get().onPlayCompleted();
     }
 
     @Override
     public void onError(String msg) {
-        if (mStateChangeListener != null) mStateChangeListener.onError(msg);
+        if (mStateChangeListener.get() != null) mStateChangeListener.get().onError(msg);
     }
 
     @Override
     public void onInfo(int arg1) {
+        if (mStateChangeListener.get() == null)
+            return;
         if (arg1 == IMediaPlayer.MEDIA_INFO_BUFFERING_START) {
-            mStateChangeListener.onBufferingStart();
+            mStateChangeListener.get().onBufferingStart();
         } else if (arg1 == IMediaPlayer.MEDIA_INFO_BUFFERING_END) {
-            mStateChangeListener.onBufferingEnd();
+            mStateChangeListener.get().onBufferingEnd();
         }
     }
 
@@ -319,6 +321,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     private void destroyPlayerByURL(String url) {
+        if (url == null)
+            return;
         if (mPlayerMap.containsKey(url)) {
             ParsingPlayerProxy player = mPlayerMap.get(url);
             player.release();

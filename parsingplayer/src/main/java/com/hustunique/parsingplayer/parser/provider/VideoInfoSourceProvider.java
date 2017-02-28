@@ -7,9 +7,9 @@ import com.hustunique.parsingplayer.parser.entity.VideoInfo;
  */
 
 public abstract class VideoInfoSourceProvider implements VideoSourceProvider {
-    protected VideoInfo mVideoInfo;
+    VideoInfo mVideoInfo;
 
-    public VideoInfoSourceProvider(VideoInfo videoInfo) {
+    VideoInfoSourceProvider(VideoInfo videoInfo) {
         mVideoInfo = videoInfo;
     }
 

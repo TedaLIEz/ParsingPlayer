@@ -47,6 +47,8 @@ import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
 import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Created by JianGuo on 1/16/17.
  * VideoView using {@link tv.danmaku.ijk.media.player.IMediaPlayer} as media player
@@ -55,7 +57,7 @@ import com.hustunique.parsingplayer.util.Util;
 public class ParsingVideoView extends RelativeLayout implements MediaStateChangeListener, TextureRenderView.OnVideoChangeListener {
     private static final String TAG = "ParsingVideoView";
 
-    private Context mContext;
+    private WeakReference<Context> mContext;
 
     private ParsingMediaManager mMedia;
     private ControllerView mControllerView;
@@ -96,12 +98,12 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void initView(Context context, AttributeSet attrs) {
-        mContext = context;
+        mContext = new WeakReference<>(context);
         getFullscreen(context, attrs);
         LayoutInflater.from(context).inflate(R.layout.parsing_video_view, this);
         mRenderView = (TextureRenderView) findViewById(R.id.texture_view);
         mControllerView = (ControllerView) findViewById(R.id.controller_view);
-        mMedia = ParsingMediaManager.getInstance(mContext);
+        mMedia = ParsingMediaManager.getInstance();
         mMedia.configureRenderView(mRenderView);
         mControllerView.setMediaPlayer(mMedia);
         mVolume = getCurrentVolume();
@@ -240,7 +242,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     private void showFullscreen() {
-        ParsingIntegrator parsingIntegrator = new ParsingIntegrator(mContext);
+        ParsingIntegrator parsingIntegrator = new ParsingIntegrator(mContext.get());
         parsingIntegrator.parsingToPlay();
         mTargetFullScreen = true;
     }
@@ -268,11 +270,11 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     public void onResume() {
         LogUtil.d(TAG, "onResume");
         mMedia.setStateChangeListener(this);
-        mMedia.onResume(mRenderView);
+        mMedia.onResume(mRenderView,getContext());
         mBrightness = mMedia.getCurrentBrightness();
-        WindowManager.LayoutParams lp = ((Activity) mContext).getWindow().getAttributes();
+        WindowManager.LayoutParams lp = ((Activity) mContext.get()).getWindow().getAttributes();
         lp.screenBrightness = (float) mBrightness;
-        ((Activity) mContext).getWindow().setAttributes(lp);
+        ((Activity) mContext.get()).getWindow().setAttributes(lp);
     }
 
     /**
@@ -446,7 +448,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private void replaceRenderView() {
         ViewGroup vp = (ViewGroup) getChildAt(0);
         ViewGroup.LayoutParams lp = mRenderView.getLayoutParams();
-        mRenderView = new TextureRenderView(mContext);
+        mRenderView = new TextureRenderView(mContext.get());
         mRenderView.setOnVideoChangeListener(this);
         vp.addView(mRenderView, lp);
         RelativeLayout.LayoutParams controllerLp = new RelativeLayout.LayoutParams(mControllerView.getWidth(), mControllerView.getHeight());

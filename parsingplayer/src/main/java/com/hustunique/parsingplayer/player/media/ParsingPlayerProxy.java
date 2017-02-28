@@ -36,6 +36,7 @@ import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -51,7 +52,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         IMediaPlayer.OnErrorListener, IMediaPlayer.OnInfoListener, IMediaPlayer.OnSeekCompleteListener,
         IMediaPlayer.OnBufferingUpdateListener, IMediaPlayerControl {
     private static final String TAG = "ParsingPlayerProxy";
-    private final Context mContext;
+    private final WeakReference<Context> mContext;
     private int mCurrentState;
 
     // all possible internal states
@@ -75,7 +76,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     ParsingPlayerProxy(Context context, OnStateListener listener) {
         mOnVideoPreparedListener = listener;
-        mContext = context;
+        mContext = new WeakReference<>(context);
     }
 
 
@@ -135,7 +136,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             mPlayer.release();
             mPlayer = null;
             mCurrentState = STATE_IDLE;
-            AudioManager am = (AudioManager) mContext.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) mContext.get().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
             am.abandonAudioFocus(null);
         }
     }
@@ -163,7 +164,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         mSeekWhenPrepared = (int) mPlayer.getCurrentPosition();
         mPlayer.setDisplay(null);
         mPlayer.release();
-        mPlayer = createPlayer(mContext);
+        mPlayer = createPlayer(mContext.get());
         setConcatVideos(quality);
     }
 
@@ -356,8 +357,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     void setConcatVideos(@NonNull VideoInfo videoInfo) {
         if (mPlayer == null)
-            mPlayer = createPlayer(mContext);
-        mProvider = new ConcatSourceProvider(videoInfo, mContext);
+            mPlayer = createPlayer(mContext.get());
+        mProvider = new ConcatSourceProvider(videoInfo, mContext.get().getApplicationContext());
         setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
     }
 
@@ -392,7 +393,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
         try {
-            mPlayer.setDataSource(mContext, uri, headers);
+            mPlayer.setDataSource(mContext.get(), uri, headers);
             openVideo();
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);

@@ -26,6 +26,8 @@ import android.widget.Toast;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.util.LogUtil;
 
+import java.lang.ref.WeakReference;
+
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
 import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
@@ -38,7 +40,7 @@ import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_STANDARD;
 
 public class ConcatSourceProvider extends VideoInfoSourceProvider {
     private static final String TAG = "ConcatSourceProvider";
-    private Context mContext;
+    private WeakReference<Context> mContext;
     private
     @Quality
     int mQuality;
@@ -62,13 +64,13 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
 
     public ConcatSourceProvider(VideoInfo videoInfo, Context context) {
         super(videoInfo);
-        mContext = context;
+        mContext = new WeakReference<>(context);
     }
 
     private
     @Quality
     int getHdByNetwork() {
-        ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) mContext.get().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
         if (networkInfo==null){
             makeToast();
@@ -102,6 +104,6 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     }
 
     private void makeToast() {
-        Toast.makeText(mContext,"No network,please check",Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext.get(),"No network,please check",Toast.LENGTH_SHORT).show();
     }
 }

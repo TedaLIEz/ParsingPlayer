@@ -24,7 +24,6 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
-import com.hustunique.parsingplayer.BuildConfig;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 import com.hustunique.parsingplayer.player.io.ParsingFileManager;
 import com.hustunique.parsingplayer.util.Util;
@@ -80,7 +79,7 @@ public class ParsingPlayer implements IParsingPlayer {
         IjkMediaPlayer ijkMediaPlayer = new IjkMediaPlayer();
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-        IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG ? IjkMediaPlayer.IJK_LOG_INFO : IjkMediaPlayer.IJK_LOG_DEFAULT);
+//        IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG ? IjkMediaPlayer.IJK_LOG_INFO : IjkMediaPlayer.IJK_LOG_DEFAULT);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "safe", config.safe ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,

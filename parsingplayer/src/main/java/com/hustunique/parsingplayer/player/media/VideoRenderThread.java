@@ -31,6 +31,7 @@ import android.util.Log;
 
 import com.hustunique.parsingplayer.util.LogUtil;
 
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -49,7 +50,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 class VideoRenderThread extends HandlerThread {
     private Handler mWorker;
-    private SurfaceTexture mNativeWindow;
+    private WeakReference<SurfaceTexture> mNativeWindow;
     private static final String TAG = "VideoRenderThread";
     private static final int EGL_OPENGL_ES2_BIT = 0x4;
     private static final int EGL_BACK_BUFFER = 0x3084;
@@ -143,11 +144,11 @@ class VideoRenderThread extends HandlerThread {
         this(TAG);
     }
 
-    VideoRenderThread(String name) {
+    private VideoRenderThread(String name) {
         this(name, THREAD_PRIORITY_BACKGROUND);
     }
 
-    VideoRenderThread(String name, int priority) {
+    private VideoRenderThread(String name, int priority) {
         super(name, priority);
     }
 
@@ -182,8 +183,8 @@ class VideoRenderThread extends HandlerThread {
         if (!egl10.eglChooseConfig(eglDisplay, EGL_CONFIG_ATTRIBUTE_LIST, eglConfigs, 1, numOfConfigs)) {
             raiseEGLInitError();
         }
-        LogUtil.v(TAG, "createWindowSurface by" + mNativeWindow);
-        eglSurface = egl10.eglCreateWindowSurface(eglDisplay, eglConfigs[0], mNativeWindow, EGL_SURFACE_ATTRIBUTE_LIST);
+        LogUtil.v(TAG, "createWindowSurface by" + mNativeWindow.get());
+        eglSurface = egl10.eglCreateWindowSurface(eglDisplay, eglConfigs[0], mNativeWindow.get(), EGL_SURFACE_ATTRIBUTE_LIST);
         if (eglSurface == EGL10.EGL_NO_SURFACE) {
             raiseEGLInitError();
         }
@@ -238,7 +239,7 @@ class VideoRenderThread extends HandlerThread {
                 boolean recycled = msg.arg1 != 0;
                 LogUtil.w(TAG, "start rendering: {" + bitmap + ", size: " +
                         bitmap.getAllocationByteCount() + ", \n recycled: "
-                        + recycled + ", \n textureSurface: " + mNativeWindow + "}");
+                        + recycled + ", \n textureSurface: " + mNativeWindow.get() + "}");
                 initEGL();
                 performRenderPoster(bitmap, recycled);
                 shutdownEGL();
@@ -339,7 +340,7 @@ class VideoRenderThread extends HandlerThread {
 
 
     void render(Bitmap bitmap, boolean recycled, SurfaceTexture surfaceTexture) {
-        mNativeWindow = surfaceTexture;
+        mNativeWindow = new WeakReference<>(surfaceTexture);
         Message msg = mWorker.obtainMessage();
         msg.obj = bitmap;
         msg.arg1 = recycled ? 1 : 0;

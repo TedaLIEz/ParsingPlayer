@@ -386,9 +386,9 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @VisibleForTesting
     void setVideoPath(String path) {
         if (mPlayer == null)
-            mPlayer = createPlayer(mContext);
+            mPlayer = createPlayer(mContext.get());
         try {
-            mPlayer.setDataSource(mContext, Uri.parse(path));
+            mPlayer.setDataSource(mContext.get(), Uri.parse(path));
             openVideo();
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);

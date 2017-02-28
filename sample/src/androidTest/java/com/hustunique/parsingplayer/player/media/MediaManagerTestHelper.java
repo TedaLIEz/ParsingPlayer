@@ -17,9 +17,6 @@
 
 package com.hustunique.parsingplayer.player.media;
 
-import android.support.test.InstrumentationRegistry;
-
-
 /**
  * Created by JianGuo on 2/24/17.
  */
@@ -27,10 +24,10 @@ import android.support.test.InstrumentationRegistry;
 public class MediaManagerTestHelper {
 
     public static void setVideoUri(String uri) {
-        ParsingMediaManager.getInstance(InstrumentationRegistry.getTargetContext()).playOrigin(uri);
+        ParsingMediaManager.getInstance().playOrigin(uri);
     }
 
     public static boolean isPlaying() {
-        return ParsingMediaManager.getInstance(InstrumentationRegistry.getTargetContext()).isPlaying();
+        return ParsingMediaManager.getInstance().isPlaying();
     }
 }

@@ -28,11 +28,11 @@ import java.lang.ref.WeakReference;
  * Created by CoXier on 17-2-7.
  */
 
-public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
-    private WeakReference<ParsingPlayerProxy> mMedia;
+class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
+    private WeakReference<ParsingPlayerProxy> mPlayerProxy;
 
-    public ParsingTask(ParsingPlayerProxy playerManager) {
-        mMedia = new WeakReference<>(playerManager);
+    ParsingTask(ParsingPlayerProxy playerManager) {
+        mPlayerProxy = new WeakReference<>(playerManager);
     }
 
     @Override
@@ -45,6 +45,6 @@ public class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
     protected void onPostExecute(VideoInfo videoInfo) {
         super.onPostExecute(videoInfo);
         // videoView will start playing automatically when process prepared
-        mMedia.get().setConcatVideos(videoInfo);
+        mPlayerProxy.get().setConcatVideos(videoInfo);
     }
 }

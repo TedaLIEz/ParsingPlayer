@@ -20,7 +20,6 @@ package com.hustunique.parsingplayer.player.media;
 import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -157,7 +156,9 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         return null;
     }
 
-    public @Quality int getQuality() {
+    public
+    @Quality
+    int getQuality() {
         return mProvider.getQuality();
     }
 
@@ -188,7 +189,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     @Override
     public void onPrepared(IMediaPlayer mp) {
-        LogUtil.i(TAG,"Proxy onPrepared");
+        LogUtil.i(TAG, "Proxy onPrepared");
         mCurrentState = STATE_PLAYING;
         mVideoWidth = mp.getVideoWidth();
         mVideoHeight = mp.getVideoHeight();
@@ -363,12 +364,14 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
     }
 
-    private void setConcatVideos(@Quality int quality){
+    private void setConcatVideos(@Quality int quality) {
         setConcatContent(mProvider.provideSource(quality));
     }
+
     private void setConcatContent(String content) {
         LogUtil.i(TAG, "set temp file content: \n" + content);
-        mPlayer.setConcatVideoPath(SystemClock.currentThreadTimeMillis() + "",
+        String fileName = mProvider.getVideoInfo().getId() + "_" + mProvider.getQuality();
+        mPlayer.setConcatVideoPath(fileName,
                 content, new LoadingCallback<String>() {
                     @Override
                     public void onSuccess(final String result) {
@@ -418,12 +421,11 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         mPlayer.prepareAsync();
     }
 
-    boolean isInPlayBackState() {
+    private boolean isInPlayBackState() {
         return mCurrentState != STATE_ERROR
                 && mCurrentState != STATE_IDLE
                 && mCurrentState != STATE_PREPARING;
     }
-
 
 
     @Override

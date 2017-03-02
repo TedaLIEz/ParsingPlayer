@@ -92,7 +92,7 @@ public abstract class Extractor {
         for (int i = 3; i >= 0; i--) {
             storedStreamMap.put(i, streamMap.get(keys[keys.length - 4 + i]));
         }
-        return new VideoInfo(storedStreamMap, videoInfo.getTitle());
+        return new VideoInfo(videoInfo.getId(),storedStreamMap, videoInfo.getTitle());
     }
 
     protected JsonObject parseResponse(String response) {

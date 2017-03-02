@@ -111,6 +111,8 @@ public class YoukuExtractor extends Extractor {
         mHdMap.put(FORMAT_HD3, VideoInfo.HD_HIGH);
     }
 
+    private String mId;
+
 
     @Override
     @Nullable
@@ -126,12 +128,12 @@ public class YoukuExtractor extends Extractor {
         mSid = sidAndToken[0];
         mToken = sidAndToken[1];
         mOip = getOip(data);
-        LogUtil.i(TAG, "sid: " + mSid +" ,mToken: " + mToken + " ,oip: " + mOip);
+        LogUtil.i(TAG, "sid: " + mSid + " ,mToken: " + mToken + " ,oip: " + mOip);
         mFiledMap = constructFiledMap(data);
         String title = getTitle(data);
-        Map<Integer,Stream> streamMap = getSegMap(data);
-        LogUtil.d(TAG,"hd length:"+streamMap.keySet().size());
-        return new VideoInfo(streamMap, title);
+        Map<Integer, Stream> streamMap = getSegMap(data);
+        LogUtil.d(TAG, "hd length:" + streamMap.keySet().size());
+        return new VideoInfo(mId,streamMap, title);
     }
 
     @VisibleForTesting
@@ -226,10 +228,10 @@ public class YoukuExtractor extends Extractor {
 
     @Override
     String constructBasicUrl(@NonNull String url) {
-        String id = searchValue(url,ID_REGEX);
-        if (id == null)
+        mId = searchValue(url, ID_REGEX);
+        if (mId == null)
             throw new IllegalArgumentException("Can't find id of this video.Please check");
-        return String.format("http://play.youku.com/play/get.json?vid=%s&ct=12", id);
+        return String.format("http://play.youku.com/play/get.json?vid=%s&ct=12", mId);
     }
 
 

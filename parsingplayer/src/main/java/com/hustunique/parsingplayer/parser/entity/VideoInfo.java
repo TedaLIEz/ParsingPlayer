@@ -40,14 +40,19 @@ public class VideoInfo {
     private Map<Integer, Stream> streamMap;
     private String title;
 
+    // Each video has an unique id
+    private String id;
+
 
     public Stream getStream(@Quality int hd) {
         return streamMap.get(hd);
     }
 
-    public VideoInfo(@NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
+    public VideoInfo(@NonNull String id,@NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
+        if (id == null) throw new IllegalArgumentException("Id can't be null");
         if (streamMap == null) throw new IllegalArgumentException("SegsMap can't be null");
         if (title == null) throw new IllegalArgumentException("Title can't be null");
+        this.id = id;
         this.streamMap = streamMap;
         this.title = title;
     }
@@ -60,6 +65,10 @@ public class VideoInfo {
 
     public Map<Integer, Stream> getStreamMap() {
         return streamMap;
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override

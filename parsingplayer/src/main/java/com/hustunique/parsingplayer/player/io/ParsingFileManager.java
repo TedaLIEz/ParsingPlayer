@@ -61,21 +61,6 @@ public final class ParsingFileManager {
         mFileService.execute(task);
     }
 
-
-    public void cleanUp(final String childFileName) {
-        Runnable cleanRunnable = new Runnable() {
-            @Override
-            public void run() {
-                File childFile = new File(mRootDirectory, childFileName);
-                if (!childFile.exists())
-                    throw new IllegalArgumentException("File# " + childFileName + "doesn't exit");
-                childFile.delete();
-            }
-        };
-        mCleanupService.submit(cleanRunnable);
-    }
-
-
     private WriteTask<String> createWriteTask(final String filename, final String content,
                                               LoadingCallback<String> callback) {
         Callable<String> callable = new Callable<String>() {

@@ -45,7 +45,7 @@ public class QQExtractor extends Extractor {
         mTitle = videoJson.get("vl").getAsJsonObject().get("vi")
                 .getAsJsonArray().get(0).getAsJsonObject().get("ti").getAsString();
         Map<Integer, Stream> streamMap = getStreamMap(videoJson);
-        return new VideoInfo(streamMap, mTitle);
+        return new VideoInfo(mVid,streamMap, mTitle);
     }
 
     @NonNull

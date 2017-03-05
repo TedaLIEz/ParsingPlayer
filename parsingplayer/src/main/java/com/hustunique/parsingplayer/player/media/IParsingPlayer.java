@@ -19,8 +19,6 @@ package com.hustunique.parsingplayer.player.media;
 
 import android.support.annotation.IntDef;
 
-import com.hustunique.parsingplayer.player.io.LoadingCallback;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -44,7 +42,7 @@ interface IParsingPlayer extends IMediaPlayer {
 
     int PARSING_ERROR = -10002;
     int INVALID_VIDEO_INFO = -1;
-    void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback);
+//    void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback);
     void setOption(@OptionCategory int category, String name, String value);
     void setOption(@OptionCategory int category, String name, long value);
 }

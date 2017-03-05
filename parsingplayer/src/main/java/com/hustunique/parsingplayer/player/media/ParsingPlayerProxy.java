@@ -32,8 +32,10 @@ import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
+import com.hustunique.parsingplayer.player.io.ParsingFileManager;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.util.LogUtil;
+import com.hustunique.parsingplayer.util.Util;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -74,15 +76,18 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     private int mVideoSarNum, mVideoSarDen;
     private int mSeekWhenPrepared;
 
+
+    private ParsingFileManager mManager;
+
     ParsingPlayerProxy(Context context, OnStateListener listener) {
-        mOnVideoPreparedListener = listener;
+        mStateListener = listener;
         mContext = new WeakReference<>(context);
     }
 
 
     private IParsingPlayer createPlayer(Context context) {
         mCurrentState = STATE_IDLE;
-        IParsingPlayer iParsingPlayer = new ParsingPlayer(context);
+        IParsingPlayer iParsingPlayer = new ParsingPlayer();
         AudioManager audioManager = (AudioManager) context.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         iParsingPlayer.setOnPreparedListener(this);
@@ -96,7 +101,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
 
-    private OnStateListener mOnVideoPreparedListener;
+    private OnStateListener mStateListener;
 
     IMediaPlayer getPlayer() {
         return mPlayer;
@@ -183,8 +188,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         void onInfo(int arg);
     }
 
-    void setStateListener(@Nullable OnStateListener onVideoPreparedListener) {
-        mOnVideoPreparedListener = onVideoPreparedListener;
+    void setStateListener(@Nullable OnStateListener onStateListener) {
+        mStateListener = onStateListener;
     }
 
     @Override
@@ -198,8 +203,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             seekTo(seekToPos);
         }
         if (mVideoHeight != 0 && mVideoWidth != 0) {
-            if (mOnVideoPreparedListener != null)
-                mOnVideoPreparedListener.onPrepared(mVideoWidth,
+            if (mStateListener != null)
+                mStateListener.onPrepared(mVideoWidth,
                         mVideoHeight, mVideoSarNum, mVideoSarDen);
         }
     }
@@ -211,8 +216,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         mVideoSarNum = mp.getVideoSarNum();
         mVideoSarDen = mp.getVideoSarDen();
         if (mVideoWidth != 0 && mVideoHeight != 0) {
-            if (mOnVideoPreparedListener != null)
-                mOnVideoPreparedListener.onVideoSizeChanged(mVideoWidth, mVideoHeight,
+            if (mStateListener != null)
+                mStateListener.onVideoSizeChanged(mVideoWidth, mVideoHeight,
                         mVideoSarNum, mVideoSarDen);
         }
     }
@@ -220,24 +225,24 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     @Override
     public void onCompletion(IMediaPlayer iMediaPlayer) {
         mCurrentState = STATE_PLAYBACK_COMPLETED;
-        if (mOnVideoPreparedListener != null)
-            mOnVideoPreparedListener.onCompleted();
+        if (mStateListener != null)
+            mStateListener.onCompleted();
     }
 
     @Override
     public boolean onError(IMediaPlayer mp, int framework_err, int impl_err) {
         LogUtil.e(TAG, "Error: " + framework_err + "," + impl_err);
         mCurrentState = STATE_ERROR;
-        if (mOnVideoPreparedListener != null)
+        if (mStateListener != null)
             // TODO: 2/19/17 Convert identifier to msg
-            mOnVideoPreparedListener.onError("Some Error");
+            mStateListener.onError("Some Error");
         return true;
     }
 
     @Override
     public boolean onInfo(IMediaPlayer mp, int arg1, int arg2) {
-        if (mOnVideoPreparedListener != null)
-            mOnVideoPreparedListener.onInfo(arg1);
+        if (mStateListener != null)
+            mStateListener.onInfo(arg1);
         switch (arg1) {
             case IMediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING:
                 LogUtil.d(TAG, "MEDIA_INFO_VIDEO_TRACK_LAGGING:");
@@ -358,32 +363,31 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
 
     void setConcatVideos(@NonNull VideoInfo videoInfo) {
-        if (mPlayer == null)
-            mPlayer = createPlayer(mContext.get());
+        mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(mContext.get(),
+                videoInfo.getTitle().trim()));
         mProvider = new ConcatSourceProvider(videoInfo, mContext.get().getApplicationContext());
         setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
     }
 
     private void setConcatVideos(@Quality int quality) {
+        assert mProvider != null;
         setConcatContent(mProvider.provideSource(quality));
     }
 
     private void setConcatContent(String content) {
         LogUtil.i(TAG, "set temp file content: \n" + content);
         String fileName = mProvider.getVideoInfo().getId() + "_" + mProvider.getQuality();
-        mPlayer.setConcatVideoPath(fileName,
-                content, new LoadingCallback<String>() {
-                    @Override
-                    public void onSuccess(final String result) {
-                        // use post here to run in main thread
-                        setVideoURI(Uri.parse(result));
-                    }
+        mManager.write(fileName, content, new LoadingCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                setVideoURI(Uri.parse(result));
+            }
 
-                    @Override
-                    public void onFailed(Exception e) {
-                        Log.wtf(TAG, e);
-                    }
-                });
+            @Override
+            public void onFailed(Exception e) {
+                Log.wtf(TAG, e);
+            }
+        });
     }
 
     @VisibleForTesting
@@ -405,6 +409,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
+        if (mPlayer == null) mPlayer = createPlayer(mContext.get());
         try {
             mPlayer.setDataSource(mContext.get(), uri, headers);
             openVideo();

@@ -24,9 +24,7 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
-import com.hustunique.parsingplayer.player.io.LoadingCallback;
-import com.hustunique.parsingplayer.player.io.ParsingFileManager;
-import com.hustunique.parsingplayer.util.Util;
+import com.hustunique.parsingplayer.BuildConfig;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -45,18 +43,15 @@ import tv.danmaku.ijk.media.player.misc.ITrackInfo;
  */
 
 public class ParsingPlayer implements IParsingPlayer {
-    private static final String CACHE_DIR = "pPlayer";
     private static final String TAG = "ParsingPlayer";
     private final IjkMediaPlayer mMediaPlayer;
-    private final ParsingFileManager mManager;
 
-    public ParsingPlayer(Context context) {
-        this(context, new Config());
+    public ParsingPlayer() {
+        this(new Config());
     }
 
-    public ParsingPlayer(Context context, Config config) {
+    public ParsingPlayer(Config config) {
         mMediaPlayer = createPlayer(config);
-        mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(context, CACHE_DIR));
     }
 
 
@@ -77,7 +72,7 @@ public class ParsingPlayer implements IParsingPlayer {
         IjkMediaPlayer ijkMediaPlayer = new IjkMediaPlayer();
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-//        IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG ? IjkMediaPlayer.IJK_LOG_INFO : IjkMediaPlayer.IJK_LOG_DEFAULT);
+        IjkMediaPlayer.native_setLogLevel(BuildConfig.DEBUG ? IjkMediaPlayer.IJK_LOG_DEFAULT : IjkMediaPlayer.IJK_LOG_ERROR);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
                 "safe", config.safe ? 1 : 0);
         ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT,
@@ -102,10 +97,10 @@ public class ParsingPlayer implements IParsingPlayer {
     }
 
 
-    @Override
-    public void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback) {
-        mManager.write(concatVideoPath, content, callback);
-    }
+//    @Override
+//    public void setConcatVideoPath(String concatVideoPath, String content, LoadingCallback<String> callback) {
+//        mManager.write(concatVideoPath, content, callback);
+//    }
 
 
     @Override

@@ -257,12 +257,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     @VisibleForTesting
-    void play(VideoInfo info) {
-        quickCheckInMap(info.getTitle());
-        mCurrentPlayerProxy.setConcatVideos(info);
-    }
-
-    @VisibleForTesting
     void playOrigin(String uri) {
         quickCheckInMap(uri);
         mCurrentPlayerProxy.setVideoPath(uri);

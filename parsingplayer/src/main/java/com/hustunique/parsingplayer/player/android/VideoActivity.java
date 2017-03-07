@@ -108,6 +108,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
     }
 
     private void intiVideoInfoAndQuality() {
+        // Confusing!
         mVideoInfo = mVideoView.getVideoInfo();
         mQuality = mVideoView.getQuality();
         if (mVideoInfo != null) {

@@ -388,15 +388,16 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(mContext.get(),
                 videoInfo.getTitle().trim()));
         mProvider = new ConcatSourceProvider(videoInfo, mContext.get().getApplicationContext());
-        setConcatContent(mProvider.provideSource(VideoInfo.HD_UNSPECIFIED));
+        setConcatContent(VideoInfo.HD_UNSPECIFIED);
     }
 
     private void setConcatVideos(@Quality int quality) {
-        assert mProvider != null;
-        setConcatContent(mProvider.provideSource(quality));
+        setConcatContent(quality);
     }
 
-    private void setConcatContent(String content) {
+    private void setConcatContent(@Quality int quality) {
+        assert mProvider != null;
+        String content = mProvider.provideSource(quality);
         LogUtil.i(TAG, "set temp file content: \n" + content);
         String fileName = mProvider.getVideoInfo().getId() + "_" + mProvider.getQuality();
         mManager.write(fileName, content, new LoadingCallback<String>() {

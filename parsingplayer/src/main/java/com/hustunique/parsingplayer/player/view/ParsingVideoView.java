@@ -415,8 +415,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return ss;
     }
 
-    public VideoInfo getVideoInfo() {
-        return mMedia.getVideoInfo();
+    public @Nullable VideoInfo getVideoInfo() {
+        return mMedia.getCurrentVideoInfo();
     }
 
     public

@@ -19,6 +19,7 @@ package com.hustunique.parsingplayer.player.media;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
@@ -234,9 +235,30 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         LogUtil.e(TAG, "Error: " + framework_err + "," + impl_err);
         mCurrentState = STATE_ERROR;
         if (mStateListener != null)
-            // TODO: 2/19/17 Convert identifier to msg
-            mStateListener.onError("Some Error");
+
+            mStateListener.onError(errToStr(framework_err, impl_err));
         return true;
+    }
+
+    // TODO: 3/7/17 usage of impl_err
+    private String errToStr(int framework_err, int impl_err) {
+        String msg = null;
+        if (framework_err == MediaPlayer.MEDIA_ERROR_IO) {
+            msg = "IO Error";
+        } else if (framework_err == MediaPlayer.MEDIA_ERROR_MALFORMED) {
+            msg = "Bitstream unsupported";
+        } else if (framework_err == MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK) {
+            msg = "Invalid progressive playback";
+        } else if (framework_err == MediaPlayer.MEDIA_ERROR_TIMED_OUT) {
+            msg = "Operation time out";
+        } else if (framework_err == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
+            msg = "MediaPlayer died";
+        } else if (framework_err == MediaPlayer.MEDIA_ERROR_UNSUPPORTED) {
+            msg = "File spec is not supported in the media framework";
+        } else if (framework_err == MediaPlayer.MEDIA_ERROR_UNKNOWN) {
+            msg = "Unknown error";
+        }
+        return msg;
     }
 
     @Override

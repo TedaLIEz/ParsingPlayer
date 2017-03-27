@@ -11,7 +11,7 @@ import android.support.annotation.VisibleForTesting;
 import android.view.Surface;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.parsingplayer.parser.provider.Quality;
+import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;

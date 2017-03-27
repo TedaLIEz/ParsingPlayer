@@ -19,8 +19,6 @@ package com.hustunique.parsingplayer.parser.entity;
 
 import android.support.annotation.NonNull;
 
-import com.hustunique.parsingplayer.parser.provider.Quality;
-
 import java.util.Map;
 
 /**
@@ -48,7 +46,7 @@ public class VideoInfo {
         return streamMap.get(hd);
     }
 
-    public VideoInfo(@NonNull String id,@NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
+    public VideoInfo(@NonNull String id, @NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
         if (id == null) throw new IllegalArgumentException("Id can't be null");
         if (streamMap == null) throw new IllegalArgumentException("SegsMap can't be null");
         if (title == null) throw new IllegalArgumentException("Title can't be null");

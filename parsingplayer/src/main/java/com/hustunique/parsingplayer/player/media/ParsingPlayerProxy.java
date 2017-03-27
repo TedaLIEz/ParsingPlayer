@@ -30,7 +30,7 @@ import android.view.SurfaceHolder;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
-import com.hustunique.parsingplayer.parser.provider.Quality;
+import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 import com.hustunique.parsingplayer.player.io.ParsingFileManager;
@@ -397,10 +397,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     private void setConcatContent(@Quality int quality) {
         assert mProvider != null;
-        String content = mProvider.provideSource(quality);
-        LogUtil.i(TAG, "set temp file content: \n" + content);
-        String fileName = mProvider.getVideoInfo().getId() + "_" + mProvider.getQuality();
-        mManager.write(fileName, content, new LoadingCallback<String>() {
+        mManager.write(mProvider, quality, new LoadingCallback<String>() {
             @Override
             public void onSuccess(String result) {
                 setVideoURI(Uri.parse(result));

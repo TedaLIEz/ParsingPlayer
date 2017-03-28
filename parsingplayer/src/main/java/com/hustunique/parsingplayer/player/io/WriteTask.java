@@ -22,8 +22,9 @@ import java.util.concurrent.Callable;
 /**
  * Created by JianGuo on 2/5/17.
  * Async callback used in thread pool
+ * Deprecated as we want to run the callback in the main thread.
  */
-
+@Deprecated
 final class WriteTask<T> implements Runnable {
     private final Callable<T> mCallable;
     private final LoadingCallback<T> mCallback;

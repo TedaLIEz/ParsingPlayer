@@ -17,6 +17,15 @@
 
 package com.hustunique.parsingplayer.player.io;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Process;
+import android.util.Pair;
+
+import com.hustunique.parsingplayer.parser.entity.Quality;
+import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
+import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 
 import java.io.File;
@@ -32,16 +41,18 @@ import java.util.concurrent.TimeUnit;
  * Created by JianGuo on 2/5/17.
  * File manager used in player.
  */
-
+// TODO: 3/7/17 Caching
 public final class ParsingFileManager {
     private static final String TAG = "ParsingFileManager";
     private final ExecutorService mFileService;
     private final File mRootDirectory;
+    private static final int MESSAGE_POST_RESULT = 1;
+    private static Handler sHandler;
     private final ExecutorService mCleanupService = new ThreadPoolExecutor(0, 1,
             60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
     private ParsingFileManager(File mRootDirectory) {
-        mFileService = ConcatExecutorService.createService();
+        mFileService = FileExecutor.createService();
         this.mRootDirectory = mRootDirectory;
         mRootDirectory.mkdirs();
     }
@@ -56,20 +67,70 @@ public final class ParsingFileManager {
     }
 
 
-    public void write(String filename, String content, LoadingCallback<String> callback) {
-        WriteTask<String> task = createWriteTask(filename, content, callback);
-        mFileService.execute(task);
+    /**
+     * Write a ffconcat config file
+     *
+     * @param provider the video info source provider, see {@link VideoInfoSourceProvider}
+     * @param quality  the quality, see {@link Quality} for details
+     * @param callback the loading callback
+     */
+    public void write(VideoInfoSourceProvider provider, @Quality int quality, LoadingCallback<String> callback) {
+        String content = provider.provideSource(quality);
+        LogUtil.i(TAG, "set temp file content: \n" + content);
+        String fileName = provider.getVideoInfo().getId() + "_" + provider.getQuality();
+        Callable<String> task = createWriteTask(fileName, content, callback);
+        mFileService.submit(task);
     }
 
-    private WriteTask<String> createWriteTask(final String filename, final String content,
-                                              LoadingCallback<String> callback) {
+    private Callable<String> createWriteTask(final String filename, final String content,
+                                             final LoadingCallback<String> callback) {
         Callable<String> callable = new Callable<String>() {
             @Override
             public String call() throws FileNotFoundException {
-                return Util.writeToFile(mRootDirectory, filename, content);
+                String path = null;
+                try {
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                    path = Util.writeToFile(mRootDirectory, filename, content);
+                } catch (Throwable tr) {
+                    throw tr;
+                } finally {
+                    postResult(new Pair<>(path, callback));
+                }
+                return path;
             }
         };
-        return new WriteTask<>(callable, callback);
+        return callable;
     }
+
+    private void postResult(Pair<String, LoadingCallback<String>> pair) {
+        Message msg = getHandler().obtainMessage(MESSAGE_POST_RESULT,
+                pair);
+        msg.sendToTarget();
+    }
+
+    private static Handler getHandler() {
+        synchronized (ParsingFileManager.class) {
+            if (sHandler == null) {
+                sHandler = new InternalHandler();
+            }
+            return sHandler;
+        }
+    }
+
+    private static class InternalHandler extends Handler {
+
+        InternalHandler() {
+            super(Looper.getMainLooper());
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public void handleMessage(Message msg) {
+            Pair<String, LoadingCallback<String>> callback = (Pair<String, LoadingCallback<String>>) msg.obj;
+            callback.second.onSuccess(callback.first);
+
+        }
+    }
+
 
 }

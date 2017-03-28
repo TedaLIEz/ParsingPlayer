@@ -11,7 +11,7 @@ import android.support.annotation.VisibleForTesting;
 import android.view.Surface;
 
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.parsingplayer.parser.provider.Quality;
+import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
@@ -147,9 +147,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         mContext = new WeakReference<>(context);
         if (mRenderView.get() == renderView) return;
         configureRenderView(renderView);
-        // buggy if we don't set url immediately in onCreate
-//        if (mCurrentPlayerProxy != null)
-//            mCurrentPlayerProxy.start();
     }
 
     /**
@@ -158,9 +155,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
      * @param url the target url
      */
     public void onDestroy(String url) {
-//        if (mBitmap != null)
-//            mBitmap.recycle();
-//        mBitmap = null;
         mRenderView.clear();
         mRenderView = null;
         destroyPlayerByURL(url);
@@ -257,12 +251,6 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     @VisibleForTesting
-    void play(VideoInfo info) {
-        quickCheckInMap(info.getTitle());
-        mCurrentPlayerProxy.setConcatVideos(info);
-    }
-
-    @VisibleForTesting
     void playOrigin(String uri) {
         quickCheckInMap(uri);
         mCurrentPlayerProxy.setVideoPath(uri);
@@ -345,7 +333,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         mCurrentPlayerProxy.setBrightness(brightness);
     }
 
-    public VideoInfo getVideoInfo() {
+    public @Nullable VideoInfo getCurrentVideoInfo() {
         return mCurrentPlayerProxy.getVideoInfo();
     }
 

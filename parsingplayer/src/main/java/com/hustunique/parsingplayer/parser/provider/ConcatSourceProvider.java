@@ -23,6 +23,7 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
+import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.util.LogUtil;
 
@@ -44,6 +45,7 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     private
     @Quality
     int mQuality;
+
     @Override
     public String provideSource(@Quality int quality) {
         quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
@@ -53,7 +55,7 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
         if (quality < VideoInfo.HD_LOW)
             throw new RuntimeException("No such hd in this url");
         mQuality = quality;
-        LogUtil.i(TAG,"current quality:" + mQuality);
+        LogUtil.i(TAG, "current quality:" + mQuality);
         return ProtocolHelper.concat(mVideoInfo.getStream(quality).getSegs());
     }
 
@@ -72,7 +74,7 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     int getHdByNetwork() {
         ConnectivityManager cm = (ConnectivityManager) mContext.get().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if (networkInfo==null || !networkInfo.isConnected()){
+        if (networkInfo == null || !networkInfo.isConnected()) {
             LogUtil.e(TAG, "No networking found");
             makeToast();
             return VideoInfo.HD_UNSPECIFIED;
@@ -106,6 +108,6 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     }
 
     private void makeToast() {
-        Toast.makeText(mContext.get(),"No network,please check",Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext.get(), "No network,please check", Toast.LENGTH_SHORT).show();
     }
 }

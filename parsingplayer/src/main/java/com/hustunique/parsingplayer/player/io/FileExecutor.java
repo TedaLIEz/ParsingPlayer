@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
  * Created by JianGuo on 2/5/17.
  * Thread pool for file io
  */
-class ConcatExecutorService extends ThreadPoolExecutor {
-    private static final String TAG = "ConcatExecutorService";
+class FileExecutor extends ThreadPoolExecutor {
+    private static final String TAG = "FileExecutor";
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     // We want at least 2 threads and at most 4 threads in the core pool,
@@ -39,13 +39,13 @@ class ConcatExecutorService extends ThreadPoolExecutor {
     private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
     private static final int KEEP_ALIVE_SECONDS = 30;
 
-    private ConcatExecutorService() {
+    private FileExecutor() {
         super(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(), new Util.ParsingThreadFactory());
     }
 
-    static ConcatExecutorService createService() {
-        return new ConcatExecutorService();
+    static FileExecutor createService() {
+        return new FileExecutor();
     }
 
 

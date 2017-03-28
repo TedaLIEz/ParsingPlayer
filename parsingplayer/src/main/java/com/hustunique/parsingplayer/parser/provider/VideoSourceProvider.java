@@ -17,6 +17,8 @@
 
 package com.hustunique.parsingplayer.parser.provider;
 
+import com.hustunique.parsingplayer.parser.entity.Quality;
+
 /**
  * Created by JianGuo on 1/29/17.
  * Interface providing video source by {@link Quality}

@@ -1,6 +1,6 @@
 /*
- *
  * Copyright (c) 2017 UniqueStudio
+ *
  *
  * This file is part of ParsingPlayer.
  *
@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-package com.hustunique.parsingplayer.parser.provider;
+package com.hustunique.parsingplayer.parser.entity;
 
 import android.support.annotation.IntDef;
 

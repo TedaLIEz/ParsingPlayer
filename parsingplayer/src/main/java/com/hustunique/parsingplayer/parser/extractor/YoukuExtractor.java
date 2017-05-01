@@ -68,16 +68,16 @@ public class YoukuExtractor extends Extractor {
      * <li>hd3: 3</li>
      * </ul>
      */
-    public static final String FORMAT_3GP = "3gp";
-    public static final String FORMAT_3GPHD = "3gphd";
-    public static final String FORMAT_FLV = "flv";
-    public static final String FORMAT_FLVHD = "flvhd";
-    public static final String FORMAT_MP4 = "mp4";
-    public static final String FORMAT_MP4HD = "mp4hd";
-    public static final String FORMAT_MP4HD2 = "mp4hd2";
-    public static final String FORMAT_MP4HD3 = "mp4hd3";
-    public static final String FORMAT_HD2 = "hd2";
-    public static final String FORMAT_HD3 = "hd3";
+    private static final String FORMAT_3GP = "3gp";
+    private static final String FORMAT_3GPHD = "3gphd";
+    private static final String FORMAT_FLV = "flv";
+    private static final String FORMAT_FLVHD = "flvhd";
+    private static final String FORMAT_MP4 = "mp4";
+    private static final String FORMAT_MP4HD = "mp4hd";
+    private static final String FORMAT_MP4HD2 = "mp4hd2";
+    private static final String FORMAT_MP4HD3 = "mp4hd3";
+    private static final String FORMAT_HD2 = "hd2";
+    private static final String FORMAT_HD3 = "hd3";
 
     private static HashMap<String, String> mExtMap = new HashMap<>();
     private static HashMap<String, Integer> mHdMap = new HashMap<>();
@@ -271,7 +271,9 @@ public class YoukuExtractor extends Extractor {
             if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
                 continue;
             String format = stream.getAsJsonObject().get("stream_type").getAsString();
-            String fileid = stream.getAsJsonObject().get("stream_fileid").getAsString();
+            String fileid = stream.getAsJsonObject().get("segs").getAsJsonArray()
+                    .get(0).getAsJsonObject()
+                    .get("fileid").getAsString();
             fileidMap.put(format, fileid);
         }
         return fileidMap;

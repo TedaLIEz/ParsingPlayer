@@ -39,8 +39,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
+import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
 import com.hustunique.parsingplayer.player.media.ParsingMediaManager;
@@ -415,7 +416,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return ss;
     }
 
-    public @Nullable VideoInfo getVideoInfo() {
+    public @Nullable
+    VideoInfo getVideoInfo() {
         return mMedia.getCurrentVideoInfo();
     }
 

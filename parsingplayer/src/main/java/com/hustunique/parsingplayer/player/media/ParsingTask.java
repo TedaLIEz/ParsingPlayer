@@ -21,6 +21,7 @@ import android.os.AsyncTask;
 
 import com.hustunique.parsingplayer.parser.VideoParser;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import java.lang.ref.WeakReference;
 

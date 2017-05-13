@@ -25,14 +25,15 @@ import android.widget.Toast;
 
 import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.lang.ref.WeakReference;
 
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_STANDARD;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_HIGH;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_LOW;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_MEDIUM;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_STANDARD;
 
 /**
  * Created by JianGuo on 2/10/17.
@@ -48,15 +49,11 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
 
     @Override
     public String provideSource(@Quality int quality) {
-        quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
-        while (mVideoInfo.getStream(quality) == null) {
-            quality--;
-        }
-        if (quality < VideoInfo.HD_LOW)
-            throw new RuntimeException("No such hd in this url");
+        quality = quality == VideoInfoImpl.HD_UNSPECIFIED ? getHdByNetwork() : quality;
+        // TODO: is this quality necessary?
         mQuality = quality;
         LogUtil.i(TAG, "current quality:" + mQuality);
-        return ProtocolHelper.concat(mVideoInfo.getStream(quality).getSegs());
+        return mVideoInfo.provideSource(quality);
     }
 
     @Override
@@ -77,7 +74,7 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
         if (networkInfo == null || !networkInfo.isConnected()) {
             LogUtil.e(TAG, "No networking found");
             makeToast();
-            return VideoInfo.HD_UNSPECIFIED;
+            return VideoInfoImpl.HD_UNSPECIFIED;
         }
         switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:

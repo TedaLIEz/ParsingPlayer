@@ -1,6 +1,6 @@
 /*
- *
  * Copyright (c) 2017 UniqueStudio
+ *
  *
  * This file is part of ParsingPlayer.
  *
@@ -17,81 +17,21 @@
 
 package com.hustunique.parsingplayer.parser.entity;
 
-import android.support.annotation.NonNull;
-
-import java.util.Map;
+import java.util.Set;
 
 /**
- * Created by JianGuo on 1/16/17.
- * POJO for video information extracted from websites
- * A list of segs represents a steam
+ * Created by JianGuo on 5/13/17.
+ * Interface for parsed video info from websites.
  */
-public class VideoInfo {
-    public static final int HD_UNSPECIFIED = -1;
-    public static final int HD_LOW = 0;
-    public static final int HD_MEDIUM = 1;
-    public static final int HD_STANDARD = 2;
-    public static final int HD_HIGH = 3;
 
-
-    // the key is hd
-    private Map<Integer, Stream> streamMap;
-    private String title;
-
-    // Each video has an unique id
-    private String id;
-
-
-    public Stream getStream(@Quality int hd) {
-        return streamMap.get(hd);
-    }
-
-    public VideoInfo(@NonNull String id, @NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
-        if (id == null) throw new IllegalArgumentException("Id can't be null");
-        if (streamMap == null) throw new IllegalArgumentException("SegsMap can't be null");
-        if (title == null) throw new IllegalArgumentException("Title can't be null");
-        this.id = id;
-        this.streamMap = streamMap;
-        this.title = title;
-    }
-
-
-
-    public String getTitle() {
-        return title;
-    }
-
-    public Map<Integer, Stream> getStreamMap() {
-        return streamMap;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String toString() {
-        return "VideoInfo{" +
-                "segsMap=" + streamMap +
-                ", title='" + title + '\'' +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o instanceof VideoInfo) {
-            VideoInfo anotherInfo = (VideoInfo) o;
-            return anotherInfo.streamMap.equals(streamMap) && anotherInfo.title.equals(title);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = streamMap != null ? streamMap.hashCode() : 0;
-        result = 31 * result + title.hashCode();
-        return result;
-    }
+public interface VideoInfo {
+    int HD_UNSPECIFIED = -1;
+    int HD_LOW = 0;
+    int HD_MEDIUM = 1;
+    int HD_STANDARD = 2;
+    int HD_HIGH = 3;
+    String provideSource(@Quality int quality);
+    String getTitle();
+    String getId();
+    Set<Integer> getQualities();
 }
-

@@ -82,7 +82,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
             public void onClick() {
                 mTitleGroupView.setVisibility(mTitleGroupView.isShown() ? View.GONE : View.VISIBLE);
                 if (mQualityView != null)
-                    mQualityView.setVisibility(mQualityView.isShown() ? View.GONE:View.INVISIBLE);
+                    mQualityView.setVisibility(mQualityView.isShown() ? View.GONE : View.INVISIBLE);
             }
         });
 
@@ -100,7 +100,8 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
                 LogUtil.d(TAG, "quality button click");
                 if (mQualityView == null) {
                     mQualityView = new QualityView(VideoActivity.this);
-                    mQualityView.attachViewWithInfo(mVideoView, mVideoInfo.getStreamMap().keySet(),mTVQuality);
+                    mQualityView.attachViewWithInfo(mVideoView, mVideoInfo.getQualities(),
+                            mTVQuality);
                 } else
                     mQualityView.setVisibility(mQualityView.isShown() ? View.GONE : View.VISIBLE);
             }

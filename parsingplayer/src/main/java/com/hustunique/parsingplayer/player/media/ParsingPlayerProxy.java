@@ -28,9 +28,9 @@ import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
-import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
 import com.hustunique.parsingplayer.player.io.ParsingFileManager;

@@ -26,7 +26,7 @@ import java.util.List;
  * Used in ffmpeg protocols
  */
 
-class ProtocolHelper {
+public class ProtocolHelper {
 
     /**
      * Create content of .concat file used in concat protocol
@@ -40,7 +40,7 @@ class ProtocolHelper {
      * @param segs list of segment, see {@link Seg}
      * @return String content of the .concat file
      */
-    static String concat(List<Seg> segs) {
+    public static String concat(List<Seg> segs) {
         StringBuilder sb = new StringBuilder();
         sb.append("ffconcat version 1.0\n");
         for (Seg seg : segs) {

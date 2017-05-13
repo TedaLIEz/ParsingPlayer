@@ -27,12 +27,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -99,16 +99,16 @@ public class YoukuExtractor extends Extractor {
         mExtMap.put(FORMAT_HD2, "flv");
         mExtMap.put(FORMAT_HD3, "flv");
 
-        mHdMap.put(FORMAT_3GP, VideoInfo.HD_LOW);
-        mHdMap.put(FORMAT_3GPHD, VideoInfo.HD_MEDIUM);
-        mHdMap.put(FORMAT_FLV, VideoInfo.HD_LOW);
-        mHdMap.put(FORMAT_FLVHD, VideoInfo.HD_LOW);
-        mHdMap.put(FORMAT_MP4, VideoInfo.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD, VideoInfo.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD2, VideoInfo.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD3, VideoInfo.HD_MEDIUM);
-        mHdMap.put(FORMAT_HD2, VideoInfo.HD_STANDARD);
-        mHdMap.put(FORMAT_HD3, VideoInfo.HD_HIGH);
+        mHdMap.put(FORMAT_3GP, VideoInfoImpl.HD_LOW);
+        mHdMap.put(FORMAT_3GPHD, VideoInfoImpl.HD_MEDIUM);
+        mHdMap.put(FORMAT_FLV, VideoInfoImpl.HD_LOW);
+        mHdMap.put(FORMAT_FLVHD, VideoInfoImpl.HD_LOW);
+        mHdMap.put(FORMAT_MP4, VideoInfoImpl.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD, VideoInfoImpl.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD2, VideoInfoImpl.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD3, VideoInfoImpl.HD_MEDIUM);
+        mHdMap.put(FORMAT_HD2, VideoInfoImpl.HD_STANDARD);
+        mHdMap.put(FORMAT_HD3, VideoInfoImpl.HD_HIGH);
     }
 
     private String mId;
@@ -116,7 +116,7 @@ public class YoukuExtractor extends Extractor {
 
     @Override
     @Nullable
-    VideoInfo createInfo(@NonNull Response response) throws IOException {
+    VideoInfoImpl createInfo(@NonNull Response response) throws IOException {
         JsonObject data = getData(response.body().string());
         if (data == null) return null;
         checkError(data);
@@ -133,7 +133,7 @@ public class YoukuExtractor extends Extractor {
         String title = getTitle(data);
         Map<Integer, Stream> streamMap = getSegMap(data);
         LogUtil.d(TAG, "hd length:" + streamMap.keySet().size());
-        return new VideoInfo(mId,streamMap, title);
+        return new VideoInfoImpl(mId,streamMap, title);
     }
 
     @VisibleForTesting

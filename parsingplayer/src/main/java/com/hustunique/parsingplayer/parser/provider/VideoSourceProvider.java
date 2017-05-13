@@ -18,6 +18,7 @@
 package com.hustunique.parsingplayer.parser.provider;
 
 import com.hustunique.parsingplayer.parser.entity.Quality;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 /**
  * Created by JianGuo on 1/29/17.
@@ -26,9 +27,9 @@ import com.hustunique.parsingplayer.parser.entity.Quality;
 interface VideoSourceProvider {
     /**
      * return video data source by quality
-     * @param quality integer specified in {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_UNSPECIFIED},
-     *                {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_LOW}, {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_MEDIUM},
-     *                {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_STANDARD}, {@link com.hustunique.parsingplayer.parser.entity.VideoInfo#HD_HIGH}
+     * @param quality integer specified in {@link VideoInfoImpl#HD_UNSPECIFIED},
+     *                {@link VideoInfoImpl#HD_LOW}, {@link VideoInfoImpl#HD_MEDIUM},
+     *                {@link VideoInfoImpl#HD_STANDARD}, {@link VideoInfoImpl#HD_HIGH}
      * @return string describing data source
      */
     String provideSource(@Quality int quality);

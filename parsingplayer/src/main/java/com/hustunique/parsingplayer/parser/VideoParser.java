@@ -21,13 +21,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.hustunique.parsingplayer.parser.extractor.QQExtractor;
-import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.extractor.BilibiliExtractor;
 import com.hustunique.parsingplayer.parser.extractor.Extractor;
+import com.hustunique.parsingplayer.parser.extractor.QQExtractor;
 import com.hustunique.parsingplayer.parser.extractor.SoHuExtractor;
 import com.hustunique.parsingplayer.parser.extractor.YoukuExtractor;
+import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.util.HashMap;
 import java.util.Map;

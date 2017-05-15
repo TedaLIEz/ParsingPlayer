@@ -65,7 +65,7 @@ public class SoHuExtractor extends Extractor {
         JsonObject vidDataJson = parseResponse(response.body().string());
         checkError(vidDataJson);
         Map<Integer,Stream> streamMap = getSegsMap(vidDataJson);
-        return new VideoInfoImpl(mId,streamMap, mTitle);
+        return new VideoInfoImpl(mUrl, streamMap, mTitle, mId);
     }
 
 

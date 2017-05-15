@@ -17,6 +17,7 @@
 
 package com.hustunique.parsingplayer.player.io;
 
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -75,11 +76,15 @@ public final class ParsingFileManager {
      * @param callback the loading callback
      */
     public void write(VideoInfoSourceProvider provider, @Quality int quality, LoadingCallback<String> callback) {
+        // FIXME: 5/15/17 provideSource has side effect here.
         String content = provider.provideSource(quality);
         LogUtil.i(TAG, "set temp file content: \n" + content);
-        String fileName = provider.getVideoInfo().getId() + "_" + provider.getQuality();
-        Callable<String> task = createWriteTask(fileName, content, callback);
+        Callable<String> task = createWriteTask(escapedFileName(provider), content, callback);
         mFileService.submit(task);
+    }
+
+    private String escapedFileName(VideoInfoSourceProvider provider) {
+        return Uri.encode(provider.getVideoInfo().getUri()) + "_" + provider.getQuality();
     }
 
     private Callable<String> createWriteTask(final String filename, final String content,
@@ -92,6 +97,7 @@ public final class ParsingFileManager {
                     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                     path = Util.writeToFile(mRootDirectory, filename, content);
                 } catch (Throwable tr) {
+                    tr.printStackTrace();
                     throw tr;
                 } finally {
                     postResult(new Pair<>(path, callback));

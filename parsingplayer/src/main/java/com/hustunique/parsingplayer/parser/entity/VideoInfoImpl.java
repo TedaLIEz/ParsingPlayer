@@ -29,84 +29,93 @@ import java.util.Set;
  * POJO for video information extracted from websites
  * A list of segs represents a steam
  */
-public class VideoInfoImpl implements VideoInfo {
+public class VideoInfoImpl implements IVideoInfo {
 
 
     // the key is hd
-    private Map<Integer, Stream> streamMap;
-    private String title;
+    private Map<Integer, Stream> mStreamMap;
+    private String mTitle;
 
     // Each video has an unique id
-    private String id;
+    private String mId;
+    private String mUri;
 
-
-    public VideoInfoImpl(@NonNull String id, @NonNull Map<Integer, Stream> streamMap, @NonNull String title) {
+    public VideoInfoImpl(@NonNull String uri, @NonNull Map<Integer, Stream> streamMap,
+                         @NonNull String title, @NonNull  String id) {
         if (id == null) throw new IllegalArgumentException("Id can't be null");
         if (streamMap == null) throw new IllegalArgumentException("SegsMap can't be null");
         if (title == null) throw new IllegalArgumentException("Title can't be null");
-        this.id = id;
-        this.streamMap = streamMap;
-        this.title = title;
+        this.mId = id;
+        this.mUri = uri;
+        this.mStreamMap = streamMap;
+        this.mTitle = title;
     }
 
     @Override
     public String getTitle() {
-        return title;
+        return mTitle.replaceAll(" ", "");
     }
 
 
     public Map<Integer, Stream> getStreamMap() {
-        return streamMap;
+        return mStreamMap;
     }
 
     @Override
     public String provideSource(@Quality int quality) {
-        while (getStream(quality) == null) {
-            quality--;
-        }
-        if (quality < HD_LOW) {
-            throw new RuntimeException("No such hd in this url");
-        }
         return ProtocolHelper.concat(getStream(quality).getSegs());
     }
 
-    @Override
     public String getId() {
-        return id;
+        return mId;
     }
 
     @Override
     public Set<Integer> getQualities() {
-        return streamMap.keySet();
+        return mStreamMap.keySet();
+    }
+
+    @Override
+    public String getUri() {
+        return mUri;
     }
 
     private Stream getStream(@Quality int hd) {
-        return streamMap.get(hd);
+        return mStreamMap.get(hd);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        VideoInfoImpl videoInfo = (VideoInfoImpl) o;
+
+        if (!mStreamMap.equals(videoInfo.mStreamMap)) return false;
+        if (!mTitle.equals(videoInfo.mTitle)) return false;
+        if (!mId.equals(videoInfo.mId)) return false;
+        return mUri.equals(videoInfo.mUri);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mStreamMap.hashCode();
+        result = 31 * result + mTitle.hashCode();
+        result = 31 * result + mId.hashCode();
+        result = 31 * result + mUri.hashCode();
+        return result;
     }
 
     @Override
     public String toString() {
         return "VideoInfoImpl{" +
-                "segsMap=" + streamMap +
-                ", title='" + title + '\'' +
+                "mStreamMap=" + mStreamMap +
+                ", mTitle='" + mTitle + '\'' +
+                ", mId='" + mId + '\'' +
+                ", mUri='" + mUri + '\'' +
                 '}';
-    }
-
-    @Override
-    public int hashCode() {
-        int result = streamMap != null ? streamMap.hashCode() : 0;
-        result = 31 * result + title.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o instanceof VideoInfoImpl) {
-            VideoInfoImpl anotherInfo = (VideoInfoImpl) o;
-            return anotherInfo.streamMap.equals(streamMap) && anotherInfo.title.equals(title);
-        }
-        return false;
     }
 }
 

@@ -32,13 +32,14 @@ import java.util.Map;
 
 public class MockHelper {
     private static final String ID = "testId";
+
     public static VideoInfoImpl mockSimpleInfo(String title, String url, int duration) {
         Map<Integer, Stream> map = new HashMap<>();
         List<Seg> list = new ArrayList<>();
         list.add(new Seg(url, duration));
         Stream stream = new Stream(list);
         map.put(VideoInfoImpl.HD_STANDARD, stream);
-        return new VideoInfoImpl(ID, map, title);
+        return new VideoInfoImpl(url, map, title, ID);
     }
 
     public static VideoInfoImpl mockQualityInfo(String title, String url, int duration) {
@@ -51,7 +52,7 @@ public class MockHelper {
         list.add(new Seg(url, duration));
         stream = new Stream(list);
         map.put(VideoInfoImpl.HD_HIGH, stream);
-        return new VideoInfoImpl(ID, map, title);
+        return new VideoInfoImpl(url, map, title, ID);
 
     }
 }

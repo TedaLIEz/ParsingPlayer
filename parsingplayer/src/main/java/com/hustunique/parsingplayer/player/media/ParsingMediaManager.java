@@ -10,8 +10,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.view.Surface;
 
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;
@@ -250,6 +250,10 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         mCurrentPlayerProxy.play(videoUrl);
     }
 
+    public void play(IVideoInfo info) {
+        play(info.getUri());
+    }
+
     @VisibleForTesting
     void playOrigin(String uri) {
         quickCheckInMap(uri);
@@ -334,7 +338,7 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public @Nullable
-    VideoInfo getCurrentVideoInfo() {
+    IVideoInfo getCurrentVideoInfo() {
         return mCurrentPlayerProxy.getVideoInfo();
     }
 

@@ -24,7 +24,7 @@ import java.util.Set;
  * Interface for parsed video info from websites.
  */
 
-public interface VideoInfo {
+public interface IVideoInfo {
     int HD_UNSPECIFIED = -1;
     int HD_LOW = 0;
     int HD_MEDIUM = 1;
@@ -32,6 +32,6 @@ public interface VideoInfo {
     int HD_HIGH = 3;
     String provideSource(@Quality int quality);
     String getTitle();
-    String getId();
     Set<Integer> getQualities();
+    String getUri();
 }

@@ -20,8 +20,7 @@ package com.hustunique.parsingplayer.player.media;
 import android.os.AsyncTask;
 
 import com.hustunique.parsingplayer.parser.VideoParser;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
-import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 
 import java.lang.ref.WeakReference;
 
@@ -29,7 +28,7 @@ import java.lang.ref.WeakReference;
  * Created by CoXier on 17-2-7.
  */
 
-class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
+class ParsingTask extends AsyncTask<String, Void, IVideoInfo> {
     private WeakReference<ParsingPlayerProxy> mPlayerProxy;
 
     ParsingTask(ParsingPlayerProxy playerManager) {
@@ -37,13 +36,13 @@ class ParsingTask extends AsyncTask<String, Void, VideoInfo> {
     }
 
     @Override
-    protected VideoInfo doInBackground(String... strings) {
+    protected IVideoInfo doInBackground(String... strings) {
         VideoParser videoParser = VideoParser.getInstance();
         return videoParser.parse(strings[0]);
     }
 
     @Override
-    protected void onPostExecute(VideoInfo videoInfo) {
+    protected void onPostExecute(IVideoInfo videoInfo) {
         super.onPostExecute(videoInfo);
         // videoView will start playing automatically when process prepared
         mPlayerProxy.get().setConcatVideos(videoInfo);

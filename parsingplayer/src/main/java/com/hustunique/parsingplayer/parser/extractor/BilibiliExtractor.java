@@ -92,7 +92,7 @@ public class BilibiliExtractor extends Extractor {
     VideoInfoImpl createInfo(@NonNull Response response) throws IOException {
         JsonObject data = parseResponse(response.body().string());
         Map<Integer,Stream> streamMap = getSegsMap(data);
-        return new VideoInfoImpl(mId,streamMap,mTitle);
+        return new VideoInfoImpl(mUrl, streamMap, mTitle, mId);
     }
 
     @NonNull

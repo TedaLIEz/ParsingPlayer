@@ -28,8 +28,8 @@ import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
 import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.player.io.LoadingCallback;
@@ -156,7 +156,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         releasePlayer();
     }
 
-    VideoInfo getVideoInfo() {
+    IVideoInfo getVideoInfo() {
         if (mProvider != null)
             return mProvider.getVideoInfo();
         return null;
@@ -374,6 +374,10 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         return mBufferPercentage;
     }
 
+    public void play(IVideoInfo info) {
+        setConcatVideos(info);
+    }
+
     @Override
     public void play(String videoUrl) {
         if (mPlayer != null && mPlayer.isPlaying()) {
@@ -384,11 +388,11 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
 
-    void setConcatVideos(@NonNull VideoInfo videoInfo) {
+    void setConcatVideos(@NonNull IVideoInfo videoInfo) {
         mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(mContext.get(),
-                videoInfo.getTitle().trim()));
+                Uri.encode(videoInfo.getUri())));
         mProvider = new ConcatSourceProvider(videoInfo, mContext.get().getApplicationContext());
-        setConcatContent(VideoInfo.HD_UNSPECIFIED);
+        setConcatContent(IVideoInfo.HD_UNSPECIFIED);
     }
 
     private void setConcatVideos(@Quality int quality) {

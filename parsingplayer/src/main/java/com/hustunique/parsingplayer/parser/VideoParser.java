@@ -21,7 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.extractor.BilibiliExtractor;
 import com.hustunique.parsingplayer.parser.extractor.Extractor;
 import com.hustunique.parsingplayer.parser.extractor.QQExtractor;
@@ -94,7 +94,7 @@ public class VideoParser {
         return null;
     }
 
-    public VideoInfo parse(String url) {
+    public IVideoInfo parse(String url) {
         try {
             mExtractor = createExtractor(url);
             return mExtractor.extract(url);

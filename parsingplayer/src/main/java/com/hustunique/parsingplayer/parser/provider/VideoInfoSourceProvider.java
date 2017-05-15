@@ -1,19 +1,19 @@
 package com.hustunique.parsingplayer.parser.provider;
 
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 
 /**
  * Created by JianGuo on 2/12/17.
  */
 
 public abstract class VideoInfoSourceProvider implements VideoSourceProvider {
-    VideoInfo mVideoInfo;
+    IVideoInfo mVideoInfo;
 
-    VideoInfoSourceProvider(VideoInfo videoInfo) {
+    VideoInfoSourceProvider(IVideoInfo videoInfo) {
         mVideoInfo = videoInfo;
     }
 
-    public VideoInfo getVideoInfo(){
+    public IVideoInfo getVideoInfo(){
         return mVideoInfo;
     }
 }

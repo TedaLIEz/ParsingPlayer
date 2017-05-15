@@ -133,7 +133,7 @@ public class YoukuExtractor extends Extractor {
         String title = getTitle(data);
         Map<Integer, Stream> streamMap = getSegMap(data);
         LogUtil.d(TAG, "hd length:" + streamMap.keySet().size());
-        return new VideoInfoImpl(mId,streamMap, title);
+        return new VideoInfoImpl(mUrl, streamMap, title, mId);
     }
 
     @VisibleForTesting

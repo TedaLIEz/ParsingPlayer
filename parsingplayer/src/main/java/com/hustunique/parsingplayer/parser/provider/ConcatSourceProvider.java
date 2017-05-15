@@ -23,8 +23,8 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 import com.hustunique.parsingplayer.util.LogUtil;
 
@@ -50,18 +50,19 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
     @Override
     public String provideSource(@Quality int quality) {
         quality = quality == VideoInfoImpl.HD_UNSPECIFIED ? getHdByNetwork() : quality;
-        // TODO: is this quality necessary?
+        // TODO: is this mQuality field necessary?
         mQuality = quality;
         LogUtil.i(TAG, "current quality:" + mQuality);
         return mVideoInfo.provideSource(quality);
     }
+
 
     @Override
     public int getQuality() {
         return mQuality;
     }
 
-    public ConcatSourceProvider(VideoInfo videoInfo, Context context) {
+    public ConcatSourceProvider(IVideoInfo videoInfo, Context context) {
         super(videoInfo);
         mContext = new WeakReference<>(context);
     }

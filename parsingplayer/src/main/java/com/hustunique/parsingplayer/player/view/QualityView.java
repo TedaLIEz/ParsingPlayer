@@ -28,7 +28,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 
@@ -101,13 +101,13 @@ public class QualityView extends LinearLayout {
     }
 
     private String getString(int q) {
-        if (q == VideoInfo.HD_HIGH) {
+        if (q == IVideoInfo.HD_HIGH) {
             return getResources().getString(R.string.hd_high);
-        } else if (q == VideoInfo.HD_LOW) {
+        } else if (q == IVideoInfo.HD_LOW) {
             return getResources().getString(R.string.hd_low);
-        } else if (q == VideoInfo.HD_MEDIUM) {
+        } else if (q == IVideoInfo.HD_MEDIUM) {
             return getResources().getString(R.string.hd_medium);
-        } else if (q == VideoInfo.HD_STANDARD) {
+        } else if (q == IVideoInfo.HD_STANDARD) {
             return getResources().getString(R.string.hd_standard);
         }
         return null;

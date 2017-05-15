@@ -26,8 +26,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.hustunique.parsingplayer.parser.ExtractException;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Stream;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
 import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import java.io.IOException;
@@ -51,9 +51,10 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 public abstract class Extractor {
     private static final String TAG = "Extractor";
-    protected OkHttpClient mClient;
+    OkHttpClient mClient;
+    protected String mUrl;
 
-    public Extractor() {
+    Extractor() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
             @Override
             public void log(String message) {
@@ -67,14 +68,15 @@ public abstract class Extractor {
     }
 
 
-    public VideoInfo extract(@NonNull String url) {
+    public IVideoInfo extract(@NonNull String url) {
+        mUrl = url;
         String baseUrl = constructBasicUrl(url);
         final Request request = buildRequest(baseUrl);
         return extract(request);
     }
 
     @VisibleForTesting
-    private VideoInfo extract(@NonNull Request request) {
+    private IVideoInfo extract(@NonNull Request request) {
         try {
             Response response = mClient.newCall(request).execute();
             VideoInfoImpl videoInfoImpl = createInfo(response);
@@ -85,7 +87,7 @@ public abstract class Extractor {
         throw new ExtractException("Can't extract video info");
     }
 
-    // TODO: refactor this method to avoid using VideoInfo#getStreamMap()
+    // TODO: refactor this method to avoid using IVideoInfo#getStreamMap()
     private VideoInfoImpl cutDownVideoInfo(VideoInfoImpl videoInfoImpl) {
         Map<Integer, Stream> streamMap = videoInfoImpl.getStreamMap();
         if (streamMap.keySet().size() <= 4) return videoInfoImpl;
@@ -94,7 +96,7 @@ public abstract class Extractor {
         for (int i = 3; i >= 0; i--) {
             storedStreamMap.put(i, streamMap.get(keys[keys.length - 4 + i]));
         }
-        return new VideoInfoImpl(videoInfoImpl.getId(),storedStreamMap, videoInfoImpl.getTitle());
+        return new VideoInfoImpl(mUrl, storedStreamMap, videoInfoImpl.getTitle(), videoInfoImpl.getId());
     }
 
     protected JsonObject parseResponse(String response) {

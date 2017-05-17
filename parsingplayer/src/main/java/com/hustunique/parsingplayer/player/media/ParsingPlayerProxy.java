@@ -25,18 +25,15 @@ import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
-import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
-import com.hustunique.parsingplayer.player.io.LoadingCallback;
-import com.hustunique.parsingplayer.player.io.ParsingFileManager;
+import com.hustunique.parsingplayer.parser.provider.VideoProvider;
+import com.hustunique.parsingplayer.parser.provider.IVideoInfoProvider;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.util.LogUtil;
-import com.hustunique.parsingplayer.util.Util;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -55,7 +52,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         IMediaPlayer.OnErrorListener, IMediaPlayer.OnInfoListener, IMediaPlayer.OnSeekCompleteListener,
         IMediaPlayer.OnBufferingUpdateListener, IMediaPlayerControl {
     private static final String TAG = "ParsingPlayerProxy";
-    private final WeakReference<Context> mContext;
+    private final WeakReference<Context> mContextRef;
     private int mCurrentState;
 
     // all possible internal states
@@ -69,7 +66,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
     private IParsingPlayer mPlayer;
     private ParsingTask mParsingTask;
-    private VideoInfoSourceProvider mProvider;
+    private IVideoInfoProvider mProvider;
     private int mBufferPercentage;
     private double mBrightness = Double.MAX_VALUE;
 
@@ -78,11 +75,10 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     private int mSeekWhenPrepared;
 
 
-    private ParsingFileManager mManager;
 
     ParsingPlayerProxy(Context context, OnStateListener listener) {
         mStateListener = listener;
-        mContext = new WeakReference<>(context);
+        mContextRef = new WeakReference<>(context);
     }
 
 
@@ -142,7 +138,7 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
             mPlayer.release();
             mPlayer = null;
             mCurrentState = STATE_IDLE;
-            AudioManager am = (AudioManager) mContext.get().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            AudioManager am = (AudioManager) mContextRef.get().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
             am.abandonAudioFocus(null);
         }
     }
@@ -172,8 +168,8 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
         mSeekWhenPrepared = (int) mPlayer.getCurrentPosition();
         mPlayer.setDisplay(null);
         mPlayer.release();
-        mPlayer = createPlayer(mContext.get());
-        setConcatVideos(quality);
+        mPlayer = createPlayer(mContextRef.get());
+        playVideo(quality);
     }
 
 
@@ -375,7 +371,18 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
     }
 
     public void play(IVideoInfo info) {
-        setConcatVideos(info);
+        mProvider = new VideoProvider(info, new IVideoInfoProvider.Callback() {
+            @Override
+            public void onProvided(String uri) {
+                setVideoURI(Uri.parse(uri));
+            }
+
+            @Override
+            public void onFail(Exception e) {
+                LogUtil.wtf(TAG, e);
+            }
+        });
+        mProvider.provideSource(IVideoInfo.HD_UNSPECIFIED);
     }
 
     @Override
@@ -389,37 +396,32 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
 
     void setConcatVideos(@NonNull IVideoInfo videoInfo) {
-        mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(mContext.get(),
-                Uri.encode(videoInfo.getUri())));
-        mProvider = new ConcatSourceProvider(videoInfo, mContext.get().getApplicationContext());
-        setConcatContent(IVideoInfo.HD_UNSPECIFIED);
+        mProvider = new ConcatSourceProvider(videoInfo, mContextRef.get().getApplicationContext(),
+                new IVideoInfoProvider.Callback() {
+                    @Override
+                    public void onProvided(String uri) {
+                        setVideoURI(Uri.parse(uri));
+                    }
+
+                    @Override
+                    public void onFail(Exception e) {
+                        LogUtil.wtf(TAG, e);
+                    }
+                });
+        playVideo(IVideoInfo.HD_UNSPECIFIED);
     }
 
-    private void setConcatVideos(@Quality int quality) {
-        setConcatContent(quality);
+    private void playVideo(@Quality int quality) {
+        mProvider.provideSource(quality);
     }
 
-    private void setConcatContent(@Quality int quality) {
-        assert mProvider != null;
-        mManager.write(mProvider, quality, new LoadingCallback<String>() {
-            @Override
-            public void onSuccess(String result) {
-                setVideoURI(Uri.parse(result));
-            }
-
-            @Override
-            public void onFailed(Exception e) {
-                Log.wtf(TAG, e);
-            }
-        });
-    }
 
     @VisibleForTesting
     void setVideoPath(String path) {
         if (mPlayer == null)
-            mPlayer = createPlayer(mContext.get());
+            mPlayer = createPlayer(mContextRef.get());
         try {
-            mPlayer.setDataSource(mContext.get(), Uri.parse(path));
+            mPlayer.setDataSource(mContextRef.get(), Uri.parse(path));
             openVideo();
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);
@@ -433,9 +435,9 @@ class ParsingPlayerProxy implements IMediaPlayer.OnPreparedListener,
 
 
     private void setVideoURI(Uri uri, Map<String, String> headers) {
-        if (mPlayer == null) mPlayer = createPlayer(mContext.get());
+        if (mPlayer == null) mPlayer = createPlayer(mContextRef.get());
         try {
-            mPlayer.setDataSource(mContext.get(), uri, headers);
+            mPlayer.setDataSource(mContextRef.get(), uri, headers);
             openVideo();
         } catch (IOException e) {
             LogUtil.wtf(TAG, e);

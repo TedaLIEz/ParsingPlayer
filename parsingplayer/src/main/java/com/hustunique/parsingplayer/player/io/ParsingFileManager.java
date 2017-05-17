@@ -17,15 +17,12 @@
 
 package com.hustunique.parsingplayer.player.io;
 
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.util.Pair;
 
-import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.provider.VideoInfoSourceProvider;
 import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 
@@ -71,21 +68,16 @@ public final class ParsingFileManager {
     /**
      * Write a ffconcat config file
      *
-     * @param provider the video info source provider, see {@link VideoInfoSourceProvider}
-     * @param quality  the quality, see {@link Quality} for details
+     * @param fileName config fileName
+     * @param content  the content of config
      * @param callback the loading callback
      */
-    public void write(VideoInfoSourceProvider provider, @Quality int quality, LoadingCallback<String> callback) {
-        // FIXME: 5/15/17 provideSource has side effect here.
-        String content = provider.provideSource(quality);
+    public void write(String fileName, String content, LoadingCallback<String> callback) {
         LogUtil.i(TAG, "set temp file content: \n" + content);
-        Callable<String> task = createWriteTask(escapedFileName(provider), content, callback);
+        Callable<String> task = createWriteTask(fileName, content, callback);
         mFileService.submit(task);
     }
 
-    private String escapedFileName(VideoInfoSourceProvider provider) {
-        return Uri.encode(provider.getVideoInfo().getUri()) + "_" + provider.getQuality();
-    }
 
     private Callable<String> createWriteTask(final String filename, final String content,
                                              final LoadingCallback<String> callback) {

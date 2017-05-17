@@ -87,7 +87,6 @@ public abstract class Extractor {
         throw new ExtractException("Can't extract video info");
     }
 
-    // TODO: refactor this method to avoid using IVideoInfo#getStreamMap()
     private VideoInfoImpl cutDownVideoInfo(VideoInfoImpl videoInfoImpl) {
         Map<Integer, Stream> streamMap = videoInfoImpl.getStreamMap();
         if (streamMap.keySet().size() <= 4) return videoInfoImpl;

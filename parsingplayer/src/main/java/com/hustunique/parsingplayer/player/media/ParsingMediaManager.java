@@ -238,40 +238,35 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public void play(String videoUrl) {
-        LogUtil.v(TAG, "current map" + mPlayerMap);
-        if (mPlayerMap.containsKey(videoUrl)) {
-            mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
-            LogUtil.v(TAG, "get player from map");
-        } else {
-            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
-            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
-            mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
-        }
+
+        mCurrentPlayerProxy = quickCheckInMap(videoUrl);
         mCurrentPlayerProxy.play(videoUrl);
     }
 
+    private ParsingPlayerProxy quickCheckInMap(String uri) {
+        LogUtil.v(TAG, "current map" + mPlayerMap);
+        ParsingPlayerProxy proxy;
+        if (mPlayerMap.containsKey(uri)) {
+            proxy = mPlayerMap.get(uri);
+            LogUtil.v(TAG, "get player from map");
+        } else {
+            proxy = new ParsingPlayerProxy(mContext.get(), this);
+            LogUtil.v(TAG, "create new proxy " + proxy);
+            mPlayerMap.put(uri, proxy);
+        }
+        return proxy;
+    }
+
     public void play(IVideoInfo info) {
-        play(info.getUri());
+        mCurrentPlayerProxy = quickCheckInMap(info.getUri());
+        mCurrentPlayerProxy.play(info);
     }
 
     @VisibleForTesting
     void playOrigin(String uri) {
-        quickCheckInMap(uri);
+        mCurrentPlayerProxy = quickCheckInMap(uri);
         mCurrentPlayerProxy.setVideoPath(uri);
     }
-
-    private void quickCheckInMap(String videoUrl) {
-        if (mPlayerMap.containsKey(videoUrl)) {
-            mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
-            LogUtil.v(TAG, "get player from map");
-        } else {
-            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
-            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
-            mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
-        }
-
-    }
-
 
 
 

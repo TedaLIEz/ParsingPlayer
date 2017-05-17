@@ -1,6 +1,6 @@
 /*
- *
  * Copyright (c) 2017 UniqueStudio
+ *
  *
  * This file is part of ParsingPlayer.
  *
@@ -17,21 +17,30 @@
 
 package com.hustunique.parsingplayer.parser.provider;
 
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 /**
- * Created by JianGuo on 1/29/17.
- * Interface providing video source by {@link Quality}
+ * Created by JianGuo on 5/17/17.
  */
-interface VideoSourceProvider {
-    /**
-     * return video data source by quality
-     * @param quality integer specified in {@link VideoInfoImpl#HD_UNSPECIFIED},
-     *                {@link VideoInfoImpl#HD_LOW}, {@link VideoInfoImpl#HD_MEDIUM},
-     *                {@link VideoInfoImpl#HD_STANDARD}, {@link VideoInfoImpl#HD_HIGH}
-     */
-    void provideSource(@Quality int quality);
 
-    @Quality int getQuality();
+public class VideoProvider extends IVideoInfoProvider {
+
+    private int mQuality;
+
+    public VideoProvider(IVideoInfo videoInfo, Callback callback) {
+        super(videoInfo, callback);
+    }
+
+
+    @Override
+    public void provideSource(@Quality int quality) {
+        mQuality = quality;
+        mCallback.onProvided(mVideoInfo.provideSource(quality));
+    }
+
+    @Override
+    public int getQuality() {
+        return mQuality;
+    }
 }

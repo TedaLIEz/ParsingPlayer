@@ -22,7 +22,7 @@ import android.os.Build;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.Mockhelper;
 import com.hustunique.parsingplayer.parser.TestConstant;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,10 +81,10 @@ public class YoukuExtractorTest {
         YoukuExtractor youkuExtractor = new YoukuExtractor();
         mExpectedException.expect(ExtractException.class);
         mExpectedException.expectMessage("Youku said: Sorry, this video is private");
-        VideoInfo videoInfo = youkuExtractor.createInfo(Mockhelper.
+        VideoInfoImpl videoInfoImpl = youkuExtractor.createInfo(Mockhelper.
                 mockResponse(TestConstant.YOUKU_ERROR_URL_1,
                         TestConstant.YOUKU_ERROR_JSON_1));
-        assertEquals(null, videoInfo);
+        assertEquals(null, videoInfoImpl);
     }
 
     @Test

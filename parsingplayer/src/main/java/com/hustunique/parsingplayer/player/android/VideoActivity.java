@@ -24,7 +24,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 import com.hustunique.parsingplayer.player.view.QualityView;
 import com.hustunique.parsingplayer.util.LogUtil;
@@ -47,7 +47,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
     private TextView mTVTitle;
     private TextView mTVQuality;
 
-    private VideoInfo mVideoInfo;
+    private IVideoInfo mVideoInfo;
     private QualityView mQualityView;
     private int mQuality;
 
@@ -82,7 +82,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
             public void onClick() {
                 mTitleGroupView.setVisibility(mTitleGroupView.isShown() ? View.GONE : View.VISIBLE);
                 if (mQualityView != null)
-                    mQualityView.setVisibility(mQualityView.isShown() ? View.GONE:View.INVISIBLE);
+                    mQualityView.setVisibility(mQualityView.isShown() ? View.GONE : View.INVISIBLE);
             }
         });
 
@@ -100,7 +100,8 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
                 LogUtil.d(TAG, "quality button click");
                 if (mQualityView == null) {
                     mQualityView = new QualityView(VideoActivity.this);
-                    mQualityView.attachViewWithInfo(mVideoView, mVideoInfo.getStreamMap().keySet(),mTVQuality);
+                    mQualityView.attachViewWithInfo(mVideoView, mVideoInfo.getQualities(),
+                            mTVQuality);
                 } else
                     mQualityView.setVisibility(mQualityView.isShown() ? View.GONE : View.VISIBLE);
             }
@@ -117,7 +118,7 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
         } else {
             mVideoView.setVideoInfoLoadedCallback(new ParsingVideoView.VideoInfoLoadedCallback() {
                 @Override
-                public void videoInfoLoaded(VideoInfo videoInfo, int quality) {
+                public void videoInfoLoaded(IVideoInfo videoInfo, int quality) {
                     mVideoInfo = videoInfo;
                     mQuality = quality;
                     mTVTitle.setText(mVideoInfo.getTitle());
@@ -129,13 +130,13 @@ public class VideoActivity extends AppCompatActivity implements View.OnSystemUiV
 
     private String getQualityAsString(int quality) {
         switch (quality) {
-            case VideoInfo.HD_LOW:
+            case IVideoInfo.HD_LOW:
                 return getString(R.string.hd_low);
-            case VideoInfo.HD_MEDIUM:
+            case IVideoInfo.HD_MEDIUM:
                 return getString(R.string.hd_medium);
-            case VideoInfo.HD_STANDARD:
+            case IVideoInfo.HD_STANDARD:
                 return getString(R.string.hd_standard);
-            case VideoInfo.HD_HIGH:
+            case IVideoInfo.HD_HIGH:
                 return getString(R.string.hd_high);
             default:
                 return null;

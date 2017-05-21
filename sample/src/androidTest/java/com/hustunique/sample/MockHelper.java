@@ -19,7 +19,7 @@ package com.hustunique.sample;
 
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,26 +32,27 @@ import java.util.Map;
 
 public class MockHelper {
     private static final String ID = "testId";
-    public static VideoInfo mockSimpleInfo(String title, String url, int duration) {
+
+    public static VideoInfoImpl mockSimpleInfo(String title, String url, int duration) {
         Map<Integer, Stream> map = new HashMap<>();
         List<Seg> list = new ArrayList<>();
         list.add(new Seg(url, duration));
         Stream stream = new Stream(list);
-        map.put(VideoInfo.HD_STANDARD, stream);
-        return new VideoInfo(ID, map, title);
+        map.put(VideoInfoImpl.HD_STANDARD, stream);
+        return new VideoInfoImpl(url, map, title, ID);
     }
 
-    public static VideoInfo mockQualityInfo(String title, String url, int duration) {
+    public static VideoInfoImpl mockQualityInfo(String title, String url, int duration) {
         Map<Integer, Stream> map = new HashMap<>();
         List<Seg> list = new ArrayList<>();
         list.add(new Seg(url, duration));
         Stream stream = new Stream(list);
-        map.put(VideoInfo.HD_STANDARD, stream);
+        map.put(VideoInfoImpl.HD_STANDARD, stream);
         list = new ArrayList<>();
         list.add(new Seg(url, duration));
         stream = new Stream(list);
-        map.put(VideoInfo.HD_HIGH, stream);
-        return new VideoInfo(ID, map, title);
+        map.put(VideoInfoImpl.HD_HIGH, stream);
+        return new VideoInfoImpl(url, map, title, ID);
 
     }
 }

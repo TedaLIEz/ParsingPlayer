@@ -8,7 +8,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,13 +39,13 @@ public class QQExtractor extends Extractor {
 
     @Nullable
     @Override
-    VideoInfo createInfo(@NonNull Response response) throws IOException {
+    VideoInfoImpl createInfo(@NonNull Response response) throws IOException {
         String info = response.body().string();
         JsonObject videoJson = parseResponse(searchValue(info, "(?<=QZOutputJson=).*"));
         mTitle = videoJson.get("vl").getAsJsonObject().get("vi")
                 .getAsJsonArray().get(0).getAsJsonObject().get("ti").getAsString();
         Map<Integer, Stream> streamMap = getStreamMap(videoJson);
-        return new VideoInfo(mVid,streamMap, mTitle);
+        return new VideoInfoImpl(mUrl,streamMap, mTitle, mVid);
     }
 
     @NonNull

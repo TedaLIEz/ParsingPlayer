@@ -27,12 +27,12 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.view.SurfaceHolder;
 
-import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
-import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.provider.ConcatSourceProvider;
-import com.hustunique.parsingplayer.parser.provider.VideoProvider;
-import com.hustunique.parsingplayer.parser.provider.IVideoInfoProvider;
+import com.hustunique.parser.entity.IVideoInfo;
+import com.hustunique.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
+import com.hustunique.parsingplayer.provider.ConcatSourceProvider;
+import com.hustunique.parsingplayer.provider.IVideoInfoProvider;
+import com.hustunique.parsingplayer.provider.VideoProvider;
 import com.hustunique.parsingplayer.util.LogUtil;
 
 import java.io.IOException;

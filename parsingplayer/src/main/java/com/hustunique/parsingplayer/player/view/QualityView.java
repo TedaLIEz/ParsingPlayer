@@ -27,8 +27,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.hustunique.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.util.LogUtil;
 import com.hustunique.parsingplayer.util.Util;
 

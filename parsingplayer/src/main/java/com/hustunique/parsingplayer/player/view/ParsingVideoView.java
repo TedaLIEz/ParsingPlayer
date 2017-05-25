@@ -38,9 +38,9 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.hustunique.parser.entity.IVideoInfo;
+import com.hustunique.parser.entity.Quality;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
-import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
 import com.hustunique.parsingplayer.player.media.ParsingMediaManager;

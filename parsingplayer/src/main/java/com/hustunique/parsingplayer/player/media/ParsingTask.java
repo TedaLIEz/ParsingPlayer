@@ -19,8 +19,8 @@ package com.hustunique.parsingplayer.player.media;
 
 import android.os.AsyncTask;
 
-import com.hustunique.parsingplayer.parser.VideoParser;
-import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
+import com.hustunique.parser.VideoParser;
+import com.hustunique.parser.entity.IVideoInfo;
 
 import java.lang.ref.WeakReference;
 

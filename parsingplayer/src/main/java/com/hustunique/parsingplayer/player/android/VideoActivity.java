@@ -23,8 +23,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
+import com.hustunique.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.player.view.ParsingVideoView;
 import com.hustunique.parsingplayer.player.view.QualityView;
 import com.hustunique.parsingplayer.util.LogUtil;

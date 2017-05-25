@@ -1,0 +1,40 @@
+/*
+ * Copyright (c) 2017 UniqueStudio
+ *
+ *
+ * This file is part of ParsingPlayer.
+ *
+ * ParsingPlayer is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with ParsingPlayer; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
+apply plugin: 'java'
+
+def logger = new com.android.build.gradle.internal.LoggerWrapper(project.logger)
+def sdkHandler = new com.android.build.gradle.internal.SdkHandler(project, logger)
+for (File file : sdkHandler.sdkLoader.repositories) {
+    project.repositories.maven {
+        url = file.toURI()
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.squareup.okhttp3:okhttp:3.5.0'
+    compile 'com.android.support:support-annotations:25.3.1'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.5.0'
+    testCompile 'org.mockito:mockito-core:2.6.3'
+    testCompile "org.robolectric:robolectric:3.2.2"
+    testCompile 'junit:junit:4.12'
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"

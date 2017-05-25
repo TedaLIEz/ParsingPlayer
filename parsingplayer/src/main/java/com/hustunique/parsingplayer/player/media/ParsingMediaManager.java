@@ -10,8 +10,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.view.Surface;
 
-import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
-import com.hustunique.parsingplayer.parser.entity.Quality;
+import com.hustunique.parser.entity.IVideoInfo;
+import com.hustunique.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
 import com.hustunique.parsingplayer.player.view.TextureRenderView;

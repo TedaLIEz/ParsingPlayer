@@ -10,7 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.view.Surface;
 
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.view.IMediaPlayerControl;
 import com.hustunique.parsingplayer.player.view.IRenderView;
@@ -238,36 +238,35 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
     }
 
     public void play(String videoUrl) {
+
+        mCurrentPlayerProxy = quickCheckInMap(videoUrl);
+        mCurrentPlayerProxy.play(videoUrl);
+    }
+
+    private ParsingPlayerProxy quickCheckInMap(String uri) {
         LogUtil.v(TAG, "current map" + mPlayerMap);
-        if (mPlayerMap.containsKey(videoUrl)) {
-            mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
+        ParsingPlayerProxy proxy;
+        if (mPlayerMap.containsKey(uri)) {
+            proxy = mPlayerMap.get(uri);
             LogUtil.v(TAG, "get player from map");
         } else {
-            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
-            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
-            mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
+            proxy = new ParsingPlayerProxy(mContext.get(), this);
+            LogUtil.v(TAG, "create new proxy " + proxy);
+            mPlayerMap.put(uri, proxy);
         }
-        mCurrentPlayerProxy.play(videoUrl);
+        return proxy;
+    }
+
+    public void play(IVideoInfo info) {
+        mCurrentPlayerProxy = quickCheckInMap(info.getUri());
+        mCurrentPlayerProxy.play(info);
     }
 
     @VisibleForTesting
     void playOrigin(String uri) {
-        quickCheckInMap(uri);
+        mCurrentPlayerProxy = quickCheckInMap(uri);
         mCurrentPlayerProxy.setVideoPath(uri);
     }
-
-    private void quickCheckInMap(String videoUrl) {
-        if (mPlayerMap.containsKey(videoUrl)) {
-            mCurrentPlayerProxy = mPlayerMap.get(videoUrl);
-            LogUtil.v(TAG, "get player from map");
-        } else {
-            mCurrentPlayerProxy = new ParsingPlayerProxy(mContext.get(), this);
-            LogUtil.v(TAG, "create new proxy " + mCurrentPlayerProxy);
-            mPlayerMap.put(videoUrl, mCurrentPlayerProxy);
-        }
-
-    }
-
 
 
 
@@ -333,7 +332,8 @@ public class ParsingMediaManager implements ParsingPlayerProxy.OnStateListener, 
         mCurrentPlayerProxy.setBrightness(brightness);
     }
 
-    public @Nullable VideoInfo getCurrentVideoInfo() {
+    public @Nullable
+    IVideoInfo getCurrentVideoInfo() {
         return mCurrentPlayerProxy.getVideoInfo();
     }
 

@@ -26,7 +26,7 @@ import com.google.gson.JsonObject;
 import com.hustunique.parsingplayer.parser.ExtractException;
 import com.hustunique.parsingplayer.parser.entity.Seg;
 import com.hustunique.parsingplayer.parser.entity.Stream;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -61,11 +61,11 @@ public class SoHuExtractor extends Extractor {
 
     @Nullable
     @Override
-    VideoInfo createInfo(@NonNull Response response) throws IOException {
+    VideoInfoImpl createInfo(@NonNull Response response) throws IOException {
         JsonObject vidDataJson = parseResponse(response.body().string());
         checkError(vidDataJson);
         Map<Integer,Stream> streamMap = getSegsMap(vidDataJson);
-        return new VideoInfo(mId,streamMap, mTitle);
+        return new VideoInfoImpl(mUrl, streamMap, mTitle, mId);
     }
 
 

@@ -22,11 +22,11 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_STANDARD;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_UNSPECIFIED;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_LOW;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_MEDIUM;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_STANDARD;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_HIGH;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_UNSPECIFIED;
 
 /**
  * Created by JianGuo on 2/10/17.

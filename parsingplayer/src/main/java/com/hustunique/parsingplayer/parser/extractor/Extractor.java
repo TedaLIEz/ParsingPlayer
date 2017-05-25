@@ -26,8 +26,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.hustunique.parsingplayer.parser.ExtractException;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Stream;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -50,9 +51,10 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 public abstract class Extractor {
     private static final String TAG = "Extractor";
-    protected OkHttpClient mClient;
+    OkHttpClient mClient;
+    protected String mUrl;
 
-    public Extractor() {
+    Extractor() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
             @Override
             public void log(String message) {
@@ -66,33 +68,34 @@ public abstract class Extractor {
     }
 
 
-    public VideoInfo extract(@NonNull String url) {
+    public IVideoInfo extract(@NonNull String url) {
+        mUrl = url;
         String baseUrl = constructBasicUrl(url);
         final Request request = buildRequest(baseUrl);
         return extract(request);
     }
 
     @VisibleForTesting
-    private VideoInfo extract(@NonNull Request request) {
+    private IVideoInfo extract(@NonNull Request request) {
         try {
             Response response = mClient.newCall(request).execute();
-            VideoInfo videoInfo = createInfo(response);
-            return cutDownVideoInfo(videoInfo);
+            VideoInfoImpl videoInfoImpl = createInfo(response);
+            return cutDownVideoInfo(videoInfoImpl);
         } catch (IOException e) {
             e.printStackTrace();
         }
         throw new ExtractException("Can't extract video info");
     }
 
-    private VideoInfo cutDownVideoInfo(VideoInfo videoInfo) {
-        Map<Integer, Stream> streamMap = videoInfo.getStreamMap();
-        if (streamMap.keySet().size() <= 4) return videoInfo;
+    private VideoInfoImpl cutDownVideoInfo(VideoInfoImpl videoInfoImpl) {
+        Map<Integer, Stream> streamMap = videoInfoImpl.getStreamMap();
+        if (streamMap.keySet().size() <= 4) return videoInfoImpl;
         Map<Integer, Stream> storedStreamMap = new HashMap<>();
         Object[] keys = streamMap.keySet().toArray();
         for (int i = 3; i >= 0; i--) {
             storedStreamMap.put(i, streamMap.get(keys[keys.length - 4 + i]));
         }
-        return new VideoInfo(videoInfo.getId(),storedStreamMap, videoInfo.getTitle());
+        return new VideoInfoImpl(mUrl, storedStreamMap, videoInfoImpl.getTitle(), videoInfoImpl.getId());
     }
 
     protected JsonObject parseResponse(String response) {
@@ -134,7 +137,7 @@ public abstract class Extractor {
     abstract String constructBasicUrl(@NonNull String url);
 
     @Nullable
-    abstract VideoInfo createInfo(@NonNull Response response) throws IOException;
+    abstract VideoInfoImpl createInfo(@NonNull Response response) throws IOException;
 
     @NonNull
     abstract Request buildRequest(@NonNull String baseUrl);

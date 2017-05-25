@@ -39,7 +39,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.hustunique.parsingplayer.R;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
 import com.hustunique.parsingplayer.player.android.ParsingIntegrator;
 import com.hustunique.parsingplayer.player.media.MediaStateChangeListener;
@@ -66,7 +66,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     private ProgressSlideView mVolumeProgress, mBrightProgress;
     private ProgressBar mProgressBar;
     private TextView mTextView;
-    private String mUrl;
+    private String mUri;
 
     private boolean mFullscreen;
     private boolean mTargetFullScreen = false;
@@ -167,16 +167,25 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     /**
      * Play remote video according to url.
      *
-     * @param url
+     * @param url url specified the video.
      */
     public void play(String url) {
-        mUrl = url;
+        mUri = url;
         mMedia.play(url);
+    }
+
+    /**
+     * Play video via {@link IVideoInfo}
+     * @param info see {@link IVideoInfo} for details
+     */
+    public void play(IVideoInfo info) {
+        mUri = info.getUri();
+        mMedia.play(info);
     }
 
     @VisibleForTesting
     void setUrl(String url) {
-        mUrl = url;
+        mUri = url;
     }
 
     private int getCurrentVolume() {
@@ -284,7 +293,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         LogUtil.d(TAG, "onDestroy");
         if (mFullscreen || Settings.System.getInt(getContext().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1)
             return;
-        mMedia.onDestroy(mUrl);
+        mMedia.onDestroy(mUri);
     }
 
     @Override
@@ -415,7 +424,8 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
         return ss;
     }
 
-    public @Nullable VideoInfo getVideoInfo() {
+    public @Nullable
+    IVideoInfo getVideoInfo() {
         return mMedia.getCurrentVideoInfo();
     }
 
@@ -427,7 +437,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
 
     /**
      * change quality but you should ensure you have playing the url before,
-     * because we use {@link VideoInfo} loaded.
+     * because we use {@link IVideoInfo} loaded.
      *
      * @param q
      */
@@ -528,7 +538,7 @@ public class ParsingVideoView extends RelativeLayout implements MediaStateChange
     }
 
     public interface VideoInfoLoadedCallback {
-        void videoInfoLoaded(VideoInfo videoInfo, int quality);
+        void videoInfoLoaded(IVideoInfo videoInfo, int quality);
     }
 
     public void setVideoInfoLoadedCallback(VideoInfoLoadedCallback videoInfoLoadedCallback) {

@@ -20,53 +20,74 @@ package com.hustunique.parsingplayer.parser.provider;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
+import com.hustunique.parsingplayer.parser.entity.IVideoInfo;
 import com.hustunique.parsingplayer.parser.entity.Quality;
-import com.hustunique.parsingplayer.parser.entity.VideoInfo;
+import com.hustunique.parsingplayer.parser.entity.VideoInfoImpl;
+import com.hustunique.parsingplayer.player.io.LoadingCallback;
+import com.hustunique.parsingplayer.player.io.ParsingFileManager;
 import com.hustunique.parsingplayer.util.LogUtil;
+import com.hustunique.parsingplayer.util.Util;
 
 import java.lang.ref.WeakReference;
 
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_HIGH;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_LOW;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_MEDIUM;
-import static com.hustunique.parsingplayer.parser.entity.VideoInfo.HD_STANDARD;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_HIGH;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_LOW;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_MEDIUM;
+import static com.hustunique.parsingplayer.parser.entity.VideoInfoImpl.HD_STANDARD;
 
 /**
  * Created by JianGuo on 2/10/17.
  * Implementation for concat protocol
  */
 
-public class ConcatSourceProvider extends VideoInfoSourceProvider {
+public class ConcatSourceProvider extends IVideoInfoProvider {
     private static final String TAG = "ConcatSourceProvider";
+    private final ParsingFileManager mManager;
     private WeakReference<Context> mContext;
     private
     @Quality
     int mQuality;
 
+
+    private String provideFileName() {
+        return Uri.encode(getVideoInfo().getUri()) + "_" + getQuality();
+    }
+
     @Override
-    public String provideSource(@Quality int quality) {
-        quality = quality == VideoInfo.HD_UNSPECIFIED ? getHdByNetwork() : quality;
-        while (mVideoInfo.getStream(quality) == null) {
-            quality--;
-        }
-        if (quality < VideoInfo.HD_LOW)
-            throw new RuntimeException("No such hd in this url");
+    public void provideSource(@Quality int quality) {
+        quality = quality == VideoInfoImpl.HD_UNSPECIFIED ? getHdByNetwork() : quality;
+        // FIXME: 5/17/17 provideSource here have side effects
         mQuality = quality;
         LogUtil.i(TAG, "current quality:" + mQuality);
-        return ProtocolHelper.concat(mVideoInfo.getStream(quality).getSegs());
+        String content = mVideoInfo.provideSource(quality);
+        mManager.write(provideFileName(), content, new LoadingCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                mCallback.onProvided(result);
+            }
+
+            @Override
+            public void onFailed(Exception e) {
+                mCallback.onFail(e);
+            }
+        });
     }
+
 
     @Override
     public int getQuality() {
         return mQuality;
     }
 
-    public ConcatSourceProvider(VideoInfo videoInfo, Context context) {
-        super(videoInfo);
+    public ConcatSourceProvider(IVideoInfo videoInfo, Context context, Callback callback) {
+        super(videoInfo, callback);
         mContext = new WeakReference<>(context);
+        mManager = ParsingFileManager.getInstance(Util.getDiskCacheDir(context,
+                Uri.encode(videoInfo.getUri())));
     }
 
     private
@@ -77,7 +98,7 @@ public class ConcatSourceProvider extends VideoInfoSourceProvider {
         if (networkInfo == null || !networkInfo.isConnected()) {
             LogUtil.e(TAG, "No networking found");
             makeToast();
-            return VideoInfo.HD_UNSPECIFIED;
+            return VideoInfoImpl.HD_UNSPECIFIED;
         }
         switch (networkInfo.getType()) {
             case ConnectivityManager.TYPE_WIFI:

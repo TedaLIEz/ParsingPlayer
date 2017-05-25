@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -49,4 +51,15 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:0.5'
 }
 
+publish {
+    groupId = 'com.uniquestudio'
+    artifactId = 'parsingplayer'
+    publishVersion = '2.0.6'
+    website = 'https://github.com/TedaLIEz/ParsingPlayer'
+    Properties properties = new Properties()
+    InputStream inputStream = project.rootProject.file('local.properties').newDataInputStream() ;
+    properties.load( inputStream )
+    bintrayUser = properties.getProperty('bintrayUser')
+    bintrayKey = properties.getProperty('bintrayKey')
+}
 

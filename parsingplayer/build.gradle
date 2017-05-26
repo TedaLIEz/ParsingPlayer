@@ -56,10 +56,5 @@ publish {
     artifactId = 'parsingplayer'
     publishVersion = '2.0.6'
     website = 'https://github.com/TedaLIEz/ParsingPlayer'
-    Properties properties = new Properties()
-    InputStream inputStream = project.rootProject.file('local.properties').newDataInputStream() ;
-    properties.load( inputStream )
-    bintrayUser = properties.getProperty('bintrayUser')
-    bintrayKey = properties.getProperty('bintrayKey')
 }
 

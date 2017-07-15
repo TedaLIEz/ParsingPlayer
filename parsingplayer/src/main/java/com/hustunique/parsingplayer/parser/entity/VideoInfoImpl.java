@@ -81,6 +81,9 @@ public class VideoInfoImpl implements IVideoInfo {
     }
 
     private Stream getStream(@Quality int hd) {
+        while (mStreamMap.get(hd) == null){
+            hd -- ;
+        }
         return mStreamMap.get(hd);
     }
 

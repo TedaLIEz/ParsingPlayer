@@ -32,7 +32,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import okhttp3.Response;
 
@@ -68,12 +67,6 @@ public class YoukuExtractorTest {
         youkuExtractor.buildRequest(null);
     }
 
-    @Test
-    public void constructBasicUrl() {
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        String baseUrl = youkuExtractor.constructBasicUrl(TestConstant.YOUKU_URL_1);
-        assertEquals("http://play.youku.com/play/get.json?vid=XMjQ3MzE1NDA3Ng&ct=12", baseUrl);
-    }
 
 
     @Test
@@ -86,29 +79,5 @@ public class YoukuExtractorTest {
                         TestConstant.YOUKU_ERROR_JSON_1));
         assertEquals(null, videoInfoImpl);
     }
-
-    @Test
-    public void EpGenerateTest() throws UnsupportedEncodingException {
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        String ep = youkuExtractor.getEp(TestConstant.YOUKU_EP_INPUT1);
-        assertEquals("ciacH0yFU8kE4SbXjj8bby7jciNcXP4J9h+HgdJjALshQO/M703RwpSy" +
-                "So1AYPkfcSIAE+nyqtiSaUIQYfZHrR4Q2U+oPfrh+vCQ5a1Xx5QFbx9EA8XRx1SZRDL1",
-                ep);
-    }
-
-    @Test
-    public void GetSidAndTokenTest() {
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        String[] rst = youkuExtractor.getSidAndToken(TestConstant.YOUKU_ENCRYPT_INPUT1);
-        assertEquals(2, rst.length);
-        assertEquals("0485585744586128216dc", rst[0]);
-        assertEquals("7724", rst[1]);
-    }
-
-
-
-
-
-
 
 }

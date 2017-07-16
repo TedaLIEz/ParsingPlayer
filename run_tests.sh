@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "TESTING..."
-if [ ${TEST} == "android" ]; then
+if [[ $TEST == "android" ]]; then
     ./gradlew --stacktrace :sample:connectedAndroidTest
-elif [${TEST} == "unit"]; then
+elif [[ $TEST == "unit" ]]; then
     ./gradlew --stacktrace test
 fi
 retval=$?

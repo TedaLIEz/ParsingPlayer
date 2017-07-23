@@ -23,6 +23,7 @@ import com.hustunique.parsingplayer.parser.provider.ProtocolHelper;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by JianGuo on 1/16/17.
@@ -72,7 +73,7 @@ public class VideoInfoImpl implements IVideoInfo {
 
     @Override
     public Set<Integer> getQualities() {
-        return mStreamMap.keySet();
+        return new TreeSet<>(mStreamMap.keySet());
     }
 
     @Override

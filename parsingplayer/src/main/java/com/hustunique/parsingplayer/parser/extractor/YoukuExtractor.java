@@ -125,13 +125,9 @@ public class YoukuExtractor extends Extractor {
             if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
                 continue;
             List<Seg> segList = new ArrayList<>();
-            JsonArray segs = stream.getAsJsonObject().getAsJsonArray("segs");
-            for (JsonElement seg : segs) {
-                String videoUrl = seg.getAsJsonObject().get("cdn_url").getAsString();
-                int duration = Integer.parseInt(seg.getAsJsonObject().get("total_milliseconds_video").getAsString()) / 1000;
-                Seg s = new Seg(videoUrl, duration);
-                segList.add(s);
-            }
+            int duration = stream.getAsJsonObject().get("milliseconds_audio").getAsInt() / 1000;
+            String m3u8Url = stream.getAsJsonObject().get("m3u8_url").getAsString();
+            segList.add(new Seg(m3u8Url, duration));
             streamMap.put(h, new Stream(segList));
             h++;
         }
@@ -189,12 +185,12 @@ public class YoukuExtractor extends Extractor {
             throw new IllegalArgumentException("Can't find id of this video.Please check");
         String clientIp = "192.168.1.1";
         String ccode;
-        if (url.contains("tudou.com")){
+        if (url.contains("tudou.com")) {
             ccode = "0402";
-        }else{
+        } else {
             ccode = "0401";
         }
-        String urlh , cna = null;
+        String urlh, cna = null;
         try {
             urlh = downloadData("https://log.mmstat.com/eg.js");
             cna = searchValue(urlh, "(?<=goldlog.Etag=\")[^\"]+");
@@ -202,13 +198,13 @@ public class YoukuExtractor extends Extractor {
             e.printStackTrace();
         }
         long time = System.currentTimeMillis() / 1000;
-        String basicUrl = "https://ups.youku.com/ups/get.json?"+
+        String basicUrl = "https://ups.youku.com/ups/get.json?" +
                 "vid=" + mId
                 + "&ccode=" + ccode
                 + "&client_ip=" + clientIp
                 + "&utid=" + cna
                 + "&client_ts=" + time;
-        Log.i(TAG,"basic url" + basicUrl);
+        Log.i(TAG, "basic url" + basicUrl);
         return basicUrl;
     }
 

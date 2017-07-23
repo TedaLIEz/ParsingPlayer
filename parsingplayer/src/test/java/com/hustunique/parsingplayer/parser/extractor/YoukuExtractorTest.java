@@ -67,12 +67,6 @@ public class YoukuExtractorTest {
         youkuExtractor.buildRequest(null);
     }
 
-    @Test
-    public void constructBasicUrl() {
-        YoukuExtractor youkuExtractor = new YoukuExtractor();
-        String baseUrl = youkuExtractor.constructBasicUrl(TestConstant.YOUKU_URL_1);
-        assertEquals("http://play.youku.com/play/get.json?vid=XMjQ3MzE1NDA3Ng&ct=12", baseUrl);
-    }
 
 
     @Test

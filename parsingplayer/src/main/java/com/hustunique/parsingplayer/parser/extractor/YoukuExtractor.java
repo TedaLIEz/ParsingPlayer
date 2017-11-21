@@ -55,12 +55,12 @@ public class YoukuExtractor extends Extractor {
 
     public static final String TEST_URL = "http://v.youku.com/v_show/id_XMjUwODc1MTY5Mg==.html";
     /**
-     * There are four qualities 0 ~3 for these formats.
+     * There are four qualities 0 ~ 3 for these formats.
      * <ul>
      * <li>3gp,flv,flvhd: 0</li>
-     * <li>3gphd,mp4,mp4hd,mp4hd2,mp4hd3: 1</li>
-     * <li>hd2: 2</li>
-     * <li>hd3: 3</li>
+     * <li>3gphd,mp4,mp4hd: 1</li>
+     * <li>hd2, mp4hd2: 2</li>
+     * <li>hd3, mp4hd3: 3</li>
      * </ul>
      */
     private static final String FORMAT_3GP = "3gp";
@@ -74,30 +74,17 @@ public class YoukuExtractor extends Extractor {
     private static final String FORMAT_HD2 = "hd2";
     private static final String FORMAT_HD3 = "hd3";
 
-    private static HashMap<String, String> mExtMap = new HashMap<>();
     private static HashMap<String, Integer> mHdMap = new HashMap<>();
 
-
     static {
-        mExtMap.put(FORMAT_3GP, "flv");
-        mExtMap.put(FORMAT_3GPHD, "mp4");
-        mExtMap.put(FORMAT_FLV, "flv");
-        mExtMap.put(FORMAT_FLVHD, "flv");
-        mExtMap.put(FORMAT_MP4, "mp4");
-        mExtMap.put(FORMAT_MP4HD, "mp4");
-        mExtMap.put(FORMAT_MP4HD2, "flv");
-        mExtMap.put(FORMAT_MP4HD3, "flv");
-        mExtMap.put(FORMAT_HD2, "flv");
-        mExtMap.put(FORMAT_HD3, "flv");
-
         mHdMap.put(FORMAT_3GP, VideoInfoImpl.HD_LOW);
         mHdMap.put(FORMAT_3GPHD, VideoInfoImpl.HD_MEDIUM);
         mHdMap.put(FORMAT_FLV, VideoInfoImpl.HD_LOW);
         mHdMap.put(FORMAT_FLVHD, VideoInfoImpl.HD_LOW);
         mHdMap.put(FORMAT_MP4, VideoInfoImpl.HD_MEDIUM);
         mHdMap.put(FORMAT_MP4HD, VideoInfoImpl.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD2, VideoInfoImpl.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD3, VideoInfoImpl.HD_MEDIUM);
+        mHdMap.put(FORMAT_MP4HD2, VideoInfoImpl.HD_STANDARD);
+        mHdMap.put(FORMAT_MP4HD3, VideoInfoImpl.HD_HIGH);
         mHdMap.put(FORMAT_HD2, VideoInfoImpl.HD_STANDARD);
         mHdMap.put(FORMAT_HD3, VideoInfoImpl.HD_HIGH);
     }
@@ -120,16 +107,18 @@ public class YoukuExtractor extends Extractor {
     private Map<Integer, Stream> getSegMap(JsonObject data) throws UnsupportedEncodingException {
         HashMap<Integer, Stream> streamMap = new HashMap<>();
         JsonArray streams = data.getAsJsonArray("stream");
-        int h = 0;
-        for (JsonElement stream : streams) {
-            if (stream.getAsJsonObject().get("channel_type") != null && stream.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
+        for (JsonElement streamJson : streams) {
+            if (streamJson.getAsJsonObject().get("channel_type") != null && streamJson.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
                 continue;
             List<Seg> segList = new ArrayList<>();
-            int duration = stream.getAsJsonObject().get("milliseconds_audio").getAsInt() / 1000;
-            String m3u8Url = stream.getAsJsonObject().get("m3u8_url").getAsString();
+            int duration = streamJson.getAsJsonObject().get("milliseconds_audio").getAsInt() / 1000;
+            String m3u8Url = streamJson.getAsJsonObject().get("m3u8_url").getAsString();
+            String streamType = streamJson.getAsJsonObject().get("stream_type").getAsString();
+            int size = streamJson.getAsJsonObject().get("size").getAsInt();
             segList.add(new Seg(m3u8Url, duration));
-            streamMap.put(h, new Stream(segList));
-            h++;
+            Stream stream = new Stream(segList);
+            stream.setSize(size);
+            streamMap.put(mHdMap.get(streamType), stream);
         }
         return streamMap;
     }

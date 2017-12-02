@@ -34,4 +34,5 @@ public interface IVideoInfo {
     String getTitle();
     Set<Integer> getQualities();
     String getUri();
+    @Quality int getBestHd(@Quality int quality);
 }

@@ -54,40 +54,7 @@ public class YoukuExtractor extends Extractor {
     private static final char[] letterTable = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     public static final String TEST_URL = "http://v.youku.com/v_show/id_XMjUwODc1MTY5Mg==.html";
-    /**
-     * There are four qualities 0 ~ 3 for these formats.
-     * <ul>
-     * <li>3gp,flv,flvhd: 0</li>
-     * <li>3gphd,mp4,mp4hd: 1</li>
-     * <li>hd2, mp4hd2: 2</li>
-     * <li>hd3, mp4hd3: 3</li>
-     * </ul>
-     */
-    private static final String FORMAT_3GP = "3gp";
-    private static final String FORMAT_3GPHD = "3gphd";
-    private static final String FORMAT_FLV = "flv";
-    private static final String FORMAT_FLVHD = "flvhd";
-    private static final String FORMAT_MP4 = "mp4";
-    private static final String FORMAT_MP4HD = "mp4hd";
-    private static final String FORMAT_MP4HD2 = "mp4hd2";
-    private static final String FORMAT_MP4HD3 = "mp4hd3";
-    private static final String FORMAT_HD2 = "hd2";
-    private static final String FORMAT_HD3 = "hd3";
 
-    private static HashMap<String, Integer> mHdMap = new HashMap<>();
-
-    static {
-        mHdMap.put(FORMAT_3GP, VideoInfoImpl.HD_LOW);
-        mHdMap.put(FORMAT_3GPHD, VideoInfoImpl.HD_MEDIUM);
-        mHdMap.put(FORMAT_FLV, VideoInfoImpl.HD_LOW);
-        mHdMap.put(FORMAT_FLVHD, VideoInfoImpl.HD_LOW);
-        mHdMap.put(FORMAT_MP4, VideoInfoImpl.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD, VideoInfoImpl.HD_MEDIUM);
-        mHdMap.put(FORMAT_MP4HD2, VideoInfoImpl.HD_STANDARD);
-        mHdMap.put(FORMAT_MP4HD3, VideoInfoImpl.HD_HIGH);
-        mHdMap.put(FORMAT_HD2, VideoInfoImpl.HD_STANDARD);
-        mHdMap.put(FORMAT_HD3, VideoInfoImpl.HD_HIGH);
-    }
 
     private String mId;
 
@@ -111,14 +78,21 @@ public class YoukuExtractor extends Extractor {
             if (streamJson.getAsJsonObject().get("channel_type") != null && streamJson.getAsJsonObject().get("channel_type").getAsString().equals("tail"))
                 continue;
             List<Seg> segList = new ArrayList<>();
-            int duration = streamJson.getAsJsonObject().get("milliseconds_audio").getAsInt() / 1000;
-            String m3u8Url = streamJson.getAsJsonObject().get("m3u8_url").getAsString();
-            String streamType = streamJson.getAsJsonObject().get("stream_type").getAsString();
+
+            JsonArray segJsons = streamJson.getAsJsonObject().getAsJsonArray("segs");
+            for (JsonElement segJson : segJsons) {
+                String url = segJson.getAsJsonObject().get("cdn_url").getAsString();
+                double duration = segJson.getAsJsonObject().get("total_milliseconds_audio").getAsInt() / 1000;
+                Seg seg = new Seg(url, duration);
+                segList.add(seg);
+            }
+
             int size = streamJson.getAsJsonObject().get("size").getAsInt();
-            segList.add(new Seg(m3u8Url, duration));
-            Stream stream = new Stream(segList);
+            int height = streamJson.getAsJsonObject().get("height").getAsInt();
+            int width = streamJson.getAsJsonObject().get("width").getAsInt();
+            Stream stream = new Stream(segList, size, height, width);
             stream.setSize(size);
-            streamMap.put(mHdMap.get(streamType), stream);
+            streamMap.put(calQualityByHeight(height), stream);
         }
         return streamMap;
     }
@@ -173,12 +147,7 @@ public class YoukuExtractor extends Extractor {
         if (mId == null)
             throw new IllegalArgumentException("Can't find id of this video.Please check");
         String clientIp = "192.168.1.1";
-        String ccode;
-        if (url.contains("tudou.com")) {
-            ccode = "0402";
-        } else {
-            ccode = "0401";
-        }
+        String ccode = "0501";
         String urlh, cna = null;
         try {
             urlh = downloadData("https://log.mmstat.com/eg.js");

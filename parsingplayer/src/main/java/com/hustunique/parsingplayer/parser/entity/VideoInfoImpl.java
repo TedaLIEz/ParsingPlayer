@@ -81,10 +81,15 @@ public class VideoInfoImpl implements IVideoInfo {
         return mUri;
     }
 
-    private Stream getStream(@Quality int hd) {
-        while (mStreamMap.get(hd) == null){
-            hd -- ;
+    @Override
+    public int getBestHd(@Quality int quality) {
+        while (mStreamMap.get(quality) == null){
+            quality -- ;
         }
+        return quality;
+    }
+
+    private Stream getStream(@Quality int hd) {
         return mStreamMap.get(hd);
     }
 

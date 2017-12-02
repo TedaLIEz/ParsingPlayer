@@ -60,10 +60,9 @@ public class ConcatSourceProvider extends IVideoInfoProvider {
     @Override
     public void provideSource(@Quality int quality) {
         quality = quality == VideoInfoImpl.HD_UNSPECIFIED ? getHdByNetwork() : quality;
-        // FIXME: 5/17/17 provideSource here have side effects
-        mQuality = quality;
+        mQuality = mVideoInfo.getBestHd(quality);
         LogUtil.i(TAG, "current quality:" + mQuality);
-        String content = mVideoInfo.provideSource(quality);
+        String content = mVideoInfo.provideSource(mQuality);
         mManager.write(provideFileName(), content, new LoadingCallback<String>() {
             @Override
             public void onSuccess(String result) {

@@ -134,6 +134,27 @@ public abstract class Extractor {
         return mClient.newCall(request).execute().body().string();
     }
 
+    /**
+     * @param height the height of video in pixel
+     * @return {@link IVideoInfo#HD_LOW}
+     * {@link IVideoInfo#HD_MEDIUM}
+     * {@link IVideoInfo#HD_STANDARD}
+     * {@link IVideoInfo#HD_HIGH}
+     */
+    protected int calQualityByHeight(int height) {
+        if (height <= 0) return IVideoInfo.HD_UNSPECIFIED;
+        if (height <= 320) {
+            return IVideoInfo.HD_LOW;
+        } else if (height <= 480) {
+            return IVideoInfo.HD_MEDIUM;
+        } else if (height <= 720) {
+            return IVideoInfo.HD_STANDARD;
+        } else {
+            return IVideoInfo.HD_HIGH;
+        }
+    }
+
+
     abstract String constructBasicUrl(@NonNull String url);
 
     @Nullable

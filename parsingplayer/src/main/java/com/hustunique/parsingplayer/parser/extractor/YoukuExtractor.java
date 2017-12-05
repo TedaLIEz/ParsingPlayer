@@ -147,7 +147,7 @@ public class YoukuExtractor extends Extractor {
         if (mId == null)
             throw new IllegalArgumentException("Can't find id of this video.Please check");
         String clientIp = "192.168.1.1";
-        String ccode = "0501";
+        String ccode = "0507";
         String urlh, cna = null;
         try {
             urlh = downloadData("https://log.mmstat.com/eg.js");
